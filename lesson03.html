@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第3回｜メソッド・引数・戻り値と値渡し</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson02.html">前の講義</a><a href="lesson04.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 3 回 ／ 全 18 回</span><h1>メソッド・引数・戻り値と値渡し</h1><p>第7章　メソッドの定義と呼び出し ／ 引数と戻り値 ／ スコープ ／ 値渡しと参照</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">メソッド</span>　<span class="term">引数</span>　<span class="term">戻り値</span>　<span class="term">値渡しと参照</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>引数を受け取り、戻り値を返すメソッドを書いて、<code>main</code> から呼べる</li><li><code>int</code> を渡したときと配列を渡したときで、元が変わるかどうかを言い分けられる</li><li>「渡したのに変わらない」ときに、戻り値で受け取り直す形に直せる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　メソッド・引数・戻り値・値渡しと参照を、自動販売機で</li><li>② 写して動かす　<code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑥の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>Rank</code> と <code>PriceList</code> を作る</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>メソッド</td><td>名前を付けた処理のまとまり。名前で呼び出すと、中の処理が実行されます。<code class="ex">static int calcTax(int price) { ... }</code></td></tr><tr><td>引数</td><td>メソッドを呼ぶときに渡す値。メソッドの側では、丸括弧の中に書いた変数（型と名前）で受け取ります。<code class="ex">calcTax(1000)   // 1000 が引数</code></td></tr><tr><td>戻り値</td><td>メソッドが処理の結果として、呼び出した側へ返す値。<code>return</code> で返し、返す値の型をメソッド名の前に書きます。何も返さないときは <code>void</code> です。<code class="ex">int total = calcTax(1000);</code></td></tr><tr><td>値渡しと参照</td><td>Java は、引数をいつも値のコピーで渡します（<strong>値渡し</strong>）。<code>int</code> などは値そのものが、配列や <code>String</code> などの参照型は、中身が置いてある場所（<strong>参照</strong>）がコピーされます。<code class="ex">addStock(stock);       // int の値 30 のコピーが渡る
+addStockAll(stocks);   // 配列の場所のコピーが渡る</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>メソッドは「自動販売機」。入れるのが引数、出てくるのが戻り値</h3><p class="lead">お金を入れると、飲み物が出てきます。中の仕組みは知らなくても使えます。</p><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 235" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1d4ed8" font-size="16" font-weight="bold" text-anchor="middle" x="100" y="50">引数</text>
+<text fill="#1d4ed8" font-size="13" text-anchor="middle" x="100" y="72">入れるもの</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="22" x="76" xml:space="preserve" y="128">1000</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="150" x2="240" y1="120" y2="120"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="195" y="110">calcTax(1000)</text>
+<rect fill="#fff" height="116" rx="6" stroke="#334155" stroke-width="1.5" width="230" x="245" y="62"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="230" x="245" y="62"></rect>
+<rect fill="#e0f2fe" height="8" width="228" x="246" y="81"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="80">calcTax（自動販売機）</text>
+<text fill="#1f2933" font-size="14" x="255" y="108">中の仕組みは</text>
+<text fill="#1f2933" font-size="14" x="255" y="128">知らなくても使える</text>
+<text fill="#475569" font-family="Consolas,monospace" font-size="14" x="255" xml:space="preserve" y="162">price * 110 / 100</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="480" x2="570" y1="120" y2="120"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="525" y="110">return</text>
+<text fill="#b45309" font-size="16" font-weight="bold" text-anchor="middle" x="630" y="50">戻り値</text>
+<text fill="#b45309" font-size="13" text-anchor="middle" x="630" y="72">出てくるもの</text>
+<text fill="#b45309" font-family="Consolas,monospace" font-size="22" x="606" xml:space="preserve" y="128">1100</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="16" x="110" xml:space="preserve" y="212">int total = calcTax(1000);</text>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="385" y="212">→ total に 1100 が入る</text>
+</svg><p class="figcap">メソッドは自動販売機。引数は「入れるもの」、戻り値は「出てくるもの」</p><p>自動販売機にお金を入れると、飲み物が出てきます。<strong>入れるものが引数、出てくるものが戻り値</strong>です。</p>
+<p><code>calcTax(1000)</code> と書けば、<code>1000</code> が入り、税込みの <code>1100</code> が出てきます。使う側は、中でどう計算しているかを知らなくても使えます。<strong>処理をメソッドに分ける一番の理由はこれです。</strong></p>
+<p>出てきた飲み物は、受け取らなければ取り出し口に残ったままです。戻り値も同じで、<code>int total = calcTax(1000);</code> のように<strong>受け取って初めて使えます。</strong></p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 226" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar6" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="208" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="182" y="30">数字を渡す　数字を書き写した紙</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="120" x="30" y="44"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="120" x="30" y="44"></rect>
+<rect fill="#e0f2fe" height="8" width="118" x="31" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="90" y="62">手元（main）</text>
+<text fill="#1f2933" font-size="14" x="40" y="90">stock : 30</text>
+<line marker-end="url(#ar6)" stroke="#334155" stroke-width="1.8" x1="150" x2="208" y1="74" y2="74"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="179" y="66">写す</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="212" y="44"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="212" y="44"></rect>
+<rect fill="#fff3e6" height="8" width="122" x="213" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="274" y="62">書き写した紙</text>
+<text fill="#1f2933" font-size="14" x="222" y="90">30 → 40</text>
+<text fill="#475569" font-size="13" text-anchor="middle" x="182" y="146">販売機が紙に書き足しても</text>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="middle" x="182" y="170">手元は 30 のまま</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="120" xml:space="preserve" y="200">addStock(stock);</text>
+<rect fill="#f8fafc" height="208" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="368" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="538" y="30">配列を渡す　住所（参照）を書き写した紙</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="120" x="386" y="44"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="120" x="386" y="44"></rect>
+<rect fill="#e0f2fe" height="8" width="118" x="387" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="446" y="62">手元（main）</text>
+<text fill="#1f2933" font-size="14" x="396" y="90">棚の住所</text>
+<line marker-end="url(#ar6)" stroke="#334155" stroke-width="1.8" x1="506" x2="564" y1="74" y2="74"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="535" y="66">写す</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="568" y="44"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="568" y="44"></rect>
+<rect fill="#fff3e6" height="8" width="122" x="569" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="630" y="62">書き写した紙</text>
+<text fill="#1f2933" font-size="14" x="578" y="90">同じ棚の住所</text>
+<line marker-end="url(#ar6)" stroke="#334155" stroke-width="1.8" x1="446" x2="500" y1="104" y2="124"></line>
+<line marker-end="url(#ar6)" stroke="#334155" stroke-width="1.8" x1="630" x2="580" y1="104" y2="124"></line>
+<rect fill="#fef2f2" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="144" x="466" y="126"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="538" y="147">棚（配列）40 / 22 / 15</text>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="538" y="178">販売機がさわると、手元から見ても変わる</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="461" xml:space="preserve" y="204">addStockAll(stocks);</text>
+</svg><p class="figcap">どちらも書き写した紙が渡る（値渡し）。数字なら数字が、配列なら棚の住所（参照）が書き写される</p><p>販売機に渡すものは、いつも<strong>書き写したもの</strong>です。これを<strong>値渡し</strong>と言います。数字を渡すと、その数字を書き写した紙が渡るので、販売機が紙に書き足しても、手元の数字は変わりません。</p>
+<p>配列を渡すときも書き写した紙が渡りますが、書いてあるのは棚の置き場所（住所）です。この住所に当たるのが<strong>参照</strong>です。販売機はその住所の棚を直接さわれるので、棚の中身を変えると、手元から見ても変わっています。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>お金を入れる</td><td>引数　<code>calcTax(1000)</code> の <code>1000</code></td></tr><tr><td>飲み物が出てくる</td><td>戻り値　<code>return</code> で返す <code>1100</code></td></tr><tr><td>販売機の名前</td><td>メソッド名　<code>calcTax</code></td></tr><tr><td>販売機の中の仕組み</td><td>メソッドの <code>{ }</code> の中身</td></tr><tr><td>数字を書き写した紙を渡す</td><td>値渡し。<code>int</code> を渡すと、値のコピーが渡る</td></tr><tr><td>棚の住所を書き写した紙を渡す</td><td>これも値渡し。配列を渡すと、参照（住所）のコピーが渡り、同じ配列を指す</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>メソッド</td><td>何度も使う処理を1か所にまとめておけば、書くのも直すのも1回で済むからです。</td></tr><tr><td>引数</td><td>同じメソッドを、渡す値だけ変えて使い回すためです。</td></tr><tr><td>戻り値</td><td>メソッドで出した結果を、呼んだ側が表示や次の計算に使えるようにするためです。</td></tr><tr><td>値渡しと参照</td><td>渡した先で書き換えたとき、元が変わるかどうかが、これで決まるからです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>メソッド</td><td>税込み金額の計算、区切り線の表示のように、プログラムのあちこちで使う処理。</td></tr><tr><td>引数</td><td>商品ごとに金額だけを変えて、同じ税込み計算をするとき。</td></tr><tr><td>戻り値</td><td>税込み金額を計算して受け取り、合計に足すとき。</td></tr><tr><td>値渡しと参照</td><td>メソッドに渡した値や配列を、メソッドの中で書き換えるとき。</td></tr></table>
+<p>今日の山場は、引数として<strong>何が</strong>渡るかです。<code>int</code> を渡したときと配列を渡したときで、結果が分かれます。まず写して確かめます。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は1つのプロジェクト <code>lesson03</code> に、クラス <code>Main</code> を1つ作ります。メソッドはすべて <code>Main</code> の中に書きます。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson03</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson03</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Main</code> と入力する。パッケージ欄に <code>lesson03</code> と入っていることを確かめて［完了］（空なら <code>lesson03</code> と入力する）</td></tr><tr><td>⑥</td><td>Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑦</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の1つのファイルだけです。</p>
+<p>1行目は <code>package lesson03;</code> です。手順⑤で作ったパッケージ <code>lesson03</code> の中にある、という意味で、Eclipse がクラスを作ったときに書く1行と同じです。消すと「Unresolved compilation problem」で動かなくなります。</p>
+<p>下が、ファイルの中身の全部です。行の右にある ①〜⑥ は、③解説の番号です。同じ番号が何か所かにあるものは、呼ぶ側と作る側の組です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 170" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson03</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson03（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="146"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="146" y2="146"></line>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="130"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="151">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="151">main と、自分で作ったメソッド4つ。全部この中に書く</text>
+</svg><p class="figcap">プロジェクトの中身。最初はこの1つのファイルだけです</p><p class="fname">Main.java</p>
+<pre class="code" id="c1">package lesson03;
+
+public class Main {
+    public static void main(String[] args) {
+        printLine();                                  <span class="cm">// <span class="cn">①</span> 呼び出し</span>
+        int total = calcTax(1000);                    <span class="cm">// <span class="cn">④</span> 受け取る</span>
+        System.out.println("税込み : " + total + "円");
+
+        int stock = 30;
+        addStock(stock);                              <span class="cm">// <span class="cn">⑤</span> int を渡す</span>
+        System.out.println("stock : " + stock + "個");
+
+        int[] stocks = {30, 12, 5};
+        addStockAll(stocks);                          <span class="cm">// <span class="cn">⑥</span> 配列を渡す</span>
+        System.out.println("stocks[0] : " + stocks[0] + "個");
+        printLine();                                  <span class="cm">// <span class="cn">①</span> 呼び出し</span>
+    }
+
+    static void printLine() {                         <span class="cm">// <span class="cn">①</span> メソッド</span>
+        System.out.println("--------------------");
+    }
+
+    static int calcTax(int price) {                   <span class="cm">// <span class="cn">②</span> 引数と戻り値の型</span>
+        return price * 110 / 100;                     <span class="cm">// <span class="cn">③</span> return</span>
+    }
+
+    static void addStock(int s) {                     <span class="cm">// <span class="cn">⑤</span> int を受け取る</span>
+        s += 10;
+    }
+
+    static void addStockAll(int[] s) {                <span class="cm">// <span class="cn">⑥</span> 配列を受け取る</span>
+        for (int i = 0; i &lt; s.length; i++) {
+            s[i] += 10;
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">--------------------
+税込み : 1100円
+stock : 30個
+stocks[0] : 40個
+--------------------</div>
+<p><code>stock</code> は <code>30</code> のまま、<code>stocks[0]</code> は <code>40</code> に変わりました。どちらも「10 足す」メソッドに渡したのに、結果が分かれています。<strong>これが今日の山場です。</strong>理由は③解説の3と4で説明します。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　メソッドを作って呼ぶ（①）</h2>
+<pre class="code" id="c2">public static void main(String[] args) {
+    printLine();                                  <span class="cm">// <span class="cn">①</span> 呼び出し</span>
+    <span class="cm">// （中略）</span>
+    printLine();                                  <span class="cm">// <span class="cn">①</span> 呼び出し</span>
+}
+
+static void printLine() {                         <span class="cm">// <span class="cn">①</span> メソッド</span>
+    System.out.println("--------------------");
+}</pre>
+<p><code>static void printLine() { ... }</code> が<strong>メソッド</strong>を作る所、<code>printLine();</code> が呼び出す所です。<code>printLine();</code> の行に来ると下の <code>{ }</code> の中へ飛び、終わると元の行の次へ戻ります。<code>void</code> は「何も返さない」という意味です。</p>
+<p>このコードでは、同じ区切り線を <code>main</code> の最初と最後の2か所で出しています。<code>printLine</code> にまとめてあるので、線の形を変えたいときは <code>printLine</code> の中の1行を直せば、2か所とも変わります。</p>
+<p><strong>よくある間違い：static を付け忘れる。</strong><code>printLine</code> から <code>static</code> を消すと、呼び出す行がエラーになります。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c3">package lesson03;
+
+public class Main {
+    public static void main(String[] args) {
+        printLine();                                  <span class="cm">// エラー</span>
+        System.out.println("商品在庫管理");
+        printLine();                                  <span class="cm">// エラー</span>
+    }
+
+    void printLine() {                                <span class="cm">// static が無い</span>
+        System.out.println("--------------------");
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">型 Main の非 static メソッド printLine() を static 参照することはできません
+（Cannot make a static reference to the non-static method printLine() from the type Main）</div>
+<p><code>main</code> は、プログラムを始めるときに JVM がインスタンスを作らずに呼ぶので、必ず <code>static</code> を付けます。<code>static</code> の付いたメソッドから名前だけで呼べるのは、<code>static</code> の付いたメソッドだけです。そのため <code>printLine</code> にも <code>static</code> を付けます。今日は「<code>main</code> から呼ぶメソッドには <code>static</code> を付ける」と覚えてください。意味は第5回で扱います。</p>
+<h2>2　引数を渡し、戻り値を受け取る（②③④）</h2>
+<pre class="code" id="c4">static int calcTax(int price) {                   <span class="cm">// <span class="cn">②</span> 引数と戻り値の型</span>
+    return price * 110 / 100;                     <span class="cm">// <span class="cn">③</span> return</span>
+}</pre>
+<p><code>static int calcTax(int price)</code> の、丸括弧の中の <code>int price</code> が<strong>引数</strong>（受け取る値）、名前の前の <code>int</code> が<strong>戻り値の型</strong>（返す値の型）です。呼ぶ側に書く <code>calcTax(1000)</code> の <code>1000</code> も、引数と呼びます。<code>price</code> は呼ぶたびに渡された値になるので、計算の式は1つのままで、どの金額にも使えます。</p>
+<p><code>return</code> は、値を返してメソッドを終える命令です。<code>1.1</code> を掛けると小数（<code>double</code>）になり <code>int</code> に入らないので、<code>110 / 100</code> で 1.1 倍しています。</p>
+<pre class="code" id="c5">int total = calcTax(1000);                    <span class="cm">// <span class="cn">④</span> 受け取る</span>
+System.out.println("税込み : " + total + "円");</pre>
+<p><code>int total = calcTax(1000);</code> は、返ってきた <code>1100</code> を <code>total</code> に入れます。戻り値は受け取らないと、その場で捨てられます。受け取らずに式の中でそのまま使うこともできます。<code>calcTax(150) + calcTax(220)</code> は <code>165 + 242</code> で <code>407</code> です。</p>
+<p><strong>よくある間違い：表示するだけのメソッドから、値を受け取ろうとする。</strong></p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c6">package lesson03;
+
+public class Main {
+    public static void main(String[] args) {
+        int total = calcTax(1000);                    <span class="cm">// エラー</span>
+        System.out.println("税込み : " + total + "円");
+    }
+
+    static void calcTax(int price) {                  <span class="cm">// 表示して終わり</span>
+        System.out.println(price * 110 / 100);
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">型の不一致: void から int には変換できません
+（Type mismatch: cannot convert from void to int）</div>
+<svg class="fig" role="img" viewbox="0 0 720 215" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="198" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="182" y="30">void　画面に出して終わり</text>
+<rect fill="#fff" height="40" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="34" y="52"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="89" y="77">main</text>
+<rect fill="#fef2f2" height="40" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="218" y="52"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="273" y="77">calcTax</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="144" x2="216" y1="64" y2="64"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="180" y="58">1000</text>
+<line marker-end="url(#ar3)" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.8" x1="216" x2="146" y1="84" y2="84"></line>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="middle" x="181" y="110">何も返らない</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="273" x2="273" y1="92" y2="132"></line>
+<rect fill="#0d1117" height="34" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="218" y="134"></rect>
+<text fill="#7ee787" font-family="Consolas,monospace" font-size="15" x="254" xml:space="preserve" y="157">1100</text>
+<text fill="#475569" font-size="13" text-anchor="middle" x="273" y="190">画面に出るだけ</text>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="89" y="150">total に</text>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="89" y="170">入れるものが無い</text>
+<rect fill="#f8fafc" height="198" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="368" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="538" y="30">int と return　手渡す</text>
+<rect fill="#fff" height="40" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="390" y="52"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="445" y="77">main</text>
+<rect fill="#f0fdf4" height="40" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="574" y="52"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="629" y="77">calcTax</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="500" x2="572" y1="64" y2="64"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="536" y="58">1000</text>
+<line marker-end="url(#ar3)" stroke="#15803d" stroke-width="1.8" x1="572" x2="502" y1="84" y2="84"></line>
+<text fill="#15803d" font-size="13" font-weight="bold" text-anchor="middle" x="537" y="110">1100 を返す</text>
+<text fill="#15803d" font-size="13" text-anchor="middle" x="445" y="150">total に</text>
+<text fill="#15803d" font-size="13" text-anchor="middle" x="445" y="170">1100 が入る</text>
+<text fill="#475569" font-size="13" text-anchor="middle" x="629" y="150">表示するかどうかは</text>
+<text fill="#475569" font-size="13" text-anchor="middle" x="629" y="170">受け取った側が決める</text>
+</svg><p class="figcap">void は「画面に出して終わり」、戻り値は「手渡し」</p><p><code>void</code> のメソッドは何も返さないので、<code>total</code> に入れるものがありません。計算するメソッドは、<code>calcTax</code> のように <code>int</code> と <code>return</code> で値を返し、表示は呼んだ側でします。</p>
+<div class="trap">戻り値の型を <code>int</code> にしたのに <code>return</code> を書き忘れると、「このメソッドは型 int の結果を戻す必要があります」（This method must return a result of type int）というエラーになります。</div>
+<h2>3　int を渡す（⑤）</h2>
+<pre class="code" id="c7">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    int stock = 30;
+    addStock(stock);                              <span class="cm">// <span class="cn">⑤</span> int を渡す</span>
+    System.out.println("stock : " + stock + "個");
+    <span class="cm">// （中略）</span>
+}
+
+static void addStock(int s) {                     <span class="cm">// <span class="cn">⑤</span> int を受け取る</span>
+    s += 10;
+}</pre>
+<p><code>addStock</code> は在庫を 10 個増やすつもりのメソッドですが、<code>stock</code> は <code>30</code> のままでした。<strong>エラーは出ません。</strong></p>
+<svg class="fig" role="img" viewbox="0 0 720 225" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="206" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="290" x="20" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="165" y="30">main</text>
+<rect fill="#fff" height="64" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="65" y="50"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="65" y="50"></rect>
+<rect fill="#e0f2fe" height="8" width="198" x="66" y="69"></rect>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="middle" x="165" y="68">stock</text>
+<text fill="#1f2933" font-size="15" x="75" y="96">30</text>
+<text fill="#1d4ed8" font-size="15" font-weight="bold" text-anchor="middle" x="165" y="150">30 のまま</text>
+<text fill="#475569" font-size="13" text-anchor="middle" x="165" y="174">s を変えても、ここには届かない</text>
+<rect fill="#f8fafc" height="206" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="290" x="410" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="555" y="30">addStock</text>
+<rect fill="#fff" height="64" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="455" y="50"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="455" y="50"></rect>
+<rect fill="#fff3e6" height="8" width="198" x="456" y="69"></rect>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="middle" x="555" y="68">s</text>
+<text fill="#1f2933" font-size="15" x="465" y="96">30 → 40</text>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="555" y="150">s += 10 で変わるのは s だけ</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="middle" x="555" y="174">メソッドが終わると s は消える</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="265" x2="453" y1="88" y2="88"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="359" y="80">値をコピー</text>
+</svg><p class="figcap">int を渡すと、値のコピーが渡る（値渡し）</p><p>メソッドに <code>int</code> を渡すと、<strong>値のコピー</strong>が渡ります。<code>s</code> は <code>stock</code> の値 <code>30</code> をコピーした別の変数で、<code>s += 10</code> で変わるのは <code>s</code> だけです。<code>s</code> はメソッドが終わると消えます。変数が使えるこの範囲を<strong>スコープ</strong>と言います。引数の名前を <code>s</code> から <code>stock</code> に変えても同じです。<strong>名前が同じでも、メソッドが違えば別の変数です。</strong></p>
+<div class="words"><b>ここで出た言葉</b><span><b>値渡し</b>　変数の中身をコピーして渡すこと。Java は、引数をいつもこの形で渡します</span><span><b>スコープ</b>　変数が使える範囲。宣言した <code>{ }</code> の中だけです。引数はそのメソッドの中だけで使えます</span></div>
+<p>増やしたいときは、変えた結果を<strong>戻り値で返し、呼んだ側で受け取り直します。</strong></p>
+<p class="fname">Main.java（戻り値で受け取り直す形）</p>
+<pre class="code" id="c8">package lesson03;
+
+public class Main {
+    public static void main(String[] args) {
+        int stock = 30;
+        stock = addStock(stock);                      <span class="cm">// 返ってきた値で入れ直す</span>
+        System.out.println("stock : " + stock + "個");
+    }
+
+    static int addStock(int s) {                      <span class="cm">// int を返す</span>
+        return s + 10;
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">stock : 40個</div>
+<h2>4　配列を渡す（⑥）</h2>
+<pre class="code" id="c9">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    int[] stocks = {30, 12, 5};
+    addStockAll(stocks);                          <span class="cm">// <span class="cn">⑥</span> 配列を渡す</span>
+    System.out.println("stocks[0] : " + stocks[0] + "個");
+    <span class="cm">// （中略）</span>
+}
+
+static void addStockAll(int[] s) {                <span class="cm">// <span class="cn">⑥</span> 配列を受け取る</span>
+    for (int i = 0; i &lt; s.length; i++) {
+        s[i] += 10;
+    }
+}</pre>
+<p><code>addStockAll</code> も同じ「10 足す」ですが、こちらは <code>stocks[0]</code> が <code>40</code> に変わりました。</p>
+<svg class="fig" role="img" viewbox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="64" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="30" y="24"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="30" y="24"></rect>
+<rect fill="#e0f2fe" height="8" width="238" x="31" y="43"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="150" y="42">stocks（main の変数）</text>
+<text fill="#1f2933" font-size="14" x="40" y="70">中身は、配列の住所</text>
+<rect fill="#fff" height="64" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="450" y="24"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="450" y="24"></rect>
+<rect fill="#fff3e6" height="8" width="238" x="451" y="43"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="570" y="42">s（addStockAll の変数）</text>
+<text fill="#1f2933" font-size="14" x="460" y="70">中身は、同じ住所のコピー</text>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="270" x2="448" y1="60" y2="60"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="359" y="52">住所をコピー</text>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="150" x2="262" y1="88" y2="158"></line>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="570" x2="458" y1="88" y2="158"></line>
+<rect fill="#fef2f2" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="73" x="250" y="160"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="16" x="276" xml:space="preserve" y="188">40</text>
+<rect fill="#fef2f2" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="73" x="323" y="160"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="16" x="349" xml:space="preserve" y="188">22</text>
+<rect fill="#fef2f2" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="73" x="396" y="160"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="16" x="422" xml:space="preserve" y="188">15</text>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="360" y="150">配列は1つだけ</text>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="360" y="232">s[i] += 10 で書き換えると、main から見ても変わっている</text>
+</svg><p class="figcap">配列を渡すと、住所のコピーが渡る。行き先は同じ配列</p><p>配列の変数が持っているのは、中身ではなく、中身が置いてある場所（<strong>住所</strong>）です。メソッドに渡るのは住所のコピーなので、<code>s</code> と <code>stocks</code> は同じ1つの配列を指します。そこへ <code>s[i] += 10</code> と書き込めば、<code>main</code> から見ても変わっています。</p>
+<table><tr><th>渡すもの</th><th>コピーされるもの</th><th>メソッドの中で書き換えると</th></tr><tr><td><code>int</code> などの基本データ型</td><td>値そのもの</td><td>元は<strong>変わらない</strong>（<code>addStock</code>）</td></tr><tr><td>配列などの参照型</td><td>住所</td><td>中身（<code>s[i]</code>）を書き換えると、元も<strong>変わる</strong>（<code>addStockAll</code>）</td></tr></table>
+<div class="note"><strong>よくある間違い：</strong>表示するだけのつもりのメソッドで配列に書き込むと、元の値まで変わってしまいます。<code>addStockAll</code> は在庫を増やしたいので、元が変わってよいのです。変えてよいかを決めてから書きます。</div>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①の <code>getRank</code> が書けたら、今日の目的は達成です。</strong></p>
+<p>どちらも、上の手順の④⑤で新しいクラスを作ってから書きます。</p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>Rank</code> クラスに、点数（<code>int</code>）を受け取り、80以上なら <code>"A"</code>、60以上なら <code>"B"</code>、それ未満なら <code>"C"</code> を<strong>返す</strong>メソッド <code>getRank</code> を作る。</li><li>②　<code>PriceList</code> クラスに、価格の配列を受け取って合計を<strong>返す</strong> <code>sum</code> と、全部の価格から指定の金額を引く <code>discountAll</code>（戻り値なし）を作る。<code>discountAll</code> のあとで、<code>main</code> の配列が変わっていることを確かめる。</li></ul>
+<h2>骨組み</h2>
+<p>2つのファイルの全体です。<code>// ここに…</code> の所を書きます。<code>main</code> はこのまま写します。</p>
+<p>貼った直後は赤い印が出ます（<code>Rank</code> は <code>getRank</code> が未定義、<code>PriceList</code> は <code>return</code> が無い）。書き足すと消えます。</p>
+<p class="fname">Rank.java</p>
+<pre class="code" id="c10">package lesson03;
+
+public class Rank {
+    public static void main(String[] args) {
+        System.out.println("85点 : " + getRank(85));
+        System.out.println("70点 : " + getRank(70));
+        System.out.println("40点 : " + getRank(40));
+    }
+
+    <span class="cm">// ここに getRank を書く（80以上 "A"、60以上 "B"、それ未満 "C" を返す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c10">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">PriceList.java</p>
+<pre class="code" id="c11">package lesson03;
+
+public class PriceList {
+    public static void main(String[] args) {
+        int[] prices = {150, 220, 100};
+
+        System.out.println("合計 : " + sum(prices) + "円");
+        discountAll(prices, 20);
+        System.out.println("値下げ後の合計 : " + sum(prices) + "円");
+        System.out.println("1つ目 : " + prices[0] + "円");
+    }
+
+    static int sum(int[] prices) {
+        <span class="cm">// ここに、全部を足した合計を返す処理を書く</span>
+    }
+
+    static void discountAll(int[] prices, int yen) {
+        <span class="cm">// ここに、全部の価格から yen を引く処理を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c11">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">85点 : A
+70点 : B
+40点 : C
+
+合計 : 470円
+値下げ後の合計 : 410円
+1つ目 : 130円</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　課題①は <code>static String getRank(int score)</code> と書き始めます。80以上を先に調べます。</li><li>②　課題②の <code>sum</code> は、<code>int total = 0;</code> に拡張for文で足していき、<code>return total;</code> で返します。</li><li>③　課題②の <code>discountAll</code> は <code>void</code> です。中身を書き換えるので、添字 <code>i</code> の for 文で <code>prices[i] -= yen;</code> とします。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第3回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　Rank</summary><div class="sol">
+<p class="fname">Rank.java</p>
+<pre class="code" id="c12">package lesson03;
+
+public class Rank {
+    public static void main(String[] args) {
+        System.out.println("85点 : " + getRank(85));
+        System.out.println("70点 : " + getRank(70));
+        System.out.println("40点 : " + getRank(40));
+    }
+
+    <span class="cm">// ここに getRank を書く（80以上 "A"、60以上 "B"、それ未満 "C" を返す）</span>
+    static String getRank(int score) {
+        if (score &gt;= 80) {
+            return "A";
+        } else if (score &gt;= 60) {
+            return "B";
+        } else {
+            return "C";
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">85点 : A
+70点 : B
+40点 : C</div>
+<div class="note"><code>return</code> はそこでメソッドを終わらせます。85 のときは <code>return "A";</code> で終わるので、下の条件は調べられません。60以上を先に書くと、85 も <code>B</code> になります。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　PriceList</summary><div class="sol">
+<p class="fname">PriceList.java</p>
+<pre class="code" id="c13">package lesson03;
+
+public class PriceList {
+    public static void main(String[] args) {
+        int[] prices = {150, 220, 100};
+
+        System.out.println("合計 : " + sum(prices) + "円");
+        discountAll(prices, 20);
+        System.out.println("値下げ後の合計 : " + sum(prices) + "円");
+        System.out.println("1つ目 : " + prices[0] + "円");
+    }
+
+    static int sum(int[] prices) {
+        <span class="cm">// ここに、全部を足した合計を返す処理を書く</span>
+        int total = 0;
+        for (int p : prices) {
+            total += p;
+        }
+        return total;
+    }
+
+    static void discountAll(int[] prices, int yen) {
+        <span class="cm">// ここに、全部の価格から yen を引く処理を書く</span>
+        for (int i = 0; i &lt; prices.length; i++) {
+            prices[i] -= yen;
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">合計 : 470円
+値下げ後の合計 : 410円
+1つ目 : 130円</div>
+<div class="note"><code>sum</code> は配列を読むだけなので、元は変わりません。<code>discountAll</code> は中身を書き換えるので、<code>main</code> の <code>prices</code> も変わります。③解説の4の表のとおりです。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>引数と戻り値を、自動販売機以外の自分のたとえで説明できる</li><li><code>int</code> を渡したときと配列を渡したときで、元が変わるかどうかを、理由と一緒に言える</li><li>「渡したのに変わらない」コードを、戻り値で受け取り直す形に直せる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、クラスとインスタンス、コンストラクタです。</strong>今日は価格や在庫を、別々の変数や配列で扱いました。次回は、それらを<strong>ひとまとめにした設計図 <code>Product</code></strong> を作ります。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>インスタンス</td><td>いんすたんす</td><td>クラスから作った実体。第4回で扱います</td></tr><tr><td>メソッド</td><td>めそっど</td><td>ひとまとまりの処理に名前を付けたもの。<code>名前()</code> と書いて呼び出すと、中身が動きます</td></tr><tr><td>呼び出す</td><td>よびだす</td><td><code>printLine();</code> のように書いて、そのメソッドを動かすこと。終わると呼んだ行の次へ戻ります</td></tr><tr><td>引数</td><td>ひきすう</td><td>メソッドに渡す値。呼ぶ側に書く値（<code>calcTax(1000)</code> の <code>1000</code>）と、メソッドの丸括弧で受け取る変数（<code>calcTax(int price)</code> の <code>price</code>）を、どちらも引数と呼びます</td></tr><tr><td>戻り値</td><td>もどりち</td><td>メソッドが返す値。<code>return</code> で返し、呼んだ側で受け取ります</td></tr><tr><td>戻り値の型</td><td>もどりちのかた</td><td>メソッド名の前に書く、返す値の型。<code>static int calcTax</code> の <code>int</code></td></tr><tr><td>return</td><td>りたーん</td><td>値を返して、そのメソッドを終わらせる命令</td></tr><tr><td>void</td><td>ぼいど</td><td>「何も返さない」という意味。戻り値が無いメソッドに書きます</td></tr><tr><td>static</td><td>すたてぃっく</td><td><code>main</code> から直接呼ぶメソッドに付けるもの。意味は第5回で扱います</td></tr><tr><td>スコープ</td><td>すこーぷ</td><td>変数が使える範囲。宣言した <code>{ }</code> の中だけです</td></tr><tr><td>ローカル変数</td><td>ろーかるへんすう</td><td>メソッドの中で宣言した変数と引数。そのメソッドが終わると消えます</td></tr><tr><td>値渡し</td><td>あたいわたし</td><td>変数の中身をコピーして渡すこと。Java は引数をいつもこの形で渡します。配列を渡すときも、コピーされるのは住所という値です</td></tr><tr><td>基本データ型</td><td>きほんでーたがた</td><td>変数が値そのものを持つ型。<code>int</code> <code>double</code> <code>boolean</code> <code>char</code> など</td></tr><tr><td>参照型</td><td>さんしょうがた</td><td>変数が中身の置き場所（住所）を持つ型。配列、<code>String</code>、クラス（第4回）</td></tr><tr><td>length</td><td>れんぐす</td><td>配列の要素の数。<code>s.length</code></td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 3 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
