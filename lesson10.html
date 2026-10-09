@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson09.html">前の講義</a><a href="lesson11.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson09.html">前の講義</a><a href="lesson11.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 10 回 ／ 全 18 回</span><h1>ストリームと検査例外、ファイル入出力と CSV</h1><p>第12章 と 第13章　検査例外と throws ／ テキストファイルを読む ／ ファイルに書き込む ／ CSV を Product に変換する</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">ストリーム</span>　<span class="term">CSV</span>　<span class="term">検査例外と throws</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>文字コードを指定して、ファイルを読むストリームと書くストリームを開ける</li><li>CSV の1行を <code>split</code> で分けて、<code>Product</code> にできる</li><li><code>try ( ... )</code> で開いて、ストリームを必ず閉じられる</li><li>ファイルの読み書きで起きる検査例外を、<code>throws</code> で呼んだ側に任せられる</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/file-io.html">ファイル入出力とthrowsを詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>ストリーム</td><td>データを先頭から順に読み書きするための、入出力の仕組み。読み込み用と書き込み用は別で、使い終わったら閉じ（<code>close</code>）ます。<code class="ex">try (BufferedReader br = new BufferedReader(
