@@ -1,0 +1,28 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>インタフェースと多態性 | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>インタフェースと多態性</strong></nav><span class="eyebrow">第7回の補足</span><h1>インタフェースと多態性</h1><p class="subtitle">違うクラスなのに、なぜ同じメソッドで呼べるのか。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong>インタフェースは「このメソッドを使える」という約束。<code>implements</code> したクラスはその約束を実装する。変数の型をインタフェースにすれば、種類が違っても同じ処理で扱える。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>まず実際にどう動くかを見て、その理由を下で整理する。</p><div class="codehead"><span>Main.java（インタフェース型で2種類を扱う）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>public class Main {
+    interface Speaker {
+        void speak();
+    }
+
+    static class Dog implements Speaker {
+        public void speak() { System.out.println(&quot;ワン&quot;); }
+    }
+    static class Cat implements Speaker {
+        public void speak() { System.out.println(&quot;ニャー&quot;); }
+    }
+
+    public static void main(String[] args) {
+        Speaker[] animals = {new Dog(), new Cat()};
+        for (Speaker a : animals) {
+            a.speak();
+        }
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果</div><pre class="output">ワン
+ニャー</pre><h3>1行ずつ考えると</h3><ol class="steps"><li><code>Speaker</code> は <code>speak()</code> を使えるという約束だけ定める。</li><li>DogとCatはそれぞれ<code>implements Speaker</code>で実装する。</li><li><code>Speaker[]</code>に両方を入れ、同じ<code>a.speak()</code>で実物に応じた処理が動く。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong>interfaceで宣言した通常の抽象メソッドはpublic。実装するときに<code>public</code>を省くと、アクセス範囲が狭くなりコンパイルエラーになる。<code>extends</code>によるクラス継承と<code>implements</code>は別。</div><h3>抽象クラスとの違い</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>interface Speaker {
+    void speak(); // 操作の約束
+}
+
+abstract class Animal {
+    String name;  // 共通の状態
+    abstract void speak();
+    void rest() { System.out.println(&quot;休む&quot;); }
+}</code></pre><p>抽象クラスは共通フィールドや実装も持てる。クラスの継承は基本1つ、インタフェースは複数実装できる。最初は「役割の約束」と「共通の土台」で使い分ける。</p></section><section class="card"><h2>30秒で理解チェック</h2><p><code>Speaker s = new Dog(); s.speak();</code> でDogの処理が動くのはなぜ？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>変数の型はSpeakerでも、実体はDogだから。</strong> これが多態性（ポリモーフィズム）の基本。</p></details></section><div class="links"><a href="../lesson07.html">← 第7回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義を補助するための解説です。比較用のコードは必要部分のみの抜粋です。実際のJava実行はEclipseなどで行ってください。</footer></main></body></html>
