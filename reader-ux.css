@@ -1,0 +1,128 @@
+
+/* 全講義共通: 元のオレンジ配色・授業内容を維持した操作性改善 */
+html { scroll-behavior:smooth; scroll-padding-top:84px; }
+html, body { max-width:100%; }
+body { overflow-x:clip; }
+.container, .card, .sol, .hero, .hero .card { min-width:0; }
+.card p, .sol p, .note, .trap, .calm { overflow-wrap:anywhere; }
+.course-nav {
+  position:sticky; top:0; z-index:40;
+  display:flex; flex-wrap:nowrap; align-items:center; gap:8px;
+  padding:9px 12px; margin-bottom:18px;
+  background:rgba(255,255,255,.97);
+  border:1px solid #d6dee8; border-radius:12px;
+  box-shadow:0 5px 15px rgba(15,23,42,.09);
+  overflow-x:auto; overscroll-behavior-x:contain;
+  scrollbar-width:thin; scrollbar-color:#cbd5e1 transparent;
+}
+.course-nav > a { flex:0 0 auto; white-space:nowrap; }
+.course-nav .jump-select {
+  flex:0 0 auto; min-width:145px; max-width:170px;
+  font-size:13px; border:1px solid #e0a776; color:#7c3412;
+  background:#fffaf4; border-radius:8px; padding:7px 10px;
+}
+.course-nav #bigbtn {
+  position:static !important; flex:0 0 auto; margin-left:auto;
+  box-shadow:none; white-space:nowrap;
+  font-size:12px; padding:8px 10px;
+  background:#334155; color:#fff;
+}
+.lesson-toc {
+  margin:0 0 18px; padding:14px 17px;
+  background:#fff; border:1px solid #dae2eb;
+  border-left:5px solid #d46b00; border-radius:11px;
+  box-shadow:0 1px 4px rgba(15,23,42,.06);
+}
+.lesson-toc > strong { display:block; color:#85410a; margin-bottom:9px; font-size:14px; }
+.lesson-toc-links { display:flex; flex-wrap:wrap; gap:7px; }
+.lesson-toc a {
+  display:inline-block; padding:5px 10px;
+  border-radius:7px; color:#8a3e08; background:#fff5e7;
+  border:1px solid #f3ceaa; text-decoration:none; font-size:13px; font-weight:650;
+}
+.lesson-toc a:hover { background:#ffe8ca; }
+[id^="lesson-part-"] { scroll-margin-top:94px; }
+.lesson-bottom-nav { display:flex; flex-wrap:wrap; justify-content:space-between; gap:10px; margin:23px 0; }
+.lesson-bottom-nav a {
+  flex:1 1 180px; padding:12px 16px;
+  border:1px solid #e6bf9e; background:#fff7eb; color:#8a3e08;
+  text-decoration:none; font-weight:750; border-radius:10px; text-align:center;
+}
+.lesson-bottom-nav a:hover { background:#ffe9cb; }
+/* コピーと折り返しを同じ位置・デザインで提供する */
+.code-toolbar {
+  display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap;
+  gap:7px; padding:6px 9px; margin:13px 0 0;
+  border:1px solid #3c475e; border-bottom:0;
+  border-radius:10px 10px 0 0; background:#1e1e2e;
+  color:#e6edf9; font-size:12px;
+}
+.code-toolbar .code-language { margin-right:auto; font-weight:750; color:#bdcce3; }
+.code-toolbar button {
+  background:#394860; color:#f8fafc; border:1px solid #70809b;
+  border-radius:7px; font-weight:700; padding:5px 10px;
+  font-size:12px; min-height:33px;
+}
+.code-toolbar button:hover { background:#516582; opacity:1; }
+.code-toolbar button:focus-visible { outline:3px solid #ffb454; outline-offset:2px; }
+.code-toolbar + pre.code {
+  margin-top:0; border-radius:0 0 10px 10px;
+  max-width:100%; min-width:0;
+  padding-right:1.35rem; scroll-padding-right:1.5rem;
+  scrollbar-width:thin; scrollbar-color:#7c879f #1e1e2e;
+}
+pre.code.reader-wrapped {
+  white-space:pre-wrap !important;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  background-image:none !important; 
+}
+pre.code.reader-wrapped.reader-active::before { display:none !important; }
+.code-toolbar button[aria-pressed="true"] {
+  background:#fff0cf; border-color:#edc07e; color:#783b05;
+}
+.code-toolbar + pre.code code { background:transparent; padding:0; color:inherit; }
+/* 解答は元から折りたたみ済み。要約行だけ読みやすくする */
+details.ans > summary { color:#8b4500; background:#fffaf2; border-left:5px solid #db850b; }
+details.ans[open] > summary { border-bottom:1px solid #e2e8f0; }
+details.ans > summary:hover { background:#fff0d9; }
+details.ans > summary:focus-visible { outline:3px solid #ae5700; outline-offset:-4px; }
+/* 既存のコピーボタンは共通ツールバーに置換。空のボタン行だけ非表示 */
+.btn-row:empty { display:none; }
+.lead-terms .term {
+  background:#fff2dc; border:1px solid #f7cc91; border-radius:6px;
+  padding:.08em .38em; margin:.13em .09em; color:#9a4506;
+}
+table { max-width:100%; }
+.fig { max-width:100%; height:auto; }
+@media(max-width:700px) {
+  body { padding:12px 10px !important; }
+  .container { width:100%; max-width:100%; }
+  .card { padding:16px 13px; }
+  .course-nav {
+    top:0; padding:8px; border-radius:9px;
+    gap:6px; margin:0 0 13px; max-width:100%;
+  }
+  .course-nav > a { font-size:12px; padding:6px 10px; }
+  .course-nav .jump-select { min-width:136px; max-width:136px; }
+  .course-nav #bigbtn { font-size:12px; }
+  .lesson-toc { padding:12px; }
+  .lesson-toc-links { gap:6px; }
+  .lesson-toc a { font-size:12px; padding:5px 8px; }
+  [id^="lesson-part-"] { scroll-margin-top:80px; }
+  .card table, .sol table, .glossary-fold table {
+    display:block; width:100%; max-width:100%;
+    overflow-x:auto; overscroll-behavior-x:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .code-toolbar button { padding:5px 8px; }
+  .code-toolbar + pre.code { font-size:13px; padding:12px 14px; }
+  .fig { overflow:visible; }
+}
+@media(prefers-reduced-motion:reduce){ html { scroll-behavior:auto; } }
+@media print {
+  body { overflow:visible; }
+  .course-nav { position:static; box-shadow:none; }
+  .lesson-toc, .code-toolbar, .lesson-bottom-nav { display:none !important; }
+  pre.code { white-space:pre-wrap !important; overflow:visible !important; }
+}
