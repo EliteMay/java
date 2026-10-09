@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第4回｜クラスとインスタンス、コンストラクタ</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson03.html">前の講義</a><a href="lesson05.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 4 回 ／ 全 18 回</span><h1>クラスとインスタンス、コンストラクタ</h1><p>第8章　設計図と実体 ／ フィールド ／ コンストラクタと this</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">クラス</span>　<span class="term">インスタンス</span>　<span class="term">フィールド</span>　<span class="term">コンストラクタと this</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>クラスから <code>new</code> でインスタンスを作れる</li><li>同じクラスから作った2つのインスタンスが、別物だと説明できる</li><li>コンストラクタで、作ると同時に値を入れられる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　クラス・インスタンス・フィールド・コンストラクタと this を、たい焼きで</li><li>② 写して動かす　<code>Product</code> と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑥の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>Book</code> と <code>Member</code> を作る</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>クラス</td><td>オブジェクトの設計図。そのオブジェクトが持つ値（フィールド）と、できる処理（メソッド）をまとめて定義したものです。<code class="ex">public class Product { ... }</code></td></tr><tr><td>インスタンス</td><td>クラスをもとに <code>new</code> で作った実体。インスタンスごとに、別々のフィールドの値を持ちます。<code class="ex">Product p1 = new Product("ボールペン", 150);</code></td></tr><tr><td>フィールド</td><td>クラスの中、メソッドの外に書く変数です。インスタンスごとに、別々の値を持ちます。<code class="ex">String name;
+int price;</code></td></tr><tr><td>コンストラクタと this</td><td><strong>コンストラクタ</strong>は、<code>new</code> したときに1回だけ動く、メソッドに似た、クラスと同じ名前の特別なものです（戻り値の型は書きません）。<strong>this</strong> は「このインスタンス自身」を指す言葉で、<code>this.name</code> はフィールドの <code>name</code> を表します。<code class="ex">Product(String name, int price) {
+    this.name = name;
+    this.price = price;
+}</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>クラスは「たい焼きの型」、インスタンスは「たい焼き」</h3><p class="lead">型そのものは食べられません。型から焼いたものを食べます。</p><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 215" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="196" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="236" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="130" y="30">たい焼きの型</text>
+<rect fill="#fff" height="86" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="30" y="44"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="30" y="44"></rect>
+<rect fill="#e0f2fe" height="8" width="198" x="31" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="130" y="62">Product（クラス）</text>
+<text fill="#1f2933" font-size="14" x="40" y="90">name  : 名前という欄</text>
+<text fill="#1f2933" font-size="14" x="40" y="110">price : 価格という欄</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="130" y="162">設計図。1つだけ書く</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="130" y="182">欄はあるが、値はまだ無い</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="250" x2="290" y1="87" y2="87"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="270" y="79">new</text>
+<rect fill="#f8fafc" height="196" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="418" x="292" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="501" y="30">たい焼き</text>
+<rect fill="#fff" height="86" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="306" y="44"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="306" y="44"></rect>
+<rect fill="#fff3e6" height="8" width="122" x="307" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="368" y="62">p1</text>
+<text fill="#1f2933" font-size="14" x="316" y="90">ボールペン</text>
+<text fill="#1f2933" font-size="14" x="316" y="110">150</text>
+<rect fill="#fff" height="86" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="439" y="44"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="439" y="44"></rect>
+<rect fill="#fff3e6" height="8" width="122" x="440" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="501" y="62">p2</text>
+<text fill="#1f2933" font-size="14" x="449" y="90">ノート</text>
+<text fill="#1f2933" font-size="14" x="449" y="110">220</text>
+<rect fill="#fff" height="86" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="572" y="44"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="124" x="572" y="44"></rect>
+<rect fill="#fff3e6" height="8" width="122" x="573" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="634" y="62">p3</text>
+<text fill="#1f2933" font-size="14" x="582" y="90">消しゴム</text>
+<text fill="#1f2933" font-size="14" x="582" y="110">100</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="501" y="162">インスタンス。new するたびに1つできる</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="501" y="182">何個でも作れて、中身はそれぞれ別</text>
+</svg><p class="figcap">クラスは「たい焼きの型」、インスタンスは「たい焼き」</p><p>ここでの「型」は、たい焼きを焼く焼き型のことです。Java の型（<code>int</code> など）とは別の意味です。</p>
+<p>たい焼きの型は1つあれば足ります。そこから何匹でも焼けます。<strong>あんこ入りとクリーム入りは、別々のたい焼きです。</strong></p>
+<p>Java も同じです。<code>Product</code> という<strong>クラス</strong>を1つ書けば、<code>new</code> するたびに別々の商品（<strong>インスタンス</strong>）が作られます。<code>p1</code> の名前を変えても、<code>p2</code> には影響しません。</p>
+<p><strong>型（クラス）そのものには、あんこは入っていません。</strong><code>new</code> を書かずに値を入れようとしてエラーになるのは、これが理由です。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 224" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="206" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="200" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="112" y="30">あんこを入れるくぼみ</text>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="168" x="28" y="44"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="168" x="28" y="44"></rect>
+<rect fill="#e0f2fe" height="8" width="166" x="29" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="112" y="62">焼き型</text>
+<text fill="#1f2933" font-size="14" x="38" y="90">くぼみ（名前）</text>
+<text fill="#1f2933" font-size="14" x="38" y="110">くぼみ（価格）</text>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="middle" x="112" y="152">＝ フィールド</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="40" xml:space="preserve" y="180">String name;</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="40" xml:space="preserve" y="200">int price;</text>
+<rect fill="#f8fafc" height="206" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="260" x="224" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="354" y="30">焼くときの手順</text>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="228" x="240" y="44"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="228" x="240" y="44"></rect>
+<rect fill="#fff3e6" height="8" width="226" x="241" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="354" y="62">1匹焼くたびに</text>
+<text fill="#1f2933" font-size="14" x="250" y="90">① 生地を流す</text>
+<text fill="#1f2933" font-size="14" x="250" y="110">② あんこを詰める</text>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="middle" x="354" y="152">＝ コンストラクタ</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="13" x="244" xml:space="preserve" y="180">Product(String name, int price)</text>
+<rect fill="#f8fafc" height="206" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="212" x="496" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="602" y="30">いま焼いているこの1匹</text>
+<rect fill="#f1f5f9" height="40" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="514" y="48"></rect>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="556" y="73">焼けた1匹</text>
+<rect fill="#fef9c3" height="40" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="608" y="48"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="650" y="73">焼いている</text>
+<line marker-end="url(#ar2)" stroke="#334155" stroke-width="1.8" x1="650" x2="650" y1="114" y2="92"></line>
+<text fill="#1d4ed8" font-size="13" text-anchor="middle" x="650" y="130">この1匹</text>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="middle" x="602" y="152">＝ this</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="537" xml:space="preserve" y="180">this.name = name;</text>
+</svg><p class="figcap">フィールドは「くぼみ」、コンストラクタは「焼くときの手順」、this は「いま焼いているこの1匹」</p><p>焼き型には、あんこを入れる<strong>くぼみ</strong>があります。どのたい焼きにも同じくぼみがあり、中身だけが1匹ごとに違います。このくぼみが<strong>フィールド</strong>です。</p>
+<p>焼くときは、生地を流してあんこを詰める手順が決まっています。この「焼くときの手順」が<strong>コンストラクタ</strong>です。手順の中で「いま焼いているこの1匹に詰める」と指すのが <strong><code>this</code></strong> です。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>たい焼きの型</td><td>クラス　<code>public class Product { ... }</code></td></tr><tr><td>型から1匹焼く</td><td><code>new Product(...)</code></td></tr><tr><td>たい焼き</td><td>インスタンス　<code>p1</code> <code>p2</code> <code>p3</code></td></tr><tr><td>あんこ／クリーム</td><td>それぞれの中に入っている値</td></tr><tr><td>あんこを入れるくぼみ</td><td>フィールド　<code>String name;</code> <code>int price;</code></td></tr><tr><td>焼くときに、あんこを詰める手順</td><td>コンストラクタ　<code>Product(String name, int price)</code></td></tr><tr><td>いま焼いているこの1匹</td><td><code>this</code>　<code>this.name = name;</code></td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>クラス</td><td>名前・価格・在庫のように1つの物に付いた値を、ばらばらの変数ではなく、ひとまとまりで扱うためです。</td></tr><tr><td>インスタンス</td><td>1つの設計図から、値の違う物をいくつでも作るためです。</td></tr><tr><td>フィールド</td><td>1つ1つのインスタンスが、自分の値（名前・価格など）を持ち続けるためです。</td></tr><tr><td>コンストラクタと this</td><td>作ると同時に値を入れれば、入れ忘れを防げるからです。<code>this</code> が無いと、同じ名前の引数とフィールドを区別できません。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>クラス</td><td>商品・会員・注文のように、アプリに出てくる「物」ごとに作ります。</td></tr><tr><td>インスタンス</td><td>ボールペン・ノート・消しゴムを、同じ <code>Product</code> クラスから別々に作るとき。</td></tr><tr><td>フィールド</td><td>商品の名前・価格・在庫のように、その物が持つ情報を書くとき。</td></tr><tr><td>コンストラクタと this</td><td><code>new Product("ボールペン", 150)</code> のように、作るときに名前と価格を決めたいとき。</td></tr></table>
+<p>今日のゴールは、この絵をコードで書けるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各箇所の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は1つのプロジェクト <code>lesson04</code> に、クラスを2つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson04</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson04</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson04</code> と入っていることを確かめて［完了］（空なら <code>lesson04</code> と入力する）</td></tr><tr><td>⑥</td><td>④⑤をもう一度行い、名前 <code>Main</code> のクラスを作る</td></tr><tr><td>⑦</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑧</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の2つのファイルだけです。<code>import</code> などを書き足す必要はありません。同じパッケージに置いたクラスどうしは、名前だけで使えます。</p>
+<p>どちらも1行目は <code>package lesson04;</code> です。手順⑤で作ったパッケージ <code>lesson04</code> の中にある、という意味で、Eclipse がクラスを作ったときに書く1行と同じです。消すと「Unresolved compilation problem」で動かなくなります。</p>
+<p>下の2つが、それぞれのファイルの中身の全部です。行の右にある ①〜⑥ は、③解説の番号です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson04</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson04（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="180"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="144" y2="144"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="180" y2="180"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="128"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="149">Product.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="164"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="185">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="149">設計図。main は無い。Main から new で使われる</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="185">使う側。main があり、ここから実行する</text>
+</svg><p class="figcap">プロジェクトの中身。この2つのファイルで全部です</p><p class="fname">Product.java　設計図のほう</p>
+<pre class="code" id="c1">package lesson04;
+
+public class Product {
+    String name;                          <span class="cm">// <span class="cn">①</span> フィールド</span>
+    int price;                            <span class="cm">// <span class="cn">①</span> フィールド</span>
+
+    Product(String name, int price) {     <span class="cm">// <span class="cn">②</span> コンストラクタ</span>
+        this.name = name;                 <span class="cm">// <span class="cn">③</span> this</span>
+        this.price = price;               <span class="cm">// <span class="cn">③</span> this</span>
+    }
+
+    void show() {                         <span class="cm">// <span class="cn">④</span> メソッド</span>
+        System.out.println(name + " / " + price + "円");
+    }
+}</pre>
+<p class="fname">Main.java　使うほう</p>
+<pre class="code" id="c2">package lesson04;
+
+public class Main {
+    public static void main(String[] args) {
+        Product p1 = new Product("ボールペン", 150);   <span class="cm">// <span class="cn">⑤</span> new</span>
+        Product p2 = new Product("ノート", 220);       <span class="cm">// <span class="cn">⑤</span> new</span>
+
+        p1.show();                                     <span class="cm">// <span class="cn">⑥</span> 呼び出し</span>
+        p2.show();                                     <span class="cm">// <span class="cn">⑥</span> 呼び出し</span>
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">ボールペン / 150円
+ノート / 220円</div>
+<p>実行するのは <code>Main</code> のほうです。<code>Product</code> には <code>main</code> が無いので、<code>Product</code> を選んで実行しても動きません。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　フィールド（①）</h2>
+<p class="fname">Product.java（抜き出し）</p>
+<pre class="code" id="c3">    String name;                          <span class="cm">// <span class="cn">①</span> フィールド</span>
+    int price;                            <span class="cm">// <span class="cn">①</span> フィールド</span></pre>
+<p><code>String name;</code> と <code>int price;</code> は<strong>フィールド</strong>です。クラスの直下に書いた変数で、たとえの「あんこを入れるくぼみ」です。<strong>なぜフィールドにするのか。</strong>商品ごとに名前と価格を持たせるためです。インスタンス1つ1つが、自分の <code>name</code> と <code>price</code> を持ちます。</p>
+<h2>2　コンストラクタと this（②③）</h2>
+<p class="fname">Product.java（抜き出し）</p>
+<pre class="code" id="c4">    Product(String name, int price) {     <span class="cm">// <span class="cn">②</span> コンストラクタ</span>
+        this.name = name;                 <span class="cm">// <span class="cn">③</span> this</span>
+        this.price = price;               <span class="cm">// <span class="cn">③</span> this</span>
+    }</pre>
+<p><code>Product(String name, int price) { ... }</code> は<strong>コンストラクタ</strong>です。<code>new</code> したときに1回だけ自動で動きます。名前はクラスと同じにし、戻り値の型（<code>void</code> など）を書きません。<strong>なぜコンストラクタを書くのか。</strong>作った時点で名前と価格を入れるためです。あとから1つずつ入れる書き方だと、入れ忘れが起きます。</p>
+<p><code>this</code> は「いま作っているこのインスタンスの」という意味です。左の <code>this.name</code> はフィールド、右の <code>name</code> は受け取った引数です。<strong>なぜ this. を付けるのか。</strong>引数とフィールドが同じ名前だからです。同じものを表しているので同じ名前が自然ですが、そのままでは Java は近いほう（引数）を選びます。<code>this.</code> で「この実物の欄」と指します。</p>
+<p><strong>よくある間違い：this. を付け忘れる。</strong>エラーにはならず、コンパイルは通ります。実行すると <code>null / 0円</code> と出ます。<code>Main</code> は写したままです。</p>
+<p class="fname">Product.java（間違いあり）</p>
+<pre class="code" id="c5">package lesson04;
+
+public class Product {
+    String name;
+    int price;
+
+    Product(String name, int price) {
+        name = name;                      <span class="cm">// ここが問題</span>
+        price = price;                    <span class="cm">// ここが問題</span>
+    }
+
+    void show() {
+        System.out.println(name + " / " + price + "円");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">null / 0円
+null / 0円</div>
+<svg class="fig" role="img" viewbox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="22" x="60" xml:space="preserve" y="50">this.name = name;</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="150" x2="150" y1="100" y2="62"></line>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="middle" x="150" y="120">フィールド</text>
+<text fill="#1d4ed8" font-size="13" text-anchor="middle" x="150" y="140">「この実物の」名前の欄</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="242" x2="242" y1="100" y2="62"></line>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="start" x="262" y="120">引数</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="262" y="140">いま受け取った値</text>
+<text fill="#1e293b" font-size="14" font-weight="bold" text-anchor="start" x="400" y="50">this を書かないと…</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="18" x="400" xml:space="preserve" y="80">name = name;</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="400" y="110">引数に、引数を入れているだけ</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="400" y="130">フィールドは null と 0 のまま</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="400" y="150">エラーにならないので気づきにくい</text>
+</svg><p class="figcap">this は「この実物の」という指さし</p><p><code>name = name;</code> は、引数に引数を入れているだけです。フィールドには何も入らず、<strong>初期値</strong>のまま残ります。写したコードのとおり <code>this.</code> を付ければ、正しく表示されます。</p>
+<div class="words"><b>ここで出た言葉</b><span><b><code>null</code></b>　「何も入っていない」を表す値。<code>String</code> のフィールドに何も入れないと、これになります</span><span><b>初期値</b>　フィールドに最初から入っている値。<code>String</code> は <code>null</code>、<code>int</code> は <code>0</code></span></div>
+<div class="trap">Eclipse では <code>name = name;</code> の行に黄色い警告「変数 name への代入は無効です」が出ます。赤ではないので見落としやすく、いちばん多い詰まり方です。<strong><code>null / 0円</code> を見たら、まず <code>this.</code> を疑ってください。</strong></div>
+<p><strong>よくある間違い：引数なしで new する。</strong>名前と価格を受け取るコンストラクタがあるのに、引数なしで <code>new</code> した形です。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c6">package lesson04;
+
+public class Main {
+    public static void main(String[] args) {
+        Product p1 = new Product();      <span class="cm">// エラー</span>
+        p1.name = "ボールペン";
+        p1.price = 150;
+
+        p1.show();
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">コンストラクター Product() は未定義です
+（The constructor Product() is undefined）</div>
+<p>コンストラクタを1つも書かないときは、Java が引数なしのものを黙って用意しています。<strong>自分で書いた瞬間に、その気づかいは無くなります。</strong>写したコードのとおり、<code>new Product("ボールペン", 150)</code> と値を渡して作ります。</p>
+<h2>3　インスタンスを作って、メソッドを呼ぶ（④⑤⑥）</h2>
+<p class="fname">Product.java（抜き出し）</p>
+<pre class="code" id="c7">    void show() {                         <span class="cm">// <span class="cn">④</span> メソッド</span>
+        System.out.println(name + " / " + price + "円");
+    }</pre>
+<p><code>void show() { ... }</code> はメソッドです。<code>static</code> が付いていないので、インスタンスに対して呼びます。<strong>なぜメソッドにするのか。</strong>表示のしかたを1か所にまとめるためです。中の <code>name</code> と <code>price</code> は、呼ばれたインスタンスのものが使われます。</p>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c8">    public static void main(String[] args) {
+        Product p1 = new Product("ボールペン", 150);   <span class="cm">// <span class="cn">⑤</span> new</span>
+        Product p2 = new Product("ノート", 220);       <span class="cm">// <span class="cn">⑤</span> new</span>
+
+        p1.show();                                     <span class="cm">// <span class="cn">⑥</span> 呼び出し</span>
+        p2.show();                                     <span class="cm">// <span class="cn">⑥</span> 呼び出し</span>
+    }</pre>
+<p><code>new Product("ボールペン", 150)</code> で、インスタンスを1つ作ります。たい焼きを1匹焼く操作です。丸括弧の中の値が、コンストラクタに渡ります。<code>Product p1 = …</code> の左の <code>Product</code> は、変数 <code>p1</code> の型です（<code>int stock</code> の <code>int</code> と同じ位置）。商品を増やすときは <code>new</code> の行を足すだけで、<code>Product</code> は1行も変えません。</p>
+<p><code>p1.show();</code> は、ドットで「<code>p1</code> の <code>show</code>」を呼びます。<strong>なぜ p1. を付けるのか。</strong>どの商品を表示するかを指定するためです。<code>p1</code> なら「ボールペン」、<code>p2</code> なら「ノート」が表示されます。</p>
+<p><strong>よくある間違い：new を書かずに使う。</strong>たい焼きの型に、直接あんこを詰めようとした形です。<code>Product</code> は写したままです。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c9">package lesson04;
+
+public class Main {
+    public static void main(String[] args) {
+        Product.name = "ボールペン";      <span class="cm">// エラー</span>
+        Product.price = 150;              <span class="cm">// エラー</span>
+
+        System.out.println(Product.name + " / " + Product.price + "円");
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">非 static フィールド Product.name を static 参照できません
+（Cannot make a static reference to the non-static field Product.name）</div>
+<svg class="fig" role="img" viewbox="0 0 720 150" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="86" rx="6" stroke="#334155" stroke-width="1.5" width="220" x="30" y="30"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="220" x="30" y="30"></rect>
+<rect fill="#e0f2fe" height="8" width="218" x="31" y="49"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="140" y="48">Product（クラス）</text>
+<text fill="#1f2933" font-size="14" x="40" y="76">name  : 欄があるだけ</text>
+<text fill="#1f2933" font-size="14" x="40" y="96">price : 欄があるだけ</text>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="start" x="290" y="60">Product.name = "ボールペン";</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="290" y="85">設計図の欄に、直接値を書こうとしている</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="290" y="105">値を入れる箱は、new で実物を作ったときにできる</text>
+</svg><p class="figcap">設計図そのものに、名前や価格は書き込めない</p><p><code>Product</code> は設計図です。設計図には「名前という欄がある」と決めてあるだけで、値を入れる箱はまだどこにもありません。箱は <code>new</code> で実物を作ったときに、実物1つにつき1組できます。写したコードのとおり、<code>new</code> で作ってから <code>p1.show()</code> と呼びます。エラー文の「static」は次回扱います。</p>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①が1冊でも表示できたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>Book</code> クラス（<code>title</code> / <code>author</code> / <code>price</code>）を作る。コンストラクタと <code>show()</code> を持たせ、<code>BookMain</code> で3冊分を配列 <code>Book[]</code> に入れて、拡張for文で一覧表示する。</li><li>②　<code>Member</code> クラス（<code>name</code> / <code>point</code>）を作る。コンストラクタと、ポイントを足す <code>addPoint(int p)</code> と、<code>show()</code> を持たせる。<code>MemberMain</code> で2人分を作り、<strong>片方だけ</strong>ポイントを足して、もう片方が変わらないことを確かめる。</li></ul>
+<h2>骨組み</h2>
+<p>4つのファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<p><code>Member</code> のコンストラクタを書くまで、<code>MemberMain</code> に赤い印が出ます。</p>
+<p class="fname">Book.java</p>
+<pre class="code" id="c10">package lesson04;
+
+public class Book {
+    String title;
+    String author;
+    int price;
+
+    <span class="cm">// ここにコンストラクタを書く</span>
+
+    void show() {
+        <span class="cm">// ここに「『題名』著者 / 価格円」の表示を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c10">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">BookMain.java</p>
+<pre class="code" id="c11">package lesson04;
+
+public class BookMain {
+    public static void main(String[] args) {
+        Book[] books = {
+            <span class="cm">// ここに new Book(...) を3冊分、カンマで区切って書く</span>
+        };
+
+        <span class="cm">// ここに拡張for文を書き、1冊ずつ show() を呼ぶ</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c11">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">Member.java</p>
+<pre class="code" id="c12">package lesson04;
+
+public class Member {
+    String name;
+    int point;
+
+    <span class="cm">// ここにコンストラクタを書く</span>
+
+    void addPoint(int p) {
+        <span class="cm">// ここにポイントを足す処理を書く</span>
+    }
+
+    void show() {
+        <span class="cm">// ここに「名前 : ポイント ポイント」の表示を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c12">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">MemberMain.java</p>
+<pre class="code" id="c13">package lesson04;
+
+public class MemberMain {
+    public static void main(String[] args) {
+        Member m1 = new Member("高橋", 100);
+        Member m2 = new Member("山田", 0);
+
+        <span class="cm">// ここで m1 にだけ 20 ポイント足す</span>
+
+        m1.show();
+        m2.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c13">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">『吾輩は猫である』夏目漱石 / 800円
+『こころ』夏目漱石 / 600円
+『走れメロス』太宰治 / 500円
+
+高橋 : 120 ポイント
+山田 : 0 ポイント</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①の配列は <code>new Book("こころ", "夏目漱石", 600)</code> のようなものを3つ、カンマで区切って並べます。拡張for文は <code>for (Book b : books) { b.show(); }</code> です。第2回の配列と、中身の型が <code>Book</code> になっただけです。</li><li>②　②の <code>addPoint</code> は、返すものがありません。<code>void</code> です。中身は <code>this.point += p;</code> の1行で足ります。</li><li>③　表示が <code>null</code> や <code>0</code> になったら、コンストラクタの <code>this.</code> を確かめてください。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第4回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　Book</summary><div class="sol">
+<p class="fname">Book.java</p>
+<pre class="code" id="c14">package lesson04;
+
+public class Book {
+    String title;
+    String author;
+    int price;
+
+    <span class="cm">// ここにコンストラクタを書く</span>
+    Book(String title, String author, int price) {
+        this.title = title;
+        this.author = author;
+        this.price = price;
+    }
+
+    void show() {
+        <span class="cm">// ここに「『題名』著者 / 価格円」の表示を書く</span>
+        System.out.println("『" + title + "』" + author + " / " + price + "円");
+    }
+}</pre>
+<p class="fname">BookMain.java</p>
+<pre class="code" id="c15">package lesson04;
+
+public class BookMain {
+    public static void main(String[] args) {
+        Book[] books = {
+            <span class="cm">// ここに new Book(...) を3冊分、カンマで区切って書く</span>
+            new Book("吾輩は猫である", "夏目漱石", 800),
+            new Book("こころ", "夏目漱石", 600),
+            new Book("走れメロス", "太宰治", 500)
+        };
+
+        <span class="cm">// ここに拡張for文を書き、1冊ずつ show() を呼ぶ</span>
+        for (Book b : books) {
+            b.show();
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">『吾輩は猫である』夏目漱石 / 800円
+『こころ』夏目漱石 / 600円
+『走れメロス』太宰治 / 500円</div>
+<div class="note">配列の中身の型が <code>int</code> ではなく <code>Book</code> になっただけです。自分で作ったクラスは、<code>int</code> や <code>String</code> と同じ位置に書けます。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　Member</summary><div class="sol">
+<p class="fname">Member.java</p>
+<pre class="code" id="c16">package lesson04;
+
+public class Member {
+    String name;
+    int point;
+
+    <span class="cm">// ここにコンストラクタを書く</span>
+    Member(String name, int point) {
+        this.name = name;
+        this.point = point;
+    }
+
+    void addPoint(int p) {
+        <span class="cm">// ここにポイントを足す処理を書く</span>
+        this.point += p;
+    }
+
+    void show() {
+        <span class="cm">// ここに「名前 : ポイント ポイント」の表示を書く</span>
+        System.out.println(name + " : " + point + " ポイント");
+    }
+}</pre>
+<p class="fname">MemberMain.java</p>
+<pre class="code" id="c17">package lesson04;
+
+public class MemberMain {
+    public static void main(String[] args) {
+        Member m1 = new Member("高橋", 100);
+        Member m2 = new Member("山田", 0);
+
+        <span class="cm">// ここで m1 にだけ 20 ポイント足す</span>
+        m1.addPoint(20);
+
+        m1.show();
+        m2.show();
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">高橋 : 120 ポイント
+山田 : 0 ポイント</div>
+<div class="note"><code>m2</code> が 0 のままなのが大事な所です。同じ設計図から作っても、実物は別々です。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>クラスとインスタンスの違いを、たい焼き以外の自分のたとえで説明できる</li><li>同じクラスから作った2つのインスタンスが、別物だと説明できる</li><li><code>this.name = name;</code> の左右が何を指しているか説明できる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、カプセル化と static です。</strong>今日作った <code>Product</code> は、外から <code>p1.price = -999;</code> と書けてしまいます。次回は<strong>それを防ぐ鍵のかけ方</strong>と、第1回から出ていた <code>static</code> の正体を扱います。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>クラス</td><td>くらす</td><td>設計図。「どんな値を持ち、何ができるか」を書いたもの。<code>public class Product { ... }</code></td></tr><tr><td>インスタンス</td><td>いんすたんす</td><td>設計図から作った実物。<code>new</code> で1つ作られます</td></tr><tr><td>オブジェクト</td><td>おぶじぇくと</td><td>インスタンスとほぼ同じ意味で使われます。この講座では同じものと考えて構いません</td></tr><tr><td>new</td><td>にゅー</td><td>インスタンスを1つ作る命令。<code>new Product("ボールペン", 150)</code></td></tr><tr><td>フィールド</td><td>ふぃーるど</td><td>クラスの直下に書いた変数。そのインスタンスが持ち続ける値</td></tr><tr><td>インスタンスメソッド</td><td>―</td><td><code>static</code> の付かないメソッド。<code>p1.show()</code> のように、実物に対して呼びます</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの。クラスと同じ名前で、戻り値の型を書きません。Eclipse の表示では「コンストラクター」</td></tr><tr><td>this</td><td>でぃす</td><td>「いま動いているこのインスタンスの」という意味。<code>this.name</code> はフィールド</td></tr><tr><td>引数</td><td>ひきすう</td><td>メソッドやコンストラクタが受け取る値。丸括弧の中に書きます（第3回）</td></tr><tr><td>初期値</td><td>しょきち</td><td>フィールドに最初から入っている値。<code>String</code> は <code>null</code>、<code>int</code> は <code>0</code>、<code>boolean</code> は <code>false</code></td></tr><tr><td>null</td><td>ぬる</td><td>「何も入っていない」を表す値。表示すると <code>null</code> と出ます。第9回で詳しく扱います</td></tr><tr><td>拡張for文</td><td>かくちょうふぉーぶん</td><td><code>for (Book b : books)</code> の形。配列の中身を1つずつ取り出します（第2回）</td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 4 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
