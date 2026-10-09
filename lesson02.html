@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第2回｜変数と演算子・条件分岐・配列と繰り返し</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson03.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 2 回 ／ 全 18 回</span><h1>変数と演算子・条件分岐・配列と繰り返し</h1><p>第2〜6章　変数と型 ／ 演算子と文字列 ／ 条件分岐 ／ 繰り返し ／ 配列</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">変数と型</span>　<span class="term">演算子と文字列</span>　<span class="term">条件分岐</span>　<span class="term">配列</span>　<span class="term">繰り返し</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>5分野（変数と型・演算子と文字列・条件分岐・繰り返し・配列）のうち、自分が忘れている所を言える</li><li>配列の中身を、<code>for</code> と拡張for文で1つずつ取り出せる</li><li>5分野を1本のプログラム（成績の集計）の中で組み合わせて使える</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　5分野の意味と、配列と繰り返しのたとえ（マンションの部屋）</li><li>② 写して動かす　<code>Recall</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑪の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>ScoreReport</code> で成績を集計する</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>変数と型</td><td><strong>変数</strong>は、値を入れておく名前付きの入れ物です。<strong>型</strong>は、その入れ物に入れられる値の種類で、<code>int</code>（整数）・<code>double</code>（小数）・<code>String</code>（文字列）・<code>boolean</code>（<code>true</code> か <code>false</code>）などがあります。変数を作るときに型を書きます。<code class="ex">int count = 3;
+double price = 198.7;
+String name = "ノート";</code></td></tr><tr><td>演算子と文字列</td><td><strong>演算子</strong>は、計算や比較をする記号です（<code>+</code> <code>-</code> <code>*</code> <code>/</code> <code>%</code>、<code>==</code> <code>&lt;</code> <code>&gt;</code>、<code>&amp;&amp;</code> など）。<strong>文字列</strong>は、<code>"</code> で囲んだ文字の並び（<code>String</code>）で、<code>+</code> でつないだり、<code>substring</code> で一部を切り出したりできます。<code class="ex">int total = 150 * 3;
+String msg = "合計 : " + total + "円";</code></td></tr><tr><td>条件分岐</td><td>条件が成り立つかどうかで、実行する処理を分ける文。<code>if</code> ／ <code>else if</code> ／ <code>else</code> と <code>switch</code> があります。<code class="ex">if (score &gt;= 80) { ... } else if (score &gt;= 60) { ... } else { ... }</code></td></tr><tr><td>配列</td><td>同じ型の値を決まった数だけ並べ、1つの変数名でまとめて扱う仕組み。1つ1つの値は 0 から始まる番号（添字）で指定します。作ったあとで数は変えられません。<code class="ex">int[] nums = {80, 65, 90};
+nums[0]   // 1つ目の 80</code></td></tr><tr><td>繰り返し</td><td>同じ処理を、条件を満たしている間くり返し実行する文。<code>for</code>・拡張 <code>for</code>・<code>while</code>・<code>do-while</code> があります。<code class="ex">for (int i = 0; i &lt; nums.length; i++) { ... }</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>配列は「0号室から始まる部屋の並び」、繰り返しは「全部屋の見回り」</h3><p class="lead">3部屋のマンションの部屋番号は、0・1・2。3号室はありません。</p><svg class="fig" role="img" viewbox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="16" x="30" xml:space="preserve" y="32">int[] nums = {80, 65, 90};</text>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="start" x="420" y="32">nums.length は 3（部屋の数）</text>
+<rect fill="#e0f2fe" height="66" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="50" y="72"></rect>
+<text fill="#1f2933" font-size="24" font-weight="bold" text-anchor="middle" x="105" y="115">80</text>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="105" y="162">nums[0]</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="105" y="182">0号室</text>
+<rect fill="#e0f2fe" height="66" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="180" y="72"></rect>
+<text fill="#1f2933" font-size="24" font-weight="bold" text-anchor="middle" x="235" y="115">65</text>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="235" y="162">nums[1]</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="235" y="182">1号室</text>
+<rect fill="#e0f2fe" height="66" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="310" y="72"></rect>
+<text fill="#1f2933" font-size="24" font-weight="bold" text-anchor="middle" x="365" y="115">90</text>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="365" y="162">nums[2]</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="365" y="182">2号室</text>
+<rect fill="#f8fafc" height="66" rx="6" stroke="#94a3b8" stroke-dasharray="6 4" stroke-width="1.5" width="110" x="440" y="72"></rect>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="495" y="101">3号室は</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="495" y="121">ありません</text>
+<text fill="#b91c1c" font-size="14" text-anchor="middle" x="495" y="162">nums[3]</text>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="495" y="182">見に行くとエラー</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="60" x2="400" y1="212" y2="212"></line>
+<text fill="#1d4ed8" font-size="13" text-anchor="middle" x="230" y="238">for で、0号室から順に1部屋ずつ見回る</text>
+</svg><p class="figcap">配列は「0号室から始まる部屋の並び」、繰り返しは「全部屋の見回り」</p><p><strong>配列</strong>は、同じ型の値を並べて、1つの名前で持つものです。1つ1つの値は「何号室か」を表す番号で取り出します。番号は <strong>0 から</strong>数えます。</p>
+<p><strong>繰り返し</strong>（<code>for</code> 文）は、0号室から順に1部屋ずつ見回るのに使います。部屋が3つでも1000でも、書くコードは同じです。</p>
+<p><strong>部屋の数と、最後の部屋の番号はずれます。</strong>3部屋なら最後は2号室です。ここを1つ間違えると、無い部屋を見に行ってプログラムが止まります。③の解説で、実際に止めてみます。</p>
+</div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>マンション</td><td>配列　<code>int[] nums = {80, 65, 90};</code></td></tr><tr><td>部屋番号</td><td>添字　<code>nums[0]</code> <code>nums[1]</code> <code>nums[2]</code></td></tr><tr><td>部屋の数</td><td><code>nums.length</code>（ここでは 3）</td></tr><tr><td>全部屋を順に見回る</td><td><code>for (int i = 0; i &lt; nums.length; i++)</code></td></tr><tr><td>3号室</td><td>無い。見に行くと <code>ArrayIndexOutOfBoundsException</code></td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>変数と型</td><td>計算の途中の値や入力された値を覚えておき、あとで使うためです。型を決めておくと、整数の所に文字を入れるような間違いを、実行する前に見つけられます。</td></tr><tr><td>演算子と文字列</td><td>値を計算したり比べたりして、その結果を人が読める文にして表示するためです。</td></tr><tr><td>条件分岐</td><td>値によって違う動きをさせるためです。条件分岐が無いと、どんな値でも同じ処理しかできません。</td></tr><tr><td>配列</td><td>同じ種類の値が多いとき、1つずつ別の変数にすると、数だけ変数が増えてまとめて扱えないからです。</td></tr><tr><td>繰り返し</td><td>同じ処理を何行も書かずに済み、値の数が変わってもコードは同じで済むからです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>変数と型</td><td>商品の価格・在庫数・名前を持っておくとき。合計を計算しながら足していくとき。</td></tr><tr><td>演算子と文字列</td><td>税込み金額の計算、点数が合格点以上かの判定、「合計 : 660円」のような表示を作るとき。</td></tr><tr><td>条件分岐</td><td>点数で評価を分ける、在庫が0なら「売り切れ」と表示する、入力が正しいかを調べるとき。</td></tr><tr><td>配列</td><td>クラス全員の点数、1週間の売上のように、同じ種類の値を並べて持つとき。</td></tr><tr><td>繰り返し</td><td>配列の値を全部表示する、合計する、九九の表を作るとき。</td></tr></table>
+<p>今日は、この2つを軸に、変数・演算子・条件分岐も含めた5分野を、1本のプログラムで思い出します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は1つのプロジェクト <code>lesson02</code> に、クラス <code>Recall</code> を1つ作ります。5分野（変数と型・演算子と文字列・条件分岐・繰り返し・配列）を、1つの <code>main</code> の中に順に並べています。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson02</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson02</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Recall</code> と入力する。パッケージ欄に <code>lesson02</code> と入っていることを確かめて［完了］（空なら <code>lesson02</code> と入力する）</td></tr><tr><td>⑥</td><td>Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑦</td><td><code>Recall.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の1つのファイルだけです。</p>
+<p>1行目は <code>package lesson02;</code> です。手順⑤で作ったパッケージ <code>lesson02</code> の中にある、という意味で、Eclipse がクラスを作ったときに書く1行と同じです。消すと「Unresolved compilation problem」で動かなくなります。</p>
+<p>下が、ファイルの中身の全部です。行の右にある ①〜⑪ は、③解説の番号です。</p>
+<p>「予想：」とある行は、写すときに、出ると思う値を「予想：」の後ろに書き込んでから実行します。</p>
+<svg class="fig" role="img" viewbox="0 0 720 170" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson02</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson02（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="146"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="146" y2="146"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="130"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="151">Recall.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="151">5分野を、1つの main の中に並べたもの</text>
+</svg><p class="figcap">プロジェクトの中身。最初はこの1つのファイルだけです</p><p class="fname">Recall.java</p>
+<pre class="code" id="c1">package lesson02;
+
+public class Recall {
+    public static void main(String[] args) {
+        System.out.println("--- 割り算 ---");
+        System.out.println(5 / 2);                         <span class="cm">// 予想：　<span class="cn">①</span> int どうしの割り算</span>
+        System.out.println(5.0 / 2);                       <span class="cm">// 予想：　<span class="cn">①</span> double の割り算</span>
+        System.out.println(5 % 2);                         <span class="cm">// 予想：　<span class="cn">①</span> あまり</span>
+
+        System.out.println("--- キャスト ---");
+        double price = 198.7;
+        int rounded = (int) price;                         <span class="cm">// <span class="cn">②</span> キャスト</span>
+        System.out.println(rounded);                       <span class="cm">// 予想：</span>
+
+        System.out.println("--- ++ ---");
+        {
+            int i = 5;
+            System.out.println(i++);                       <span class="cm">// 予想：　<span class="cn">③</span> 使ってから増やす</span>
+            System.out.println(i);                         <span class="cm">// 予想：</span>
+            System.out.println(++i);                       <span class="cm">// 予想：　<span class="cn">③</span> 増やしてから使う</span>
+            i += 3;
+            System.out.println(i);                         <span class="cm">// 予想：</span>
+        }
+
+        System.out.println("--- substring ---");
+        {
+            String s = "商品コード:A-1024";
+            System.out.println(s.substring(s.indexOf(":") + 1));   <span class="cm">// <span class="cn">④</span> 切り出す</span>
+        }
+
+        System.out.println("--- == と equals ---");
+        {
+            String a = "ノート";
+            String b = "ノート";
+            String c = new String("ノート");
+            System.out.println(a == b);                    <span class="cm">// <span class="cn">⑤</span> 同じ物か</span>
+            System.out.println(a == c);                    <span class="cm">// <span class="cn">⑤</span> 同じ物か</span>
+            System.out.println(a.equals(c));               <span class="cm">// <span class="cn">⑤</span> 同じ中身か</span>
+        }
+
+        System.out.println("--- if ---");
+        {
+            int score = 85;
+            if (score &gt;= 80) {                             <span class="cm">// <span class="cn">⑥</span> 上から順に調べる</span>
+                System.out.println("優");
+            } else if (score &gt;= 60) {
+                System.out.println("良");
+            } else {
+                System.out.println("再テスト");
+            }
+        }
+
+        System.out.println("--- for ---");
+        {
+            int sum = 0;                                   <span class="cm">// <span class="cn">⑦</span> for の外に用意する</span>
+            for (int i = 1; i &lt;= 10; i++) {                <span class="cm">// <span class="cn">⑦</span> for の3つの部分</span>
+                sum += i;
+            }
+            System.out.println(sum);
+        }
+
+        System.out.println("--- while と do-while ---");
+        {
+            int count = 0;
+            while (count &gt; 0) {                            <span class="cm">// <span class="cn">⑧</span> 先に調べる</span>
+                System.out.println("while");
+                count--;
+            }
+        }
+        {
+            int count = 0;
+            do {                                           <span class="cm">// <span class="cn">⑧</span> 先に動く</span>
+                System.out.println("do-while");
+                count--;
+            } while (count &gt; 0);
+        }
+
+        System.out.println("--- 九九 ---");
+        {
+            for (int dan = 1; dan &lt;= 9; dan++) {           <span class="cm">// <span class="cn">⑨</span> 二重ループ</span>
+                for (int retsu = 1; retsu &lt;= 9; retsu++) {
+                    System.out.printf("%3d", dan * retsu);
+                }
+                System.out.println();                      <span class="cm">// <span class="cn">⑨</span> 内側が終わってから改行</span>
+            }
+        }
+
+        System.out.println("--- 拡張for ---");
+        {
+            int[] scores = {80, 65, 90};                   <span class="cm">// <span class="cn">⑩</span> 配列</span>
+            for (int s : scores) {                         <span class="cm">// <span class="cn">⑩</span> 拡張for文</span>
+                System.out.println(s);
+            }
+        }
+
+        System.out.println("--- 二次元配列 ---");
+        {
+            int[][] table = { {1, 2, 3}, {4, 5}, {6, 7, 8, 9} };   <span class="cm">// <span class="cn">⑪</span> 二次元配列</span>
+            for (int i = 0; i &lt; table.length; i++) {
+                int total = 0;
+                for (int j = 0; j &lt; table[i].length; j++) {   <span class="cm">// <span class="cn">⑪</span> i 行目の個数</span>
+                    total += table[i][j];
+                }
+                System.out.println(i + "行目の合計 : " + total);
+            }
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">--- 割り算 ---
+2
+2.5
+1
+--- キャスト ---
+198
+--- ++ ---
+5
+6
+7
+10
+--- substring ---
+A-1024
+--- == と equals ---
+true
+false
+true
+--- if ---
+優
+--- for ---
+55
+--- while と do-while ---
+do-while
+--- 九九 ---
+  1  2  3  4  5  6  7  8  9
+  2  4  6  8 10 12 14 16 18
+  3  6  9 12 15 18 21 24 27
+  4  8 12 16 20 24 28 32 36
+  5 10 15 20 25 30 35 40 45
+  6 12 18 24 30 36 42 48 54
+  7 14 21 28 35 42 49 56 63
+  8 16 24 32 40 48 56 64 72
+  9 18 27 36 45 54 63 72 81
+--- 拡張for ---
+80
+65
+90
+--- 二次元配列 ---
+0行目の合計 : 6
+1行目の合計 : 9
+2行目の合計 : 30</div>
+<p><code>--- 割り算 ---</code> のような見出しの下に、それぞれの結果が出ます。見出しは、結果がどこからどこまでかを分けるために表示しています。</p>
+<p><code>--- while と do-while ---</code> の下は <code>do-while</code> の1行だけで、<code>while</code> は出ません。<strong>これで正しい動きです。</strong>理由は③解説の4で説明します。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　変数と型（①②）</h2>
+<pre class="code" id="c2">System.out.println("--- 割り算 ---");
+System.out.println(5 / 2);                         <span class="cm">// 予想：　<span class="cn">①</span> int どうしの割り算</span>
+System.out.println(5.0 / 2);                       <span class="cm">// 予想：　<span class="cn">①</span> double の割り算</span>
+System.out.println(5 % 2);                         <span class="cm">// 予想：　<span class="cn">①</span> あまり</span>
+
+System.out.println("--- キャスト ---");
+double price = 198.7;
+int rounded = (int) price;                         <span class="cm">// <span class="cn">②</span> キャスト</span>
+System.out.println(rounded);                       <span class="cm">// 予想：</span></pre>
+<p><code>5 / 2</code> は 2、<code>5.0 / 2</code> は 2.5 と出ます。<code>int</code> どうしの割り算は、結果も <code>int</code> になるので、小数が消えます。<code>5.0</code> のように片方が <code>double</code>（小数を入れる型）なら、<code>double</code> の割り算になります。<code>%</code> は割り算のあまりで、<code>5 % 2</code> は 1 です。</p>
+<p><code>(int) price</code> のように、型の名前を丸括弧で囲んで値の型を変える書き方を<strong>キャスト</strong>と言います。<code>198.7</code> を <code>int</code> にするので、198 と出ます。切り捨てで、四捨五入ではありません。<strong>なぜ (int) を書くのか。</strong><code>double</code> を <code>int</code> に入れると小数が失われるので、Java はそのままでは入れさせないからです。</p>
+<h2>2　演算子と文字列（③④⑤）</h2>
+<pre class="code" id="c3">System.out.println("--- ++ ---");
+{
+    int i = 5;
+    System.out.println(i++);                       <span class="cm">// 予想：　<span class="cn">③</span> 使ってから増やす</span>
+    System.out.println(i);                         <span class="cm">// 予想：</span>
+    System.out.println(++i);                       <span class="cm">// 予想：　<span class="cn">③</span> 増やしてから使う</span>
+    i += 3;
+    System.out.println(i);                         <span class="cm">// 予想：</span>
+}</pre>
+<p>5 ／ 6 ／ 7 ／ 10 と出ます。<code>i++</code> も <code>++i</code> も <code>i</code> を1増やしますが、<code>i++</code> は<strong>いまの値を使ってから増やし</strong>、<code>++i</code> は<strong>増やしてから使います</strong>。<code>println(i++)</code> は 5 を表示してから 6 にし、<code>println(++i)</code> は 7 にしてから表示します。<code>i += 3</code> は <code>i = i + 3</code> と同じです。</p>
+<pre class="code" id="c4">System.out.println("--- substring ---");
+{
+    String s = "商品コード:A-1024";
+    System.out.println(s.substring(s.indexOf(":") + 1));   <span class="cm">// <span class="cn">④</span> 切り出す</span>
+}</pre>
+<svg class="fig" role="img" viewbox="0 0 720 172" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#64748b" font-size="13" text-anchor="start" x="20" y="79">文字</text>
+<text fill="#64748b" font-size="13" text-anchor="start" x="20" y="114">位置</text>
+<rect fill="#fff" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="72" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="96" y="79">商</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="96" y="114">0</text>
+<rect fill="#fff" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="120" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="144" y="79">品</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="144" y="114">1</text>
+<rect fill="#fff" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="168" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="192" y="79">コ</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="192" y="114">2</text>
+<rect fill="#fff" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="216" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="240" y="79">ー</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="240" y="114">3</text>
+<rect fill="#fff" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="264" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="288" y="79">ド</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="288" y="114">4</text>
+<rect fill="#fef2f2" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="312" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="336" y="79">:</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="336" y="114">5</text>
+<rect fill="#f0fdf4" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="360" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="384" y="79">A</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="384" y="114">6</text>
+<rect fill="#f0fdf4" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="408" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="432" y="79">-</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="432" y="114">7</text>
+<rect fill="#f0fdf4" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="456" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="480" y="79">1</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="480" y="114">8</text>
+<rect fill="#f0fdf4" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="504" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="528" y="79">0</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="528" y="114">9</text>
+<rect fill="#f0fdf4" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="552" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="576" y="79">2</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="576" y="114">10</text>
+<rect fill="#f0fdf4" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="48" x="600" y="50"></rect>
+<text fill="#1f2933" font-size="18" font-weight="bold" text-anchor="middle" x="624" y="79">4</text>
+<text fill="#64748b" font-size="14" text-anchor="middle" x="624" y="114">11</text>
+<line stroke="#15803d" stroke-width="2" x1="362" x2="646" y1="40" y2="40"></line>
+<line stroke="#15803d" stroke-width="2" x1="362" x2="362" y1="34" y2="46"></line>
+<line stroke="#15803d" stroke-width="2" x1="646" x2="646" y1="34" y2="46"></line>
+<text fill="#15803d" font-size="13" font-weight="bold" text-anchor="middle" x="504" y="28">欲しいのはここ（A-1024）</text>
+<line marker-end="url(#ar3)" stroke="#b91c1c" stroke-width="1.8" x1="336" x2="336" y1="146" y2="122"></line>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="middle" x="336" y="164">indexOf(":") が返すのは、この 5</text>
+</svg><p>Java は文字の位置を <strong>0 から</strong>数えます。<code>s.indexOf(":")</code> は <code>:</code> の位置 5 を返し、<code>s.substring(n)</code> は位置 <code>n</code> の文字から後ろを全部切り出します。<strong>なぜ + 1 するのか。</strong><code>indexOf</code> が返した位置には、コロンそのものが立っているからです。欲しいのは、その次の文字からです。</p>
+<pre class="code" id="c5">System.out.println("--- == と equals ---");
+{
+    String a = "ノート";
+    String b = "ノート";
+    String c = new String("ノート");
+    System.out.println(a == b);                    <span class="cm">// <span class="cn">⑤</span> 同じ物か</span>
+    System.out.println(a == c);                    <span class="cm">// <span class="cn">⑤</span> 同じ物か</span>
+    System.out.println(a.equals(c));               <span class="cm">// <span class="cn">⑤</span> 同じ中身か</span>
+}</pre>
+<p>true ／ false ／ true と出ます。<code>==</code> は「同じ物か」、<code>equals</code> は「同じ中身か」を見ます。コードに直接書いた同じ文字は Java が1つを使い回すので、<code>a == b</code> は <code>true</code> です。<code>new String("ノート")</code> は文字列を新しく作る書き方で、中身が同じでも別の物になるので、<code>a == c</code> は <code>false</code> です。<strong>文字列を比べるときは <code>equals</code> を使います。</strong><code>new</code> は第4回で扱います。</p>
+<h2>3　条件分岐（⑥）</h2>
+<pre class="code" id="c6">System.out.println("--- if ---");
+{
+    int score = 85;
+    if (score &gt;= 80) {                             <span class="cm">// <span class="cn">⑥</span> 上から順に調べる</span>
+        System.out.println("優");
+    } else if (score &gt;= 60) {
+        System.out.println("良");
+    } else {
+        System.out.println("再テスト");
+    }
+}</pre>
+<p><code>if</code> ／ <code>else if</code> ／ <code>else</code> は上から順に調べ、最初に当てはまった所だけが動きます。85 は <code>score &gt;= 80</code> に当てはまるので「優」だけが出ます。<code>score</code> を 70 にすると「良」、45 にすると「再テスト」と出ます。<strong>なぜ 80以上を先に書くのか。</strong>60以上を先に書くと、85 もそこで当てはまって「良」になるからです。</p>
+<p>同じ分け方は <code>switch</code> でも書けます。<code>switch</code> は1つの値を見て、一致した <code>case</code> から動き、<code>break;</code> で抜けます。どれにも当たらなければ <code>default</code> が動きます。「80以上」のような範囲はそのままでは書けないので、<code>score / 10</code> で10点ごとの番号（85 なら 8）にしてから分けます。</p>
+<pre class="code" id="c7">int score = 85;
+switch (score / 10) {
+    case 10:
+    case 9:
+    case 8:
+        System.out.println("優");
+        break;
+    case 7:
+    case 6:
+        System.out.println("良");
+        break;
+    default:
+        System.out.println("再テスト");
+}</pre>
+<h2>4　繰り返し（⑦⑧⑨）</h2>
+<pre class="code" id="c8">System.out.println("--- for ---");
+{
+    int sum = 0;                                   <span class="cm">// <span class="cn">⑦</span> for の外に用意する</span>
+    for (int i = 1; i &lt;= 10; i++) {                <span class="cm">// <span class="cn">⑦</span> for の3つの部分</span>
+        sum += i;
+    }
+    System.out.println(sum);
+}</pre>
+<p><code>for</code> の丸括弧の中は、<code>;</code> で区切った3つの部分です。最初に1回だけ動く <code>int i = 1</code>、毎回調べる条件 <code>i &lt;= 10</code>、1周ごとの最後に動く <code>i++</code> の順に書きます。<code>i</code> が 1 から 10 まで変わるあいだ <code>sum += i</code> を繰り返すので、55 と出ます。<strong>なぜ sum を for の外に書くのか。</strong><code>for</code> の中で宣言すると、1周ごとに作り直されて 0 に戻り、<code>for</code> が終わると消えるからです。</p>
+<pre class="code" id="c9">System.out.println("--- while と do-while ---");
+{
+    int count = 0;
+    while (count &gt; 0) {                            <span class="cm">// <span class="cn">⑧</span> 先に調べる</span>
+        System.out.println("while");
+        count--;
+    }
+}
+{
+    int count = 0;
+    do {                                           <span class="cm">// <span class="cn">⑧</span> 先に動く</span>
+        System.out.println("do-while");
+        count--;
+    } while (count &gt; 0);
+}</pre>
+<p><code>do-while</code> の1行だけが出ます。<code>while</code> は入る前に条件を調べるので、<code>count</code> が 0 だと1回も動きません。<code>do-while</code> は動いてから調べるので、必ず1回動きます。<code>count</code> を両方とも 3 にすると、<code>while</code> と <code>do-while</code> が3回ずつ出て、差は消えます。</p>
+<p><code>count</code> を2回宣言していますが、<code>{ }</code> で囲んであるのでぶつかりません。<code>{ }</code> の中で宣言した変数は、その中だけで使えます。ほかの所も、同じ名前の変数がぶつからないように <code>{ }</code> で囲んでいます。</p>
+<pre class="code" id="c10">System.out.println("--- 九九 ---");
+{
+    for (int dan = 1; dan &lt;= 9; dan++) {           <span class="cm">// <span class="cn">⑨</span> 二重ループ</span>
+        for (int retsu = 1; retsu &lt;= 9; retsu++) {
+            System.out.printf("%3d", dan * retsu);
+        }
+        System.out.println();                      <span class="cm">// <span class="cn">⑨</span> 内側が終わってから改行</span>
+    }
+}</pre>
+<p><code>for</code> の中に <code>for</code> を書く形を<strong>二重ループ</strong>と言います。外側の <code>dan</code> が1つ進むあいだに、内側の <code>retsu</code> が 1 から 9 まで回ります。<code>System.out.printf("%3d", 値)</code> は3桁ぶんの幅をとって数字を表示し、改行はしません。<strong>なぜ改行を内側の for の後ろに書くのか。</strong>1行に9個並べ終わってから改行するためです。内側に書くと、1個ごとに改行されて81行になります。</p>
+<h2>5　配列（⑩⑪）</h2>
+<pre class="code" id="c11">System.out.println("--- 拡張for ---");
+{
+    int[] scores = {80, 65, 90};                   <span class="cm">// <span class="cn">⑩</span> 配列</span>
+    for (int s : scores) {                         <span class="cm">// <span class="cn">⑩</span> 拡張for文</span>
+        System.out.println(s);
+    }
+}</pre>
+<p><code>int[] scores = {80, 65, 90};</code> は<strong>配列</strong>です。3つの <code>int</code> を 0番・1番・2番の順に並べて、<code>scores</code> という1つの名前で持ちます。点数が何人分に増えても、<code>scores</code> という名前は1つのままで、番号で1人ずつ取り出せます。</p>
+<p><code>for (int s : scores)</code> は<strong>拡張for文</strong>です。番号を使わずに、配列の中身を1つずつ取り出して <code>s</code> に入れます。<code>:</code> の左の型には、配列の中身の型を書きます。</p>
+<p><strong>普通の for と比べる。</strong>⑩の拡張for文を、⑦と同じ普通の <code>for</code> で書くと次のようになります。上が普通の <code>for</code>、下が⑩の拡張for文です。どちらも 80・65・90 の順に表示します。</p>
+<svg class="fig" role="img" viewbox="0 0 720 330" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="20" y="30">普通の for</text>
+<text font-family="Consolas,monospace" font-size="15" x="36" xml:space="preserve" y="62"><tspan fill="#1f2933">for (</tspan><tspan fill="#c2410c">int i = 0; i &lt; scores.length; i++</tspan><tspan fill="#1f2933">) {</tspan></text>
+<text font-family="Consolas,monospace" font-size="15" x="36" xml:space="preserve" y="88"><tspan fill="#1f2933"> </tspan><tspan fill="#1d4ed8">int s = scores[i];</tspan></text>
+<text font-family="Consolas,monospace" font-size="15" x="36" xml:space="preserve" y="114"><tspan fill="#1f2933">    System.out.println(s);</tspan></text>
+<text font-family="Consolas,monospace" font-size="15" x="36" xml:space="preserve" y="140"><tspan fill="#1f2933">}</tspan></text>
+<text fill="#c2410c" font-size="13" font-weight="bold" text-anchor="start" x="470" y="62">① 番号 i を 0・1・2 と数える</text>
+<text fill="#1d4ed8" font-size="13" font-weight="bold" text-anchor="start" x="470" y="88">② i 番目の値を s に入れる</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="150" x2="150" y1="156" y2="196"></line>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="start" x="166" y="182">①と②を、Java が代わりにする</text>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="20" y="222">拡張for文</text>
+<text font-family="Consolas,monospace" font-size="15" x="36" xml:space="preserve" y="254"><tspan fill="#1f2933">for (</tspan><tspan fill="#1d4ed8">int s</tspan><tspan fill="#1f2933"> : </tspan><tspan fill="#c2410c">scores</tspan><tspan fill="#1f2933">) {</tspan></text>
+<text font-family="Consolas,monospace" font-size="15" x="36" xml:space="preserve" y="280"><tspan fill="#1f2933">    System.out.println(s);</tspan></text>
+<text font-family="Consolas,monospace" font-size="15" x="36" xml:space="preserve" y="306"><tspan fill="#1f2933">}</tspan></text>
+<text fill="#c2410c" font-size="13" font-weight="bold" text-anchor="start" x="330" y="254">① scores の先頭から最後まで</text>
+<text fill="#1d4ed8" font-size="13" font-weight="bold" text-anchor="start" x="330" y="276">② 1つずつ s に入れる</text>
+</svg><p class="figcap">同じ色の所が、同じ仕事をしている</p><p>普通の <code>for</code> では、①番号 <code>i</code> を 0 から数えることと、②<code>i</code> 番目の値を <code>s</code> に入れることを、自分で書いています。拡張for文は、この①と②を Java が代わりにする書き方です。<code>for (int s : scores)</code> は「<code>scores</code> の中身を1つずつ <code>s</code> に入れて、<code>{ }</code> の中を繰り返す」と読みます。</p>
+<p>1周ずつ追うと、次のようになります。拡張for文でも、<code>s</code> に入る値と順番はまったく同じです。違うのは、<code>i</code> が見えないことだけです。</p>
+<table><tr><th></th><th>普通の for の <code>i</code></th><th>条件 <code>i &lt; scores.length</code></th><th><code>s</code> に入る値</th><th>表示</th></tr><tr><td>1周目</td><td>0</td><td>0 &lt; 3 → <code>true</code></td><td><code>scores[0]</code> → 80</td><td>80</td></tr><tr><td>2周目</td><td>1</td><td>1 &lt; 3 → <code>true</code></td><td><code>scores[1]</code> → 65</td><td>65</td></tr><tr><td>3周目</td><td>2</td><td>2 &lt; 3 → <code>true</code></td><td><code>scores[2]</code> → 90</td><td>90</td></tr><tr><td>次</td><td>3</td><td>3 &lt; 3 → <code>false</code></td><td>（入らずに終わる）</td><td>―</td></tr></table>
+<p>拡張for文の動きが分からなくなったら、普通の <code>for</code> に書き直して、この表のように <code>i</code> と <code>s</code> を1周ずつ書き出すと追えます。</p>
+<table><tr><th>やりたいこと</th><th>使う for</th><th>理由</th></tr><tr><td>全部を順に見る（表示する・足す・比べる）</td><td>拡張for文</td><td>番号を書かないので、範囲の外を見る間違いが起きない</td></tr><tr><td>何番目かを使う（「0行目」と表示する、隣と比べる）</td><td>普通の <code>for</code></td><td>拡張for文には <code>i</code> が無い</td></tr><tr><td>配列の中身を書き換える</td><td>普通の <code>for</code></td><td><code>s</code> は取り出した値を入れた別の変数なので、<code>s</code> に入れ直しても配列は変わらない</td></tr></table>
+<p>④の <code>ScoreReport</code> は全員を順に見るだけなので、拡張for文で書きます。次の⑪で普通の <code>for</code> を使っているのは、「0行目の合計」のように番号を表示するためです。</p>
+<pre class="code" id="c12">System.out.println("--- 二次元配列 ---");
+{
+    int[][] table = { {1, 2, 3}, {4, 5}, {6, 7, 8, 9} };   <span class="cm">// <span class="cn">⑪</span> 二次元配列</span>
+    for (int i = 0; i &lt; table.length; i++) {
+        int total = 0;
+        for (int j = 0; j &lt; table[i].length; j++) {   <span class="cm">// <span class="cn">⑪</span> i 行目の個数</span>
+            total += table[i][j];
+        }
+        System.out.println(i + "行目の合計 : " + total);
+    }
+}</pre>
+<p><code>int[][] table</code> は<strong>二次元配列</strong>です。配列の中に配列が入っていて、<code>table[0]</code> が <code>{1, 2, 3}</code>、<code>table[1]</code> が <code>{4, 5}</code> です。外側は <code>table.length</code>（行の数 3）で回し、内側は <code>table[i].length</code>（<code>i</code> 行目の個数）で回します。<strong>なぜ table[i].length なのか。</strong>行ごとに個数が 3個・2個・4個と違うからです。</p>
+<p><strong>よくある間違い：for の条件を &lt;= で書く。</strong></p>
+<p class="fname">Recall.java（間違いあり）</p>
+<pre class="code" id="c13">package lesson02;
+
+public class Recall {
+    public static void main(String[] args) {
+        int[] nums = {80, 65, 90};
+        for (int i = 0; i &lt;= nums.length; i++) {           <span class="cm">// &lt;= と書いた</span>
+            System.out.println(nums[i]);
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">80
+65
+90</div>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3
+	at lesson02.Recall.main(Recall.java:7)</div>
+<p><strong>3つ表示してから止まっています。</strong><code>i</code> が 3 になった4周目で、無い <code>nums[3]</code> を見に行ったためです。<code>Index 3 out of bounds for length 3</code> は「個数 3 の配列で、3番を見ようとした」という意味です。この番号を<strong>添字</strong>と言います。今日の主役の図の、無い3号室です。<strong><code>&lt;=</code> を <code>&lt;</code> にします。</strong></p>
+<div class="words"><b>ここで出た言葉</b><span><b>添字</b>　配列の何番目かを表す番号。0 から始まり、最後は <code>length - 1</code></span><span><b><code>ArrayIndexOutOfBoundsException</code></b>　アレイ インデックス アウトオブバウンズ エクセプション。「配列の添字が範囲の外」という意味です</span></div>
+<div class="trap">配列のエラーは、ほぼ全部が添字の数え方です。<strong>0 から始まること、最後は <code>length - 1</code> であること。</strong><code>for</code> の条件は <code>i &lt; 配列.length</code> と書く、と決めておくと間違えません。</div>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。<code>ScoreReport</code> に、課題①〜④を順に書き足します。5分野を1本のプログラムで全部使います。1つできるたびに実行して確かめてください。<strong>課題③まで作れれば、今日の目的は達成です。</strong></p>
+<p>上の手順の④⑤で、新しいクラス <code>ScoreReport</code> を作ってから書きます。</p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　受験者数と合計点を表示する（コードの「課題①」。使う分野：配列・繰り返し）</li><li>②　平均点を小数第1位まで表示する（「課題②」。変数と型。<code>int</code> どうしの割り算に注意）</li><li>③　最高点と最低点を表示する（「課題③」。条件分岐・繰り返し）</li><li>④　60点未満の人数と、その点数の一覧を表示する（「課題④」。条件分岐・文字列）</li></ul>
+<h2>骨組み</h2>
+<p>ファイルの全体です。課題①は「ここに for を書いて」のコメントの所に、課題②〜④はそれぞれのコメントの下に書き足します。</p>
+<p class="fname">ScoreReport.java</p>
+<pre class="code" id="c14">package lesson02;
+
+public class ScoreReport {
+    public static void main(String[] args) {
+        int[] scores = {82, 55, 91, 68, 77, 49, 100, 73, 60, 38};
+
+        <span class="cm">// 課題<span class="cn">①</span> 受験者数と合計点</span>
+        int sum = 0;
+        <span class="cm">// ここに for を書いて、sum に全部足す</span>
+        System.out.println("受験者数 : " + scores.length + " 人");
+        System.out.println("合計点   : " + sum + " 点");
+
+        <span class="cm">// 課題<span class="cn">②</span> 平均点（小数第1位まで）</span>
+
+        <span class="cm">// 課題<span class="cn">③</span> 最高点と最低点</span>
+
+        <span class="cm">// 課題<span class="cn">④</span> 60点未満の人数と、その点数の一覧</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c14">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">受験者数 : 10 人
+合計点   : 693 点
+平均点   : 69.3 点
+最高点   : 100 点
+最低点   : 38 点
+再テスト : 3 人（55, 49, 38）</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　課題①は <code>for (int s : scores) { sum += s; }</code> です。拡張for文で1人ずつ足していきます。</li><li>②　課題②は、<code>sum / scores.length</code> だと <code>int</code> どうしの割り算で小数が消えます。<code>(double) sum / scores.length</code> と、先に片方を <code>double</code> にします。表示は <code>System.out.printf("平均点   : %.1f 点%n", average);</code> です。<code>%.1f</code> は小数第1位まで、<code>%n</code> は改行です。</li><li>③　課題③は、<code>int max = scores[0];</code> のように最初の1人を仮の最高点・最低点にして、<code>for</code> の中で比べて入れ替えます。課題④は、空の文字列 <code>String list = "";</code> の後ろに <code>", " + s</code> をつないでいき、できあがる <code>", 55, 49, 38"</code> の先頭2文字を <code>list.substring(2)</code> で切り落とします。</li></ul>
+<div class="calm">全部は解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第2回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　ScoreReport</summary><div class="sol">
+<p class="fname">ScoreReport.java（4つの課題を書いたもの）</p>
+<pre class="code" id="c15">package lesson02;
+
+public class ScoreReport {
+    public static void main(String[] args) {
+        int[] scores = {82, 55, 91, 68, 77, 49, 100, 73, 60, 38};
+
+        <span class="cm">// 課題<span class="cn">①</span> 受験者数と合計点</span>
+        int sum = 0;
+        <span class="cm">// ここに for を書いて、sum に全部足す</span>
+        for (int s : scores) {
+            sum += s;
+        }
+        System.out.println("受験者数 : " + scores.length + " 人");
+        System.out.println("合計点   : " + sum + " 点");
+
+        <span class="cm">// 課題<span class="cn">②</span> 平均点（小数第1位まで）</span>
+        double average = (double) sum / scores.length;
+        System.out.printf("平均点   : %.1f 点%n", average);
+
+        <span class="cm">// 課題<span class="cn">③</span> 最高点と最低点</span>
+        int max = scores[0];
+        int min = scores[0];
+        for (int s : scores) {
+            if (s &gt; max) {
+                max = s;
+            }
+            if (s &lt; min) {
+                min = s;
+            }
+        }
+        System.out.println("最高点   : " + max + " 点");
+        System.out.println("最低点   : " + min + " 点");
+
+        <span class="cm">// 課題<span class="cn">④</span> 60点未満の人数と、その点数の一覧</span>
+        int retest = 0;
+        String list = "";
+        for (int s : scores) {
+            if (s &lt; 60) {
+                retest++;
+                list += ", " + s;
+            }
+        }
+        System.out.println("再テスト : " + retest + " 人（" + list.substring(2) + "）");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">受験者数 : 10 人
+合計点   : 693 点
+平均点   : 69.3 点
+最高点   : 100 点
+最低点   : 38 点
+再テスト : 3 人（55, 49, 38）</div>
+<p>課題①③④は、どれも「<code>for (int s : scores)</code> で1人ずつ取り出して、何かをする」形です。取り出したあとにすることが、足す・比べる・つなぐ、と変わるだけです。</p>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li><code>int</code> どうしの割り算で小数が消えることを、例を挙げて説明できる</li><li><code>==</code> と <code>equals</code> の違いを説明できる</li><li><code>while</code> と <code>do-while</code> の違いを説明できる</li><li>配列の添字が 0 から <code>length - 1</code> までだと説明でき、<code>ArrayIndexOutOfBoundsException</code> を直せる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、メソッド・引数・戻り値と値渡しです。</strong>今日の <code>ScoreReport</code> は、<code>main</code> の中に全部を書いたので長くなりました。次回は、合計や平均のようなまとまりに<strong>名前を付けて切り出す</strong>書き方と、値の渡し方・受け取り方を扱います。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>配列</td><td>はいれつ</td><td>同じ型の値を並べて、1つの名前で持つもの。<code>int[] nums = {80, 65, 90};</code></td></tr><tr><td>添字</td><td>そえじ</td><td>配列の何番目かを表す番号。0 から始まり、最後は <code>length - 1</code></td></tr><tr><td>length</td><td>れんぐす</td><td>配列に入っている個数。<code>nums.length</code></td></tr><tr><td>二次元配列</td><td>にじげんはいれつ</td><td>配列の中に配列が入ったもの。<code>int[][] table</code>。行ごとに個数が違ってもよい</td></tr><tr><td>繰り返し</td><td>くりかえし</td><td>同じ処理を何度も行うこと。<code>for</code>・<code>while</code>・<code>do-while</code> があります</td></tr><tr><td>for文</td><td>ふぉーぶん</td><td>回数を決めて繰り返す書き方。<code>for (int i = 0; i &lt; 3; i++)</code></td></tr><tr><td>拡張for文</td><td>かくちょうふぉーぶん</td><td><code>for (int s : scores)</code> の形。配列の中身を先頭から1つずつ <code>s</code> に入れて繰り返す。普通の <code>for</code> で <code>i</code> を数えて <code>scores[i]</code> を取り出すのと同じ動き</td></tr><tr><td>while文</td><td>ほわいるぶん</td><td>条件を先に調べてから繰り返す。条件が最初から <code>false</code> なら1回も動きません</td></tr><tr><td>do-while文</td><td>どぅーほわいるぶん</td><td>先に1回動いてから条件を調べる。必ず1回は動きます</td></tr><tr><td>二重ループ</td><td>にじゅうるーぷ</td><td><code>for</code> の中に <code>for</code> を書くこと。外側が1周するあいだに、内側が最後まで回ります</td></tr><tr><td>変数</td><td>へんすう</td><td>値を入れておく、名前の付いた箱</td></tr><tr><td>型</td><td>かた</td><td>箱の形。<code>int</code>（整数）、<code>double</code>（小数）、<code>String</code>（文字列）など</td></tr><tr><td>キャスト</td><td>きゃすと</td><td><code>(int)</code> のように、型の名前を丸括弧で囲んで型を変える書き方。<code>double</code> から <code>int</code> へは切り捨て</td></tr><tr><td>演算子</td><td>えんざんし</td><td>計算や比較に使う記号。<code>+</code> <code>/</code> <code>%</code> <code>==</code> <code>&amp;&amp;</code> など</td></tr><tr><td>%</td><td>―</td><td>割り算のあまり。<code>5 % 2</code> は 1</td></tr><tr><td>++</td><td>―</td><td>1 増やす。<code>i++</code> は使ってから増やし、<code>++i</code> は増やしてから使う</td></tr><tr><td>indexOf</td><td>いんでっくすおぶ</td><td>文字列の中で、指定した文字が何番目にあるかを返す。0 から数えます</td></tr><tr><td>substring</td><td>さぶすとりんぐ</td><td>文字列の一部を切り出す。<code>s.substring(6)</code> は位置 6 の文字から後ろ全部（位置は 0 から数える）</td></tr><tr><td>equals</td><td>いこーるず</td><td>文字列の中身が同じかを調べる。文字列の比較はこれを使います</td></tr><tr><td>==</td><td>―</td><td>同じ物かを調べる。<code>int</code> などの比較に使います。文字列では中身ではなく「同じ物か」を見ます</td></tr><tr><td>if / else if / else</td><td>―</td><td>条件で処理を分ける。上から順に調べ、最初に当てはまった所だけが動きます</td></tr><tr><td>switch</td><td>すいっち</td><td>1つの値を見て、<code>case</code> ごとに処理を分ける。範囲の判定には使えません</td></tr><tr><td>&amp;&amp;</td><td>―</td><td>「かつ」。左と右の両方が <code>true</code> のときだけ <code>true</code>。<code>score &gt;= 60 &amp;&amp; score &lt; 80</code></td></tr><tr><td>printf</td><td>ぷりんとえふ</td><td>書式を決めて表示する。<code>%3d</code> は3桁の幅、<code>%.1f</code> は小数第1位まで、<code>%n</code> は改行</td></tr><tr><td>コメント</td><td>こめんと</td><td><code>//</code> から行の終わりまで。プログラムとして読まれません</td></tr><tr><td>ArrayIndexOutOfBoundsException</td><td>―</td><td>アレイ インデックス アウトオブバウンズ エクセプション。配列の添字が範囲の外のときに出るエラー。そこでプログラムが止まります</td></tr><tr><td>new</td><td>にゅー</td><td>新しく作る命令。<code>new String("ノート")</code>。第4回で詳しく扱います</td></tr><tr><td>パッケージ</td><td>ぱっけーじ</td><td>クラスを入れるフォルダのようなもの。1行目の <code>package lesson02;</code></td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 2 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
