@@ -1,0 +1,21 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ファイル入出力とthrows | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>ファイル入出力とthrows</strong></nav><span class="eyebrow">第10回の補足</span><h1>ファイル入出力とthrows</h1><p class="subtitle">ファイルがないとき、どこに保存されるか、どう閉じるか。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong>ファイル操作は失敗し得るので<code>IOException</code>を考える。<code>Path.of("memo.txt")</code>は実行時の作業フォルダを基準にする。読んだ内容を使う操作とファイルの場所を分けて考える。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>まず実際にどう動くかを見て、その理由を下で整理する。</p><div class="codehead"><span>Main.java（テキストを書いて読み戻す）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+public class Main {
+    public static void main(String[] args) {
+        Path file = Path.of(&quot;memo.txt&quot;);
+        try {
+            Files.writeString(file, &quot;こんにちは&quot;);
+            String text = Files.readString(file);
+            System.out.println(text);
+        } catch (IOException e) {
+            System.out.println(&quot;ファイル操作に失敗&quot;);
+        }
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果</div><pre class="output">こんにちは（正常に書き込み・読み込みできた場合）</pre><h3>1行ずつ考えると</h3><ol class="steps"><li><code>Path.of("memo.txt")</code>で、ファイル名から場所を指定する。相対パスは作業フォルダ基準。</li><li><code>Files.writeString</code>で内容を保存し、<code>Files.readString</code>で全部読む。</li><li>失敗したら<code>IOException</code>をcatchして処理を分ける。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong><code>Files.writeString</code>の標準設定は、すでにファイルがある場合に上書きする。大切なデータの保存では追記・バックアップを検討。Eclipseのプロジェクト名やsrcフォルダと、実行時の作業フォルダは同じとは限らない。</div><h3>BufferedReaderなどは自動で閉じる</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>try (var reader = Files.newBufferedReader(
+        Path.of(&quot;memo.txt&quot;))) {
+    System.out.println(reader.readLine());
+} catch (IOException e) {
+    System.out.println(&quot;読めませんでした&quot;);
+}</code></pre><p><code>try ( ... )</code> を使うと、自動でcloseされる。上の比較は<code>Files</code>・<code>Path</code>・<code>IOException</code>をimportした状態の抜粋。</p></section><section class="card"><h2>30秒で理解チェック</h2><p><code>void load() throws IOException</code> と書けば、ファイル読み込みは必ず成功する？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>いいえ。</strong> throwsは例外が起き得ることを宣言するだけ。失敗をなくすのではなく呼び出し元で扱えるようにする。</p></details></section><div class="links"><a href="../lesson10.html">← 第10回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義を補助するための解説です。比較用のコードは必要部分のみの抜粋です。実際のJava実行はEclipseなどで行ってください。</footer></main></body></html>
