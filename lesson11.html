@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第11回｜MySQL・SQL・JDBC</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson10.html">前の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 11 回 ／ 全 18 回</span><h1>MySQL・SQL・JDBC</h1><p>第14章 と 第17章 17-1・17-2　MySQL の準備 ／ SQL の最低限 ／ JDBC で接続して SELECT ／ JDBC の7つの手順</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">データベース（MySQL）</span>　<span class="term">SQL</span>　<span class="term">JDBC</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>mysql で、データベースと表を作り、商品を入れて取り出せる</li><li>Java から MySQL につないで、表の中身を <code>List&lt;Product&gt;</code> に読み込める</li><li>つながらないときに、メッセージから見る所を言える</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　データベース（MySQL）・SQL・JDBC を、お店と倉庫で</li><li>② 写して動かす　mysql で表を作り、<code>Product</code> <code>ProductDao</code> <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑭の順に。よくある間違いも一緒に</li><li>④ 自力で書く　在庫の少ない商品を取り出す</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>データベース（MySQL）</td><td>データを表（テーブル）の形でまとめて保存し、検索・追加・更新・削除を受け持つソフトです。この講座では MySQL を使います。<code class="ex">CREATE DATABASE stock;</code></td></tr><tr><td>SQL</td><td>データベースに、データの検索・追加・更新・削除や、表の作成を命令するための言語。MySQL をはじめ、ほとんどのデータベースで共通に使えます。<code class="ex">SELECT id, name, price, stock FROM products ORDER BY id;</code></td></tr><tr><td>JDBC</td><td>Java Database Connectivity。Java のプログラムからデータベースに接続し、SQL を送って結果を受け取るための標準の仕組み（<code>java.sql</code>）。データベースごとのドライバ（MySQL なら Connector/J）と組み合わせて使います。<code class="ex">Connection con = DriverManager.getConnection(URL, USER, PASSWORD);</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>SQL は「倉庫への注文書」、JDBC は「倉庫へつながる電話回線」</h3><p class="lead">倉庫の人は、倉庫の言葉で書いた注文書しか受け付けません。</p><svg class="fig" role="img" viewbox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="110" rx="6" stroke="#334155" stroke-width="1.5" width="160" x="20" y="60"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="160" x="20" y="60"></rect>
+<rect fill="#fff3e6" height="8" width="158" x="21" y="79"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="100" y="78">お店（Java）</text>
+<text fill="#1f2933" font-size="14" x="30" y="106">Main</text>
+<text fill="#1f2933" font-size="14" x="30" y="126">ProductDao</text>
+<rect fill="#f5f3ff" height="175" rx="10" stroke="#a78bfa" stroke-dasharray="5 4" stroke-width="1.2" width="310" x="200" y="40"></rect>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="middle" x="355" y="60">注文書（SQL）</text>
+<line marker-end="url(#ar1)" stroke="#1d4ed8" stroke-width="1.8" x1="185" x2="525" y1="75" y2="75"></line>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="13" x="222" xml:space="preserve" y="100">SELECT id, name, price, stock</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="13" x="222" xml:space="preserve" y="118">FROM products ORDER BY id</text>
+<line marker-end="url(#ar1)" stroke="#047857" stroke-width="1.8" x1="525" x2="185" y1="150" y2="150"></line>
+<text fill="#047857" font-size="14" font-weight="bold" text-anchor="middle" x="355" y="172">返事（結果の表）</text>
+<text fill="#6d28d9" font-size="14" font-weight="bold" text-anchor="middle" x="355" y="204">回線とかけ方の決まり＝JDBC</text>
+<rect fill="#fff" height="170" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="30"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="30"></rect>
+<rect fill="#e0f2fe" height="8" width="168" x="531" y="49"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="615" y="48">倉庫（MySQL）</text>
+<text fill="#1f2933" font-size="13" x="540" y="76">データベース stock</text>
+<text fill="#1f2933" font-size="13" x="540" y="96">表 products</text>
+<text fill="#1f2933" font-size="13" x="540" y="116">1 ボールペン</text>
+<text fill="#1f2933" font-size="13" x="540" y="136">2 ノート</text>
+<text fill="#1f2933" font-size="13" x="540" y="156">3 消しゴム</text>
+</svg><p class="figcap">SQL は倉庫の言葉で書いた注文書、JDBC は倉庫へつながる電話回線</p><p>第10回までは、商品のデータを Java の中（<code>List</code>）や CSV ファイルに持っていました。今日は、データを <strong>MySQL</strong> という<strong>データベース</strong>に置きます。商品を倉庫に預けるようなものです。</p>
+<p>倉庫に「商品を全部、番号順に出して」と頼むときの言葉が <strong>SQL</strong> です。mysql の画面から打っても、Java から送っても、<strong>同じ SQL がそのまま通じます。</strong></p>
+<p>お店（Java）から倉庫（MySQL）へ注文書を届け、返事を受け取る電話回線が <strong>JDBC</strong> です。かけ方の決まりはどの倉庫でも同じで、倉庫の会社ごとの電話機に当たるのが <strong>Connector/J</strong> という部品です。</p>
+</div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>倉庫</td><td>データベース　MySQL の中の <code>stock</code></td></tr><tr><td>倉庫の棚の一覧表</td><td>表（テーブル）　<code>products</code></td></tr><tr><td>倉庫の言葉で書いた注文書</td><td>SQL　<code>SELECT id, name, price, stock FROM products ORDER BY id</code></td></tr><tr><td>電話回線とかけ方の決まり</td><td>JDBC　<code>Connection</code> <code>PreparedStatement</code> <code>ResultSet</code></td></tr><tr><td>MySQL の会社がくれる電話機</td><td>Connector/J　<code>mysql-connector-j-8.4.0.jar</code></td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>データベース（MySQL）</td><td>たくさんのデータを安全に保存し、いくつものプログラムから同時に使えるようにするためです。</td></tr><tr><td>SQL</td><td>たくさんのデータから条件に合うものを探す・並べ替えるといった仕事を、データベースに任せるためです。</td></tr><tr><td>JDBC</td><td>Java のプログラムからデータベースを使うには、決まった手順と部品が要るからです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>データベース（MySQL）</td><td>商品・会員・注文など、アプリが扱うデータを保存しておくとき。</td></tr><tr><td>SQL</td><td>在庫の少ない商品だけを取り出す、価格の高い順に並べるとき。</td></tr><tr><td>JDBC</td><td>Java で入力した商品を MySQL に保存する、保存した一覧を読み込むとき。</td></tr></table>
+<p>今日のゴールは、この絵のとおり、Java から注文書を送って商品の一覧を受け取ることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各箇所の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は、先に MySQL に表を作り、そのあと Eclipse で Java を書きます。MySQL は起動している状態から始めます。</p>
+<h2>MySQL の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>コマンド プロンプトを開く</td></tr><tr><td>②</td><td><code>mysql -u root -p</code> と入力して <code>Enter</code></td></tr><tr><td>③</td><td>パスワードを聞かれたら、授業で使うパスワード（この資料では <code>password</code>）を入れて <code>Enter</code></td></tr><tr><td>④</td><td><code>mysql&gt;</code> と出たら、下の全体像の「mysql に貼る SQL」を貼って <code>Enter</code></td></tr><tr><td>⑤</td><td>最後に3行の表が出たことを確かめる。出れば、表はできている</td></tr><tr><td>⑥</td><td><code>exit</code> と入力して <code>Enter</code>。mysql から抜ける</td></tr></table>
+<p>②で「'mysql' は、内部コマンドまたは外部コマンド、操作可能なプログラムまたはバッチ ファイルとして認識されていません。」と出たときは、エクスプローラーで MySQL の <code>bin</code> フォルダ（<code>mysql.exe</code> がある所）を開き、上のアドレス欄に <code>cmd</code> と入力して <code>Enter</code> を押します。そのフォルダでコマンド プロンプトが開くので、②からやり直します。</p>
+<p>SQL を貼り直したいときは、先に <code>DROP DATABASE IF EXISTS stock;</code> を打って、データベースごと消してから貼ります。</p>
+<p>Eclipse 側は、新しいプロジェクト <code>lesson11</code> に、MySQL につなぐ部品（Connector/J）を追加してから、クラスを3つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson11</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson11</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］</td></tr><tr><td>⑤</td><td>講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーに「参照ライブラリー」ができ、その中に jar があることを確かめる</td></tr><tr><td>⑥</td><td><code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑦</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson11</code> と入っていることを確かめて［完了］（空なら <code>lesson11</code> と入力する）</td></tr><tr><td>⑧</td><td>⑥⑦をあと2回行い、名前 <code>ProductDao</code> と <code>Main</code> のクラスを作る</td></tr><tr><td>⑨</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>mysql に貼る SQL が1つと、Java のファイルが3つです。どの Java のファイルも1行目は <code>package lesson11;</code> です。</p>
+<p><code>Product</code> のコードは第5回と同じです（行末の番号のメモは外しています）。MySQL の表 <code>products</code> の列 <code>id</code> <code>name</code> <code>price</code> <code>stock</code> は、<code>Product</code> のフィールドと同じ4つにしてあります。<strong>表の1行が、<code>Product</code> 1つになります。</strong></p>
+<p>下が、それぞれの中身の全部です。行の右にある ①〜⑭ は、③解説の番号です（SQL では <code>--</code> のあとが、Java の <code>//</code> と同じ行末のメモです）。</p>
+<svg class="fig" role="img" viewbox="0 0 720 320" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="30" y="30">lesson11（Eclipse）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="38" x2="38" y1="38" y2="247"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="38" x2="56" y1="66" y2="66"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="38" x2="56" y1="247" y2="247"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="62" y="71">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="70" x2="70" y1="78" y2="102"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="70" x2="88" y1="102" y2="102"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="94" y="107">lesson11（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="108" x2="108" y1="114" y2="212"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="108" x2="126" y1="140" y2="140"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="108" x2="126" y1="176" y2="176"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="108" x2="126" y1="212" y2="212"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="130" y="124"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="142" y="145">Product.java</text>
+<rect fill="#f5f3ff" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="130" y="160"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="142" y="181">ProductDao.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="130" y="196"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="142" y="217">Main.java</text>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="62" y="252">参照ライブラリー</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="70" x2="70" y1="259" y2="284"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="70" x2="88" y1="284" y2="284"></line>
+<rect fill="#f8fafc" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="250" x="92" y="268"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="289">mysql-connector-j-8.4.0.jar</text>
+<rect fill="#f8fafc" height="200" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="270" x="430" y="30"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="565" y="52">MySQL</text>
+<rect fill="#fff" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="230" x="450" y="70"></rect>
+<text fill="#1f2933" font-size="14" x="460" y="90">データベース stock</text>
+<rect fill="#fff" height="90" rx="6" stroke="#334155" stroke-width="1.5" width="210" x="470" y="120"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="210" x="470" y="120"></rect>
+<rect fill="#e0f2fe" height="8" width="208" x="471" y="139"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="575" y="138">表 products</text>
+<text fill="#1f2933" font-size="13" x="480" y="166">id / name / price / stock</text>
+<text fill="#1f2933" font-size="13" x="480" y="186">3行（3商品）</text>
+<line marker-end="url(#ar2)" stroke="#6d28d9" stroke-width="1.8" x1="302" x2="428" y1="176" y2="150"></line>
+<text fill="#6d28d9" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="150">JDBC</text>
+<text fill="#475569" font-size="13" text-anchor="middle" x="565" y="256">①〜④の SQL で作る</text>
+<text fill="#475569" font-size="13" text-anchor="middle" x="565" y="276">（mysql に貼る）</text>
+</svg><p class="figcap">左が Eclipse のプロジェクト、右が MySQL の中身</p><p class="fname">mysql に貼る SQL</p>
+<pre class="code" id="c1">CREATE DATABASE stock DEFAULT CHARACTER SET utf8mb4;       -- <span class="cn">①</span> データベースを作る
+USE stock;                                                 -- <span class="cn">①</span> これから使う
+
+CREATE TABLE products (                                    -- <span class="cn">②</span> 表を作る
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(100) NOT NULL,
+    price  INT NOT NULL,
+    stock  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO products (name, price, stock) VALUES           -- <span class="cn">③</span> 3件入れる
+    ('ボールペン', 150, 30),
+    ('ノート', 220, 10),
+    ('消しゴム', 100, 50);
+
+SELECT id, name, price, stock FROM products ORDER BY id;   -- <span class="cn">④</span> 取り出す</pre>
+<p class="fname">Product.java　商品（第5回と同じ）</p>
+<pre class="code" id="c2">package lesson11;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="fname">ProductDao.java　MySQL から商品を読む係</p>
+<pre class="code" id="c3">package lesson11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";   <span class="cm">// <span class="cn">⑤</span> つなぐ先</span>
+    private static final String USER = "root";                               <span class="cm">// <span class="cn">⑤</span> つなぐ先</span>
+    private static final String PASSWORD = "password";                       <span class="cm">// <span class="cn">⑤</span> つなぐ先</span>
+
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";   <span class="cm">// <span class="cn">⑥</span> SQL を用意する</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);   <span class="cm">// <span class="cn">⑦</span> つなぐ</span>
+             PreparedStatement ps = con.prepareStatement(sql);                    <span class="cm">// <span class="cn">⑧</span> 送る道具を作る</span>
+             ResultSet rs = ps.executeQuery()) {                                  <span class="cm">// <span class="cn">⑨</span> 実行する</span>
+            while (rs.next()) {                                                   <span class="cm">// <span class="cn">⑩</span> 1行進む</span>
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),       <span class="cm">// <span class="cn">⑪</span> 詰め替える</span>
+                                     rs.getInt("price"), rs.getInt("stock")));    <span class="cm">// <span class="cn">⑪</span> 詰め替える</span>
+            }
+        }                                                                         <span class="cm">// <span class="cn">⑫</span> ここで閉じる</span>
+        return list;
+    }
+}</pre>
+<p class="fname">Main.java　使うほう</p>
+<pre class="code" id="c4">package lesson11;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+
+        try {
+            List&lt;Product&gt; products = dao.findAll();   <span class="cm">// <span class="cn">⑬</span> 読んでもらう</span>
+            for (Product p : products) {
+                p.show();
+            }
+            System.out.println("全部で" + products.size() + "件です");
+        } catch (SQLException e) {   <span class="cm">// <span class="cn">⑭</span> 受け止める</span>
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個
+全部で3件です</div>
+<p><code>Main</code> には商品の名前も価格も1つも書いていません。表示された3件は、mysql で③に入れたものを、実行するたびに MySQL から読んできたものです。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　データベースと表を作る（①②）</h2>
+<p class="fname">mysql に貼る SQL（抜き出し）</p>
+<pre class="code" id="c5">CREATE DATABASE stock DEFAULT CHARACTER SET utf8mb4;       -- <span class="cn">①</span> データベースを作る
+USE stock;                                                 -- <span class="cn">①</span> これから使う
+
+CREATE TABLE products (                                    -- <span class="cn">②</span> 表を作る
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(100) NOT NULL,
+    price  INT NOT NULL,
+    stock  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;</pre>
+<p><code>CREATE DATABASE</code> で <code>stock</code> という名前の<strong>データベース</strong>（倉庫）を作り、<code>USE stock;</code> でこれから使うと指定します。<code>utf8mb4</code> は文字コードの指定で、日本語の商品名がそのまま入ります。データベースの名前の <code>stock</code> と、在庫の列 <code>stock</code> は別物です。</p>
+<p><code>CREATE TABLE</code> で<strong>表（テーブル）</strong>を作ります。<code>id INT</code> のように「列の名前と型」を並べます。<code>VARCHAR(100)</code> は最大100文字の文字列、<code>NOT NULL</code> は「空を許さない」です。<code>id</code> の <code>AUTO_INCREMENT PRIMARY KEY</code> は「番号を自動で振り、その行を1つに決める列」です。</p>
+<p><strong>なぜ列を決めておくのか。</strong>列と型を決めておくと、MySQL が型を守ってくれます。列は <code>Product</code> のフィールドと同じ4つにしてあるので、表の1行が <code>Product</code> 1つになります。</p>
+<h2>2　行を入れて、取り出す（③④）</h2>
+<p class="fname">mysql に貼る SQL（抜き出し）</p>
+<pre class="code" id="c6">INSERT INTO products (name, price, stock) VALUES           -- <span class="cn">③</span> 3件入れる
+    ('ボールペン', 150, 30),
+    ('ノート', 220, 10),
+    ('消しゴム', 100, 50);
+
+SELECT id, name, price, stock FROM products ORDER BY id;   -- <span class="cn">④</span> 取り出す</pre>
+<p><strong>INSERT</strong> は「表に行を入れる」SQL です。丸括弧の列の順に値を並べ、文字列は <code>'ボールペン'</code> のようにシングルクォートで囲みます。<code>id</code> は書きません。②の <code>AUTO_INCREMENT</code> が 1・2・3 と振るので、番号がぶつかりません。</p>
+<p><strong>SELECT</strong> は「表から取り出す」SQL です。「<code>products</code> から、4つの列を、<code>id</code> の小さい順に」と読みます。mysql の画面で3件入ったことを確かめる文で、<strong>同じ文を⑥で Java から送ります。</strong></p>
+<h2>3　つなぐ先を決める（⑤）</h2>
+<p class="fname">ProductDao.java（抜き出し）</p>
+<pre class="code" id="c7">    private static final String URL = "jdbc:mysql://localhost:3306/stock";   <span class="cm">// <span class="cn">⑤</span> つなぐ先</span>
+    private static final String USER = "root";                               <span class="cm">// <span class="cn">⑤</span> つなぐ先</span>
+    private static final String PASSWORD = "password";                       <span class="cm">// <span class="cn">⑤</span> つなぐ先</span></pre>
+<p><code>jdbc:mysql://localhost:3306/stock</code> は「この PC（<code>localhost</code>）の 3306 番で動いている MySQL の、<code>stock</code>」という意味です。<code>static final</code> は、あとから変えない値（定数）の印です。どこに、誰としてつなぐかを1か所にまとめておくので、パスワードが変わっても直すのはここだけです。</p>
+<p><strong>よくある間違い：つなぐ先が1つ違う。</strong><code>PASSWORD</code> を、MySQL に登録したものと違う値にした形です。</p>
+<p class="fname">ProductDao.java（間違いあり）</p>
+<pre class="code" id="c8">package lesson11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "pass";   <span class="cm">// ここが問題</span>
+
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                     rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">データベースのエラー: Access denied for user 'root'@'localhost' (using password: YES)</div>
+<p><code>Access denied</code> は「入れてもらえない」という意味です。MySQL までは届いたけれど、ユーザー名かパスワードが合わなかった、ということです。どこで失敗したかで、メッセージが変わります。</p>
+<table><tr><th>メッセージ</th><th>何が起きているか</th><th>見る所</th></tr><tr><td><code>No suitable driver found</code></td><td>Connector/J が入っていない</td><td>②の Eclipse の手順④⑤（ビルド・パス）</td></tr><tr><td><code>Communications link failure</code></td><td>MySQL が動いていない、またはポート番号が違う</td><td>MySQL が起動しているか。<code>URL</code> の <code>3306</code></td></tr><tr><td><code>Access denied for user</code></td><td>ユーザー名かパスワードが違う</td><td><code>USER</code> と <code>PASSWORD</code></td></tr><tr><td><code>Unknown database</code></td><td>そのデータベースが無い</td><td><code>URL</code> の <code>stock</code> の綴り。mysql で①をしたか</td></tr><tr><td><code>Table ... doesn't exist</code></td><td>その表が無い</td><td>SQL の表の名前の綴り。mysql で②をしたか</td></tr></table>
+<div class="trap"><code>No suitable driver found</code> だけは、Java のコードをいくら見ても間違いがありません。<strong>jar をビルド・パスに入れ忘れた</strong>ときに出ます。ツリーに「参照ライブラリー」があるかを見てください。</div>
+<h2>4　SQL を用意して、つないで、実行する（⑥〜⑨）</h2>
+<p class="fname">ProductDao.java（抜き出し）</p>
+<pre class="code" id="c9">    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";   <span class="cm">// <span class="cn">⑥</span> SQL を用意する</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);   <span class="cm">// <span class="cn">⑦</span> つなぐ</span>
+             PreparedStatement ps = con.prepareStatement(sql);                    <span class="cm">// <span class="cn">⑧</span> 送る道具を作る</span>
+             ResultSet rs = ps.executeQuery()) {                                  <span class="cm">// <span class="cn">⑨</span> 実行する</span>
+            <span class="cm">// （中略）</span>
+        }                                                                         <span class="cm">// <span class="cn">⑫</span> ここで閉じる</span>
+        return list;
+    }</pre>
+<svg class="fig" role="img" viewbox="0 0 720 160" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="24">JDBC で表を読むときの、決まった7つの手順</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="18" y="40"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="60" y="66">SQL を</text>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="60" y="84">用意する</text>
+<text fill="#c25c00" font-size="14" font-weight="bold" text-anchor="middle" x="60" y="124">⑥</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="118" y="40"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="160" y="75">つなぐ</text>
+<text fill="#c25c00" font-size="14" font-weight="bold" text-anchor="middle" x="160" y="124">⑦</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="218" y="40"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="260" y="66">送る道具を</text>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="260" y="84">作る</text>
+<text fill="#c25c00" font-size="14" font-weight="bold" text-anchor="middle" x="260" y="124">⑧</text>
+<rect fill="#f8fafc" height="60" rx="6" stroke="#94a3b8" stroke-dasharray="6 4" stroke-width="1.5" width="84" x="318" y="40"></rect>
+<text fill="#94a3b8" font-size="13" text-anchor="middle" x="360" y="66">? に値を</text>
+<text fill="#94a3b8" font-size="13" text-anchor="middle" x="360" y="84">入れる</text>
+<text fill="#94a3b8" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="124">次回</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="418" y="40"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="460" y="75">実行する</text>
+<text fill="#c25c00" font-size="14" font-weight="bold" text-anchor="middle" x="460" y="124">⑨</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="518" y="40"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="560" y="66">1行ずつ</text>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="560" y="84">受け取る</text>
+<text fill="#c25c00" font-size="14" font-weight="bold" text-anchor="middle" x="560" y="124">⑩⑪</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="84" x="618" y="40"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="660" y="75">閉じる</text>
+<text fill="#c25c00" font-size="14" font-weight="bold" text-anchor="middle" x="660" y="124">⑫</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="104" x2="116" y1="70" y2="70"></line>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="204" x2="216" y1="70" y2="70"></line>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="304" x2="316" y1="70" y2="70"></line>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="404" x2="416" y1="70" y2="70"></line>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="504" x2="516" y1="70" y2="70"></line>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="604" x2="616" y1="70" y2="70"></line>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="360" y="150">下の数字は、写したコードの番号です。点線の手順は今日は使わず、次回の主役になります</text>
+</svg><p>⑥〜⑫は、JDBC で表を読むときに毎回同じ順で書く手順です。⑥で、送る SQL を文字列で用意します。④と同じ文で、最後の <code>;</code> は付けません。⑦の <code>DriverManager.getConnection</code> で MySQL につなぎ、つながりを表す <strong>Connection</strong> を受け取ります。つながらなければ、ここで <code>SQLException</code> が起きます。⑧で、⑥の SQL を持った送る道具 <strong>PreparedStatement</strong> を作ります。⑨の <code>executeQuery()</code> で実行し、返ってきた表を <strong>ResultSet</strong> として受け取ります。</p>
+<p><strong>なぜ SQL に ORDER BY を書くのか。</strong>書かないと、並び順は決まらないからです。<code>ORDER BY price DESC</code> と書けば価格の高い順になります。並べ替えは MySQL がするので、Java 側は変わりません。</p>
+<p><strong>④で使う WHERE と、SQL の「等しい」。</strong>写したコードには出てきませんが、④では <code>WHERE</code> で行を絞ります。ID が 2 の商品だけを取り出そうとして <code>WHERE</code> を足し、Java の癖で <code>==</code> と書いた形です。</p>
+<p class="fname">ProductDao.java（間違いあり）</p>
+<pre class="code" id="c10">package lesson11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products WHERE id == 2 ORDER BY id";   <span class="cm">// ここが問題</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                     rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">データベースのエラー: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '== 2 ORDER BY id' at line 1</div>
+<p>引用符の中の SQL は、Java ではなく MySQL が読みます。そのため Eclipse は何も言わず、実行したときに <code>SQLException</code> になりました。<code>near '== 2 ORDER BY id'</code> は「この辺りから読めない」という意味で、間違えた場所を指しています。<code>==</code> を <code>=</code> に直すと、ID 2 のノートだけが出ます。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">2 / ノート / 220円 / 残り10個
+全部で1件です</div>
+<div class="words"><b>ここで出た言葉</b><span><b><code>WHERE</code></b>　取り出す行を条件で絞ります。<code>WHERE id = 2</code> は「<code>id</code> が 2 の行だけ」</span></div>
+<table><tr><th>意味</th><th>Java</th><th>SQL</th></tr><tr><td>等しい</td><td><code>==</code></td><td><code>=</code></td></tr><tr><td>等しくない</td><td><code>!=</code></td><td><code>&lt;&gt;</code></td></tr><tr><td>かつ</td><td><code>&amp;&amp;</code></td><td><code>AND</code></td></tr><tr><td>または</td><td><code>||</code></td><td><code>OR</code></td></tr><tr><td>文字列</td><td><code>"ノート"</code></td><td><code>'ノート'</code></td></tr></table>
+<h2>5　1行ずつ読んで、閉じる（⑩〜⑫）</h2>
+<p class="fname">ProductDao.java（抜き出し）</p>
+<pre class="code" id="c11">    public List&lt;Product&gt; findAll() throws SQLException {
+        <span class="cm">// （中略）</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);   <span class="cm">// <span class="cn">⑦</span> つなぐ</span>
+             PreparedStatement ps = con.prepareStatement(sql);                    <span class="cm">// <span class="cn">⑧</span> 送る道具を作る</span>
+             ResultSet rs = ps.executeQuery()) {                                  <span class="cm">// <span class="cn">⑨</span> 実行する</span>
+            while (rs.next()) {                                                   <span class="cm">// <span class="cn">⑩</span> 1行進む</span>
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),       <span class="cm">// <span class="cn">⑪</span> 詰め替える</span>
+                                     rs.getInt("price"), rs.getInt("stock")));    <span class="cm">// <span class="cn">⑪</span> 詰め替える</span>
+            }
+        }                                                                         <span class="cm">// <span class="cn">⑫</span> ここで閉じる</span>
+        return list;
+    }</pre>
+<p>⑩の <code>rs.next()</code> は、<code>rs</code> が見ている行を1つ進めます。進めた先に行があれば <code>true</code>、もう無ければ <code>false</code> です。<code>rs</code> は最初、1行目の「手前」を見ているので、<code>next()</code> で1行目に進んでから読みます。3行なら3回回って止まります。</p>
+<svg class="fig" role="img" viewbox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="30" stroke="#334155" stroke-width="1.2" width="330" x="230" y="40"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="start" x="242" y="60">id</text>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="start" x="282" y="60">name</text>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="start" x="402" y="60">price</text>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="start" x="482" y="60">stock</text>
+<rect fill="#fff" height="30" stroke="#334155" stroke-width="1.2" width="330" x="230" y="70"></rect>
+<rect fill="#fff" height="30" stroke="#334155" stroke-width="1.2" width="330" x="230" y="100"></rect>
+<rect fill="#fff" height="30" stroke="#334155" stroke-width="1.2" width="330" x="230" y="130"></rect>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="242" y="90">1</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="282" y="90">ボールペン</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="402" y="90">150</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="482" y="90">30</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="242" y="120">2</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="282" y="120">ノート</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="402" y="120">220</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="482" y="120">10</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="242" y="150">3</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="282" y="150">消しゴム</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="402" y="150">100</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="482" y="150">50</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="start" x="20" y="74">最初はここ</text>
+<line marker-end="url(#ar4)" stroke="#b91c1c" stroke-width="1.8" x1="100" x2="226" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="20" y="94">next() 1回目</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="20" y="124">next() 2回目</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="20" y="154">next() 3回目</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="108" x2="226" y1="90" y2="90"></line>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="108" x2="226" y1="120" y2="120"></line>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="108" x2="226" y1="150" y2="150"></line>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="20" y="190">next() 4回目</text>
+<text fill="#64748b" font-size="13" text-anchor="start" x="110" y="190">→ もう行が無い</text>
+<text fill="#047857" font-size="13" font-weight="bold" text-anchor="start" x="575" y="90">true（読める）</text>
+<text fill="#047857" font-size="13" font-weight="bold" text-anchor="start" x="575" y="120">true（読める）</text>
+<text fill="#047857" font-size="13" font-weight="bold" text-anchor="start" x="575" y="150">true（読める）</text>
+<text fill="#64748b" font-size="13" font-weight="bold" text-anchor="start" x="575" y="190">false（ループ終了）</text>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="start" x="20" y="230">next() を呼ぶ前に値を読むと、「手前」には値が無いので止まる</text>
+</svg><p class="figcap">ResultSet は「いま見ている行」を持っていて、next() で1行ずつ進む</p><p>⑪は、いま見ている行から、列の名前を指定して値を取り出します。<code>INT</code> の列は <code>getInt</code>、文字の列は <code>getString</code> です。表の1行を <code>Product</code> 1つに詰め替えて <code>list</code> に入れるので、Java の側は第8回からの <code>List&lt;Product&gt;</code> のまま使えます。</p>
+<p>⑫の <code>}</code> で、<code>try</code> の丸括弧で作った3つ（<code>rs</code> <code>ps</code> <code>con</code>）が自動で閉じられます。第10回の try-with-resources です。<strong>なぜ閉じるのか。</strong>回線を切り忘れると、MySQL がつなげる数の上限に達して、誰もつなげなくなるからです。</p>
+<p><strong>よくある間違い：next() を呼ぶ前に読む。</strong>「1件目だけ欲しい」と考えて、<code>while (rs.next())</code> を消した形です。</p>
+<p class="fname">ProductDao.java（間違いあり）</p>
+<pre class="code" id="c12">package lesson11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            list.add(new Product(rs.getInt("id"), rs.getString("name"),   <span class="cm">// next() を呼んでいない</span>
+                                 rs.getInt("price"), rs.getInt("stock")));
+        }
+        return list;
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">データベースのエラー: Before start of result set</div>
+<p><code>Before start of result set</code> は「結果の表の、始まりより前」という意味です。1行目の手前には値が無いので、読めません。読む前に必ず <code>next()</code> を呼びます。全部の行なら <code>while (rs.next())</code>、1行だけなら <code>if (rs.next())</code> です。</p>
+<div class="trap">列の名前を <code>"nane"</code> のように打ち間違えても、赤い波線は出ずにコンパイルが通ります。Java から見るとただの文字列だからです。実行すると <code>Column 'nane' not found.</code> と出ます。<strong>メッセージに出ている名前を、コードの中で探す</strong>のが早道です。</div>
+<h2>6　Main から読んでもらう（⑬⑭）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c13">    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+
+        try {
+            List&lt;Product&gt; products = dao.findAll();   <span class="cm">// <span class="cn">⑬</span> 読んでもらう</span>
+            for (Product p : products) {
+                p.show();
+            }
+            System.out.println("全部で" + products.size() + "件です");
+        } catch (SQLException e) {   <span class="cm">// <span class="cn">⑭</span> 受け止める</span>
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }</pre>
+<p>⑬で <code>ProductDao</code> に「全部読んで」と頼み、<code>List&lt;Product&gt;</code> を受け取ります。<strong>なぜ ProductDao に分けるのか。</strong><code>Main</code> に SQL や JDBC を書かずに済ませるためです。MySQL とのやりとりは <code>ProductDao</code> が1か所で引き受けます。</p>
+<p>⑭は、データベースで起きた例外 <strong>SQLException</strong> を受け止めて、理由を表示します。<code>findAll</code> に <code>throws SQLException</code> と書いてあるので、呼んだ側が受け止めます（第10回の検査例外）。書かないとコンパイルエラーです。</p>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。<strong>在庫の少ない商品が表示できたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>LowStockDao</code> に <code>findLowStock()</code> を書き、在庫が30個以下の商品を、在庫の少ない順に取り出す。<code>LowStockMain</code> で表示する。</li></ul>
+<h2>骨組み</h2>
+<p>2つのファイルの全体です。<code>// ここに…</code> の所を書きます。<code>LowStockMain</code> はそのまま写します。</p>
+<p class="fname">LowStockDao.java</p>
+<pre class="code" id="c14">package lesson11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class LowStockDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    public List&lt;Product&gt; findLowStock() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        <span class="cm">// ここに、在庫が30個以下の商品を、在庫の少ない順に取り出す SQL を書く</span>
+
+        <span class="cm">// ここに、ProductDao の findAll と同じ手順で、つないで・実行して・詰め替える処理を書く</span>
+
+        return list;
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c14">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c15">package lesson11;
+
+import java.sql.SQLException;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        LowStockDao dao = new LowStockDao();
+
+        try {
+            for (Product p : dao.findLowStock()) {
+                p.show();
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c15">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">2 / ノート / 220円 / 残り10個
+1 / ボールペン / 150円 / 残り30個</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　SQL は <code>WHERE</code> と <code>ORDER BY</code> を両方使います。<code>WHERE</code> が先、<code>ORDER BY</code> が後ろです。「30個以下」は <code>stock &lt;= 30</code> です。先に mysql で打って（最後に <code>;</code> を付けて）、2件出ることを確かめてから Java に写すと、打ち間違いに早く気づけます。</li><li>②　SQL より下は、②で写した <code>ProductDao</code> の <code>findAll</code> と同じです。</li></ul>
+<div class="calm">解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第11回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　在庫の少ない商品</summary><div class="sol">
+<p class="fname">LowStockDao.java</p>
+<pre class="code" id="c16">package lesson11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class LowStockDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    public List&lt;Product&gt; findLowStock() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        <span class="cm">// ここに、在庫が30個以下の商品を、在庫の少ない順に取り出す SQL を書く</span>
+        String sql = "SELECT id, name, price, stock FROM products WHERE stock &lt;= 30 ORDER BY stock";
+        <span class="cm">// ここに、ProductDao の findAll と同じ手順で、つないで・実行して・詰め替える処理を書く</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                     rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+}</pre>
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c17">package lesson11;
+
+import java.sql.SQLException;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        LowStockDao dao = new LowStockDao();
+
+        try {
+            for (Product p : dao.findLowStock()) {
+                p.show();
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">2 / ノート / 220円 / 残り10個
+1 / ボールペン / 150円 / 残り30個</div>
+<div class="note">消しゴム（50個）は条件に合わないので、MySQL が返してきません。絞り込みと並べ替えは SQL の仕事で、Java の側は <code>findAll</code> と同じ形のままです。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>SQL と JDBC の役目の違いを、お店と倉庫以外の自分のたとえで説明できる</li><li><code>ProductDao</code> の⑥〜⑫を、手順の名前（つなぐ・実行する など）で順に言える</li><li><code>rs.next()</code> を呼ぶ前に値を読むと止まる理由を説明できる</li><li>つながらないときのメッセージから、見る所を言える</li></ul></div>
+<h2>次回</h2><p><strong>次回は、PreparedStatement で追加・更新・削除です。</strong>今日は表を読むだけで、7つの手順のうち「<code>?</code> に値を入れる」を飛ばしました。次回はその <code>?</code> を使って、Java から商品を足したり、在庫を変えたり、消したりします。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>データベース</td><td>でーたべーす</td><td>データをまとめて置いておく仕組み。今日の <code>stock</code> がこれです</td></tr><tr><td>MySQL</td><td>まい えすきゅーえる</td><td>この講座で使うデータベースの製品</td></tr><tr><td>mysql</td><td>まい えすきゅーえる</td><td>MySQL に SQL を打つための画面（コマンド）。<code>mysql -u root -p</code> で入り、<code>exit</code> で抜けます</td></tr><tr><td>SQL</td><td>えすきゅーえる</td><td>データベースに頼むための言葉。mysql からも Java からも同じ文が通じます</td></tr><tr><td>JDBC</td><td>じぇい でぃー びー しー</td><td>Java からデータベースにつなぎ、SQL を送り、結果を受け取るための決まり。<code>java.sql</code> パッケージにあります</td></tr><tr><td>Connector/J</td><td>こねくたー じぇい</td><td>MySQL 用の JDBC の部品（ドライバ）。jar ファイルをビルド・パスに追加して使います</td></tr><tr><td>ビルド・パス</td><td>びるど・ぱす</td><td>プロジェクトが使う部品の一覧。jar を追加すると「参照ライブラリー」に出ます</td></tr><tr><td>表（テーブル）</td><td>ひょう（てーぶる）</td><td>データベースの中の表。1行が1件（1商品）、1列が1項目です</td></tr><tr><td>列</td><td>れつ</td><td>表の縦の並び。<code>id</code> <code>name</code> <code>price</code> <code>stock</code> の4つ。<code>Product</code> のフィールドに当たります</td></tr><tr><td>行</td><td>ぎょう</td><td>表の横の並び。1行が <code>Product</code> 1つに当たります</td></tr><tr><td>VARCHAR</td><td>ばーきゃら</td><td>文字列の列の型。<code>VARCHAR(100)</code> は最大100文字の文字列です</td></tr><tr><td>主キー</td><td>しゅきー</td><td>その行を1つに決められる列。重複しません。<code>PRIMARY KEY</code></td></tr><tr><td>AUTO_INCREMENT</td><td>おーと いんくりめんと</td><td>行を入れるたびに、番号を自動で1ずつ増やして振る指定</td></tr><tr><td>utf8mb4</td><td>ゆーてぃーえふ えいと えむびー ふぉー</td><td>MySQL の文字コードの指定。日本語も絵文字も入ります</td></tr><tr><td>CREATE DATABASE / CREATE TABLE</td><td>くりえいと</td><td>データベースを作る／表を作る SQL</td></tr><tr><td>INSERT</td><td>いんさーと</td><td>表に行を入れる SQL。<code>INSERT INTO 表 (列, ...) VALUES (値, ...)</code></td></tr><tr><td>SELECT</td><td>せれくと</td><td>表から取り出す SQL。<code>SELECT 列, ... FROM 表</code></td></tr><tr><td>WHERE</td><td>うぇあ</td><td>取り出す行を条件で絞る。<code>WHERE stock &lt;= 30</code></td></tr><tr><td>ORDER BY</td><td>おーだー ばい</td><td>並び順を決める。書かないと順番は決まりません。<code>DESC</code> を付けると大きい順</td></tr><tr><td>DriverManager</td><td>どらいばー まねーじゃー</td><td><code>getConnection</code> で MySQL につなぎ、<code>Connection</code> を返す係</td></tr><tr><td>Connection</td><td>こねくしょん</td><td>データベースとのつながり（電話回線）</td></tr><tr><td>PreparedStatement</td><td>ぷりぺあど すてーとめんと</td><td>SQL を送る道具。次回の主役です</td></tr><tr><td>ResultSet</td><td>りざると せっと</td><td>返ってきた結果の表。<code>next()</code> で1行ずつ進みます</td></tr><tr><td>executeQuery()</td><td>えぐぜきゅーと くえりー</td><td><code>SELECT</code> を実行して、<code>ResultSet</code> を受け取るメソッド</td></tr><tr><td>SQLException</td><td>えすきゅーえる えくせぷしょん</td><td>データベースで起きた例外。検査例外なので、<code>try-catch</code> か <code>throws</code> が要ります</td></tr><tr><td>try-with-resources</td><td>とらい うぃず りそーしず</td><td><code>try</code> の丸括弧で作ったものを、終わったときに自動で閉じる書き方（第10回）</td></tr><tr><td>定数</td><td>ていすう</td><td>あとから変えない値。<code>static final</code> を付け、名前は大文字で書く習慣です</td></tr><tr><td>DAO</td><td>だお</td><td>Data Access Object の略。データベースとのやりとりを引き受けるクラス。<code>ProductDao</code> がこれです。第13回で詳しく扱います</td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 11 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
