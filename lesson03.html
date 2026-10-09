@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson02.html">前の講義</a><a href="lesson04.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson02.html">前の講義</a><a href="lesson04.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 3 回 ／ 全 18 回</span><h1>メソッド・引数・戻り値と値渡し</h1><p>第7章　メソッドの定義と呼び出し ／ 引数と戻り値 ／ スコープ ／ 値渡しと参照</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">メソッド</span>　<span class="term">引数</span>　<span class="term">戻り値</span>　<span class="term">値渡しと参照</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>引数を受け取り、戻り値を返すメソッドを書いて、<code>main</code> から呼べる</li><li><code>int</code> を渡したときと配列を渡したときで、元が変わるかどうかを言い分けられる</li><li>「渡したのに変わらない」ときに、戻り値で受け取り直す形に直せる</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/value-pass.html">引数・戻り値と値渡しの仕組みを詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>メソッド</td><td>名前を付けた処理のまとまり。名前で呼び出すと、中の処理が実行されます。<code class="ex">static int calcTax(int price) { ... }</code></td></tr><tr><td>引数</td><td>メソッドを呼ぶときに渡す値。メソッドの側では、丸括弧の中に書いた変数（型と名前）で受け取ります。<code class="ex">calcTax(1000)   // 1000 が引数</code></td></tr><tr><td>戻り値</td><td>メソッドが処理の結果として、呼び出した側へ返す値。<code>return</code> で返し、返す値の型をメソッド名の前に書きます。何も返さないときは <code>void</code> です。<code class="ex">int total = calcTax(1000);</code></td></tr><tr><td>値渡しと参照</td><td>Java は、引数をいつも値のコピーで渡します（<strong>値渡し</strong>）。<code>int</code> などは値そのものが、配列や <code>String</code> などの参照型は、中身が置いてある場所（<strong>参照</strong>）がコピーされます。<code class="ex">addStock(stock);       // int の値 30 のコピーが渡る
