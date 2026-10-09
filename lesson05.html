@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第5回｜カプセル化と static</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson04.html">前の講義</a><a href="lesson06.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 5 回 ／ 全 18 回</span><h1>カプセル化と static</h1><p>第9章　カプセル化 ／ static の意味 ／ static とインスタンスの使い分け</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">カプセル化</span>　<span class="term">private</span>　<span class="term">static</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>フィールドを <code>private</code> にして、getter と setter を通して読み書きできる</li><li>setter に検査を入れて、おかしな値をはじける</li><li><code>static</code> が「クラスに1つ」、付けないと「実物1つにつき1つ」だと説明できる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　カプセル化・<code>private</code>・<code>static</code> を、お店の棚とカウンターで</li><li>② 写して動かす　<code>Product</code> と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑧の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>Account</code> と <code>Ticket</code> を作る</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>カプセル化</td><td>フィールドを <code>private</code> で隠し、値の出し入れを <code>public</code> のメソッド（getter・setter）だけに限ることです。<code class="ex">private int price;
+public int getPrice() { return price; }
+public void setPrice(int price) { ... }</code></td></tr><tr><td>private</td><td>アクセス修飾子の1つ。付けたフィールドやメソッドは、そのクラスの中からしか使えません。外からは public のメソッド（getter・setter）を通して扱います。<code class="ex">private int price;</code></td></tr><tr><td>static</td><td>クラスそのものに属することを表す修飾子。static を付けたフィールドは、インスタンスがいくつあってもクラスに1つだけで、全部のインスタンスで共有されます。static メソッドは、インスタンスを作らずに「クラス名.メソッド名()」で呼べます。<code class="ex">private static int count;
+Product.getCount()</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>private は「鍵のかかった棚」、static は「お店に1つのカウンター」</h3><p class="lead">棚の中身は受付を通して変えます。カウンターは、商品がいくつあってもお店に1つです。</p><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 230" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="24" y="34">お客さん（Main）</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="15" x="24" xml:space="preserve" y="80">p1.price = -100;</text>
+<line marker-end="url(#ar1)" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.8" x1="180" x2="432" y1="75" y2="75"></line>
+<line stroke="#b91c1c" stroke-width="3" x1="438" x2="454" y1="67" y2="83"></line><line stroke="#b91c1c" stroke-width="3" x1="454" x2="438" y1="67" y2="83"></line>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="300" y="102">棚に直接は手を入れられない</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="15" x="24" xml:space="preserve" y="170">p1.setPrice(180);</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="186" x2="262" y1="165" y2="165"></line>
+<rect fill="#fff" height="66" rx="6" stroke="#334155" stroke-width="1.5" width="130" x="266" y="132"></rect>
+<rect fill="#fef9c3" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="130" x="266" y="132"></rect>
+<rect fill="#fef9c3" height="8" width="128" x="267" y="151"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="331" y="150">受付（setter）</text>
+<text fill="#1f2933" font-size="13" x="276" y="178">負の値なら断る</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="398" x2="462" y1="165" y2="165"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="430" y="157">入れる</text>
+<rect fill="#fff" height="160" rx="6" stroke="#334155" stroke-width="1.5" width="234" x="466" y="40"></rect>
+<rect fill="#fee2e2" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="234" x="466" y="40"></rect>
+<rect fill="#fee2e2" height="8" width="232" x="467" y="59"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="583" y="58">p1 の棚（private）</text>
+<text fill="#1f2933" font-size="14" x="476" y="86">id    : 1</text>
+<text fill="#1f2933" font-size="14" x="476" y="106">name  : ボールペン</text>
+<text fill="#1f2933" font-size="14" x="476" y="126">price : 180</text>
+<text fill="#1f2933" font-size="14" x="476" y="146">stock : 30</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="583" y="222">鍵がかかっていて、受付の人だけが開けられる</text>
+</svg><p class="figcap">private は「鍵のかかった棚」。中身は受付（setter）を通して変える</p><p>フィールドに何も付けないと、<code>Main</code> から <code>p1.price = -100;</code> と書けてしまいます。<strong>マイナス100円の商品ができてしまいます。</strong>値を確かめるメソッドを作っても、それを通らずに直接書く道が残ります。</p>
+<p>お店の棚に鍵をかけ、受付の人だけが開けられるようにします。受付の人は「マイナスの値札は付けられません」と断れます。Java では、鍵が <strong><code>private</code></strong>、受付が <strong>setter</strong>（値を入れるメソッド）です。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 240" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="224" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="696" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="30">お店（Product クラス）</text>
+<rect fill="#e0f2fe" height="48" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="210" y="42"></rect>
+<text fill="#1f2933" font-size="16" font-weight="bold" text-anchor="middle" x="360" y="73">カウンター　count : 3</text>
+<text fill="#1d4ed8" font-size="13" font-weight="bold" text-anchor="start" x="524" y="62">お店に1つ</text>
+<text fill="#1d4ed8" font-size="13" text-anchor="start" x="524" y="82">3つの商品で共有</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="35" y="132"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="35" y="132"></rect>
+<rect fill="#fff3e6" height="8" width="188" x="36" y="151"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="130" y="150">p1</text>
+<text fill="#1f2933" font-size="14" x="45" y="178">ボールペン / 150円</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="265" y="132"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="265" y="132"></rect>
+<rect fill="#fff3e6" height="8" width="188" x="266" y="151"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="150">p2</text>
+<text fill="#1f2933" font-size="14" x="275" y="178">ノート / 220円</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="495" y="132"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="495" y="132"></rect>
+<rect fill="#fff3e6" height="8" width="188" x="496" y="151"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="590" y="150">p3</text>
+<text fill="#1f2933" font-size="14" x="505" y="178">消しゴム / 100円</text>
+<line marker-end="url(#ar2)" stroke="#334155" stroke-width="1.8" x1="130" x2="290" y1="130" y2="93"></line>
+<line marker-end="url(#ar2)" stroke="#334155" stroke-width="1.8" x1="360" x2="360" y1="130" y2="93"></line>
+<line marker-end="url(#ar2)" stroke="#334155" stroke-width="1.8" x1="590" x2="430" y1="130" y2="93"></line>
+<text fill="#64748b" font-size="13" text-anchor="start" x="40" y="116">new するたびに +1</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="360" y="216">名前と価格は商品ごとに別々（static なし）</text>
+</svg><p class="figcap">static は「お店に1つのカウンター」。商品がいくつあっても1つだけ</p><p>もう1つは、レジ横の「登録した商品の数」のカウンターです。商品が何個あっても、<strong>カウンターはお店に1つ</strong>です。商品ごとに持つものではありません。Java では、これに <strong><code>static</code></strong> を付けます。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 216" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="198" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="472" x="236" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="472" y="30">カプセル化</text>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="24" y="40">お客さん（Main）</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="24" xml:space="preserve" y="112">p1.setPrice(180);</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="160" x2="254" y1="107" y2="107"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="207" y="99">通れる</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="14" x="24" xml:space="preserve" y="165">p1.price = -100;</text>
+<line marker-end="url(#ar3)" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.8" x1="156" x2="482" y1="160" y2="160"></line>
+<line stroke="#b91c1c" stroke-width="3" x1="484" x2="500" y1="152" y2="168"></line><line stroke="#b91c1c" stroke-width="3" x1="500" x2="484" y1="152" y2="168"></line>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="330" y="190">棚に直接は手を入れられない</text>
+<rect fill="#fff" height="86" rx="6" stroke="#334155" stroke-width="1.5" width="176" x="256" y="64"></rect>
+<rect fill="#fef9c3" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="176" x="256" y="64"></rect>
+<rect fill="#fef9c3" height="8" width="174" x="257" y="83"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="344" y="82">受付（getter・setter）</text>
+<text fill="#1f2933" font-size="14" x="266" y="110">setPrice(...)</text>
+<text fill="#1f2933" font-size="14" x="266" y="130">getPrice()</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="434" x2="498" y1="107" y2="107"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="466" y="99">開ける</text>
+<rect fill="#fff" height="126" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="500" y="44"></rect>
+<rect fill="#fee2e2" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="500" y="44"></rect>
+<rect fill="#fee2e2" height="8" width="188" x="501" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="595" y="62">棚（private）</text>
+<text fill="#1f2933" font-size="14" x="510" y="90">private int id;</text>
+<text fill="#1f2933" font-size="14" x="510" y="110">private String name;</text>
+<text fill="#1f2933" font-size="14" x="510" y="130">private int price;</text>
+<text fill="#1f2933" font-size="14" x="510" y="150">private int stock;</text>
+</svg><p class="figcap">カプセル化は、鍵のかかった棚と受付をひとまとめにして、受付だけを開けておく仕組み</p><p>鍵のかかった棚と受付を組み合わせて、中身は受付を通さないとさわれないようにする。この仕組み全体を<strong>カプセル化</strong>と言います。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>鍵のかかった棚</td><td><code>private int price;</code></td></tr><tr><td>受付（ここだけ開いている）</td><td><code>public void setPrice(int price)</code></td></tr><tr><td>受付の人の確認</td><td><code>if (price &lt; 0) { ... return; }</code></td></tr><tr><td>棚の中を見せてもらう</td><td><code>public int getPrice()</code>（getter）</td></tr><tr><td>お店に1つのカウンター</td><td><code>private static int count</code></td></tr><tr><td>カウンターの数を聞く</td><td><code>Product.getCount()</code>　クラス名で聞く</td></tr><tr><td>棚に鍵をかけ、受付だけを開けておく仕組み</td><td>カプセル化　<code>private</code> のフィールド＋getter・setter</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>カプセル化</td><td>値を変える道を1か所にまとめ、そこで正しい値かどうかを確かめられるようにするためです。</td></tr><tr><td>private</td><td>外から直接おかしな値（マイナスの価格など）を入れられないようにするためです。</td></tr><tr><td>static</td><td>インスタンスごとではなく、全体で1つだけ持ちたい値や処理があるからです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>カプセル化</td><td>価格にマイナスを入れさせたくないときのように、値に決まりがあるフィールドを持つクラスを作るとき。</td></tr><tr><td>private</td><td>フィールドには基本的に付け、値の出し入れは getter・setter を通します。</td></tr><tr><td>static</td><td>作った商品の数を数えるカウンター。インスタンスを作る前に動く <code>main</code> メソッド。</td></tr></table>
+<p>今日は、この形の <code>Product</code> と、それを使う <code>Main</code> の全体を写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は新しいプロジェクト <code>lesson05</code> に、クラスを2つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson05</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson05</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson05</code> と入っていることを確かめて［完了］（空なら <code>lesson05</code> と入力する）</td></tr><tr><td>⑥</td><td>④⑤をもう一度行い、名前 <code>Main</code> のクラスを作る</td></tr><tr><td>⑦</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑧</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の2つのファイルだけです。どちらも1行目は <code>package lesson05;</code> です。</p>
+<p><code>Product</code> のポイントは3つです。<strong>欄に <code>private</code> が付いている</strong>こと、<strong>読み書きの入口（getter・setter）がある</strong>こと、<strong>商品の数を数える <code>count</code> に <code>static</code> が付いている</strong>ことです。</p>
+<p>そのあとの2つが、それぞれのファイルの中身の全部です。行の右にある ①〜⑧ は、③解説の番号です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson05</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson05（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="180"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="144" y2="144"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="180" y2="180"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="128"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="149">Product.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="164"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="185">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="149">設計図。欄は private、読み書きの入口は public</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="185">使う側。main があり、ここから実行する</text>
+</svg><p class="figcap">プロジェクトの中身。この2つのファイルで全部です</p><p class="fname">Product.java　設計図のほう</p>
+<pre class="code" id="c1">package lesson05;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// <span class="cn">①</span> 作った商品の数（全体で1つ）</span>
+
+    private int id;                 <span class="cm">// <span class="cn">②</span> private</span>
+    private String name;            <span class="cm">// <span class="cn">②</span> private</span>
+    private int price;              <span class="cm">// <span class="cn">②</span> private</span>
+    private int stock;              <span class="cm">// <span class="cn">②</span> private</span>
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;                    <span class="cm">// <span class="cn">③</span> 作るたびに1増える</span>
+    }
+
+    public int getId() { return id; }              <span class="cm">// <span class="cn">④</span> getter</span>
+    public String getName() { return name; }       <span class="cm">// <span class="cn">④</span> getter</span>
+    public int getPrice() { return price; }        <span class="cm">// <span class="cn">④</span> getter</span>
+    public int getStock() { return stock; }        <span class="cm">// <span class="cn">④</span> getter</span>
+
+    public void setPrice(int price) {              <span class="cm">// <span class="cn">⑤</span> setter</span>
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {              <span class="cm">// <span class="cn">⑤</span> setter</span>
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }   <span class="cm">// <span class="cn">⑥</span> static メソッド</span>
+}</pre>
+<p class="fname">Main.java　使うほう</p>
+<pre class="code" id="c2">package lesson05;
+
+public class Main {
+    public static void main(String[] args) {
+        Product p1 = new Product(1, "ボールペン", 150, 30);
+        Product p2 = new Product(2, "ノート", 220, 10);
+
+        p1.setPrice(-100);                        <span class="cm">// <span class="cn">⑦</span> 入口を通す</span>
+        p1.setPrice(180);                         <span class="cm">// <span class="cn">⑦</span> 入口を通す</span>
+
+        p1.show();
+        p2.show();
+        System.out.println("ノートの在庫: " + p2.getStock() + "個");       <span class="cm">// <span class="cn">⑦</span> 入口を通す</span>
+        System.out.println("登録した商品: " + Product.getCount() + "個");  <span class="cm">// <span class="cn">⑧</span> クラス名で呼ぶ</span>
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">価格に負の値は設定できません
+1 / ボールペン / 180円 / 残り30個
+2 / ノート / 220円 / 残り10個
+ノートの在庫: 10個
+登録した商品: 2個</div>
+<p>1行目は、<code>setPrice(-100)</code> がはじかれたときの表示です。そのあとの <code>setPrice(180)</code> は通ったので、ボールペンは180円になっています。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　欄に private と static を付ける（①②）</h2>
+<p><code>Product.java</code> から抜き出しています。</p>
+<pre class="code" id="c3">private static int count = 0;   <span class="cm">// <span class="cn">①</span> 作った商品の数（全体で1つ）</span>
+
+private int id;                 <span class="cm">// <span class="cn">②</span> private</span>
+private String name;            <span class="cm">// <span class="cn">②</span> private</span>
+private int price;              <span class="cm">// <span class="cn">②</span> private</span>
+private int stock;              <span class="cm">// <span class="cn">②</span> private</span></pre>
+<p><code>id</code> <code>name</code> <code>price</code> <code>stock</code> には <strong><code>private</code></strong> が付いています。<code>Product</code> クラスの中からしか読み書きできない、という印です。たとえの「鍵のかかった棚」です。</p>
+<p>このコードの欄はどれも <code>private</code> なので、<code>Main</code> で <code>p1.price = -100;</code> と書くとエラーになります。値を変える道は setter だけです。</p>
+<p><code>count</code> には <strong><code>static</code></strong> も付いています。商品ごとではなく、<code>Product</code> クラスに1つだけある欄です。たとえの「お店に1つのカウンター」です。</p>
+<p>「作った商品の数」は、商品1つ1つではなく全体で1つの数なので、<code>count</code> に <code>static</code> を付けています。<code>static</code> が無いと商品ごとに別の <code>count</code> ができ、どれも1のままになります。</p>
+<p><strong>よくある間違い：private の欄に外から書く。</strong><code>Product</code> は写したまま、<code>Main</code> だけ変えた形です。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c4">package lesson05;
+
+public class Main {
+    public static void main(String[] args) {
+        Product p1 = new Product(1, "ボールペン", 150, 30);
+
+        p1.price = -100;                  <span class="cm">// エラー（書く）</span>
+        System.out.println(p1.name);      <span class="cm">// エラー（読む）</span>
+        p1.show();
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">フィールド Product.price は不可視です
+（The field Product.price is not visible）
+フィールド Product.name は不可視です
+（The field Product.name is not visible）</div>
+<p>書くほう（<code>p1.price = -100</code>）だけでなく、読むほう（<code>p1.name</code>）も止まります。<code>private</code> の欄は、<code>Product</code> の外からは見えないからです。実行する前に、書いた時点で止まります。外から使うときは、<code>p1.setPrice(-100)</code> や <code>p1.getName()</code> のように <code>public</code> の入口を通します。</p>
+<div class="words"><b>ここで出た言葉</b><span><b>不可視</b>　「見えない」という意味。<code>private</code> の欄は、クラスの外からは無いものとして扱われます</span></div>
+<p>欄を <code>private</code> で隠し、<code>public</code> の入口からだけ使わせる形を<strong>カプセル化</strong>といいます。今日の題名の言葉です。<code>private</code> と <code>public</code> のように、どこから使えるかを決める言葉を<strong>アクセス修飾子</strong>といいます。</p>
+<p><strong>よくある間違い：全部の欄に static を付ける。</strong>エラーは出ないのに、商品が消える形です。<code>Main</code> は写したままです。</p>
+<p class="fname">Product.java（間違いあり）</p>
+<pre class="code" id="c5">package lesson05;
+
+public class Product {
+    private static int count = 0;
+
+    private static int id;          <span class="cm">// ここが問題</span>
+    private static String name;     <span class="cm">// ここが問題</span>
+    private static int price;       <span class="cm">// ここが問題</span>
+    private static int stock;       <span class="cm">// ここが問題</span>
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; } 
+    public int getStock() { return stock; } 
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">価格に負の値は設定できません
+2 / ノート / 180円 / 残り10個
+2 / ノート / 180円 / 残り10個
+ノートの在庫: 10個
+登録した商品: 2個</div>
+<svg class="fig" role="img" viewbox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="24" y="40"></rect>
+<text fill="#1f2933" font-size="13" x="34" y="60">p1　ボールペンのつもり</text>
+<rect fill="#fff" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="24" y="120"></rect>
+<text fill="#1f2933" font-size="13" x="34" y="140">p2　ノートのつもり</text>
+<rect fill="#fff" height="140" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="290" y="26"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="290" y="26"></rect>
+<rect fill="#e0f2fe" height="8" width="238" x="291" y="45"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="410" y="44">Product に1組だけ（static）</text>
+<text fill="#1f2933" font-size="14" x="300" y="72">id    : 2</text>
+<text fill="#1f2933" font-size="14" x="300" y="92">name  : ノート</text>
+<text fill="#1f2933" font-size="14" x="300" y="112">price : 180</text>
+<text fill="#1f2933" font-size="14" x="300" y="132">stock : 10</text>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="226" x2="288" y1="62" y2="80"></line>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="226" x2="288" y1="142" y2="128"></line>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="548" y="70">p2 を作った時点で、</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="548" y="92">ボールペンの値は</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="548" y="114">ノートで上書きされた</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="360" y="190">p1 も p2 も、同じ1組を見ている</text>
+</svg><p class="figcap">static を付けた欄は、実物がいくつあっても1つしかない</p><p><code>static</code> を付けた欄は、クラスに1組しかありません。<code>p2</code> を作ったときに、<code>p1</code> のボールペンの値が上書きされます。<strong>全員が1枚の棚を使っている状態です。</strong>付けるかどうかは、次の1つで決めます。</p>
+<table><tr><th>問い</th><th>答え</th><th>static</th><th>写したコードでは</th></tr><tr><td>1つ1つで中身が違うか</td><td>違う</td><td><strong>付けない</strong></td><td><code>id</code> <code>name</code> <code>price</code> <code>stock</code></td></tr><tr><td></td><td>全部で同じ</td><td><strong>付ける</strong></td><td><code>count</code></td></tr></table>
+<div class="trap">Eclipse は黄色い警告「static フィールド Product.name には static にアクセスする必要があります」を出すだけで、実行できてしまいます。<strong>商品が全部同じ値になったら、欄の <code>static</code> を疑ってください。</strong></div>
+<h2>2　作るたびに数える（③）</h2>
+<pre class="code" id="c6">public Product(int id, String name, int price, int stock) {
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.stock = stock;
+    count++;                    <span class="cm">// <span class="cn">③</span> 作るたびに1増える</span>
+}</pre>
+<p>コンストラクタの中で、<code>count</code> を1増やします。<strong>なぜここで数えるのか。</strong>商品を作るときは必ずコンストラクタが動くので、ここで数えれば数え漏れがありません。商品をもう1つ <code>new</code> すれば、最後の数は3になります。</p>
+<p>コンストラクタの中からでも、<code>static</code> の欄 <code>count</code> に届きます。コンストラクタに付けた <code>public</code>（どこからでも使える）は、別のパッケージからも <code>new</code> できるようにする印です。</p>
+<h2>3　読み書きの入口 getter と setter（④⑤）</h2>
+<pre class="code" id="c7">public int getId() { return id; }              <span class="cm">// <span class="cn">④</span> getter</span>
+public String getName() { return name; }       <span class="cm">// <span class="cn">④</span> getter</span>
+public int getPrice() { return price; }        <span class="cm">// <span class="cn">④</span> getter</span>
+public int getStock() { return stock; }        <span class="cm">// <span class="cn">④</span> getter</span>
+
+public void setPrice(int price) {              <span class="cm">// <span class="cn">⑤</span> setter</span>
+    if (price &lt; 0) {
+        System.out.println("価格に負の値は設定できません");
+        return;
+    }
+    this.price = price;
+}
+<span class="cm">// （中略）</span></pre>
+<p><strong>getter</strong> は、フィールドの値を返すだけのメソッドです。<strong>なぜ要るのか。</strong><code>private</code> にすると、外からは読むこともできなくなるからです。中身が <code>return</code> だけなので1行で書いていますが、<code>{ }</code> の中を改行して書いても同じ意味です。</p>
+<p><strong>setter</strong> は、フィールドに値を入れるメソッドです。負の値なら表示を出して <code>return;</code> で抜け、そうでなければ入れます。<strong>なぜ setter を通すのか。</strong>値を変える入口をここ1か所にすれば、検査もここ1か所で済むからです。<code>setStock</code> も同じ形です。</p>
+<table><tr><th>種類</th><th>名前</th><th>戻り値の型</th><th>引数</th></tr><tr><td>getter</td><td><code>get</code> ＋ フィールド名（先頭を大文字）</td><td>フィールドと同じ型</td><td>なし</td></tr><tr><td>setter</td><td><code>set</code> ＋ フィールド名（先頭を大文字）</td><td><code>void</code></td><td>フィールドと同じ型を1つ</td></tr></table>
+<div class="trap">Eclipse では、コードの何もない所で右クリック →［ソース］→［getter および setter の生成］で、getter と setter を自動で作れます。<strong>ただし、自動で作った setter に検査は入っていません。</strong><code>if (price &lt; 0)</code> のような検査は、自分で書き足します。</div>
+<h2>4　実物に対して呼ぶか、クラス名で呼ぶか（⑥⑦⑧）</h2>
+<pre class="code" id="c8">public static int getCount() { return count; }   <span class="cm">// <span class="cn">⑥</span> static メソッド</span></pre>
+<p><code>getCount()</code> は <strong><code>static</code></strong> を付けたメソッドです。実物ではなく、クラスに対して呼びます。<code>count</code> はクラスに1つなので、どの商品に聞いても答えは同じだからです。</p>
+<p><code>Main.java</code> から抜き出しています。</p>
+<pre class="code" id="c9">public static void main(String[] args) {
+    Product p1 = new Product(1, "ボールペン", 150, 30);
+    Product p2 = new Product(2, "ノート", 220, 10);
+
+    p1.setPrice(-100);                                                 <span class="cm">// <span class="cn">⑦</span> 入口を通す</span>
+    p1.setPrice(180);                                                  <span class="cm">// <span class="cn">⑦</span> 入口を通す</span>
+    <span class="cm">// （中略）</span>
+    System.out.println("ノートの在庫: " + p2.getStock() + "個");       <span class="cm">// <span class="cn">⑦</span> 入口を通す</span>
+    System.out.println("登録した商品: " + Product.getCount() + "個");  <span class="cm">// <span class="cn">⑧</span> クラス名で呼ぶ</span>
+}</pre>
+<p><code>p1.setPrice(-100)</code> と <code>p2.getStock()</code> は、実物（<code>p1</code> <code>p2</code>）に対して入口のメソッドを呼んでいます。価格や在庫は商品ごとに違うので、どの商品のものかを指します。<code>-100</code> ははじかれ、<code>180</code> は通ります。</p>
+<p><code>Product.getCount()</code> は、クラス名にドットを付けて呼んでいます。<code>static</code> の付いたものはクラスに1つなので、実物を指さなくても呼べます。</p>
+<p><strong>よくある間違い：static の付かないメソッドを、クラス名で呼ぶ。</strong><code>Product</code> は写したままです。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c10">package lesson05;
+
+public class Main {
+    public static void main(String[] args) {
+        Product p1 = new Product(1, "ボールペン", 150, 30);
+        Product p2 = new Product(2, "ノート", 220, 10);
+
+        System.out.println("登録した商品: " + Product.getCount() + "個");   <span class="cm">// 通る</span>
+        System.out.println("名前: " + Product.getName());                   <span class="cm">// エラー</span>
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">型 Product の非 static メソッド getName() を static 参照することはできません
+（Cannot make a static reference to the non-static method getName() from the type Product）</div>
+<svg class="fig" role="img" viewbox="0 0 720 230" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar6" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="88" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="24" y="24"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="240" x="24" y="24"></rect>
+<rect fill="#e0f2fe" height="8" width="238" x="25" y="43"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="144" y="42">Product（クラス）</text>
+<text fill="#1f2933" font-size="14" x="34" y="70">static count : 2</text>
+<text fill="#1f2933" font-size="14" x="34" y="90">static getCount()</text>
+<rect fill="#fff" height="70" rx="6" stroke="#334155" stroke-width="1.5" width="250" x="450" y="24"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="250" x="450" y="24"></rect>
+<rect fill="#fff3e6" height="8" width="248" x="451" y="43"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="575" y="42">p1（実物）</text>
+<text fill="#1f2933" font-size="14" x="460" y="70">name : ボールペン</text>
+<rect fill="#fff" height="70" rx="6" stroke="#334155" stroke-width="1.5" width="250" x="450" y="120"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="250" x="450" y="120"></rect>
+<rect fill="#fff3e6" height="8" width="248" x="451" y="139"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="575" y="138">p2（実物）</text>
+<text fill="#1f2933" font-size="14" x="460" y="166">name : ノート</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="14" x="24" xml:space="preserve" y="160">Product.getCount()</text>
+<text fill="#1d4ed8" font-size="13" text-anchor="start" x="196" y="160">クラスに1つ。決まる</text>
+<line marker-end="url(#ar6)" stroke="#334155" stroke-width="1.8" x1="240" x2="240" y1="144" y2="116"></line>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="14" x="24" xml:space="preserve" y="205">Product.getName()</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="196" y="205">p1 と p2 のどちら？</text>
+<line marker-end="url(#ar6)" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.8" x1="330" x2="446" y1="196" y2="64"></line>
+<line marker-end="url(#ar6)" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.8" x1="330" x2="446" y1="200" y2="160"></line>
+</svg><p class="figcap">クラス名で呼べるのは、クラスに1つしかないもの（static）だけ</p><p>名前は商品ごとに違うので、クラス名で聞いても「どの商品の名前か」が決まりません。<code>p1.getName()</code> のように実物を指します。<code>static</code> の付いたメソッドの中からも、<code>static</code> の付かない欄やメソッドは、名前だけでは呼べません。<code>main</code> の中の <code>p1.setPrice(180)</code> のように、実物を指せば呼べます。</p>
+<p><strong>なぜ main に static が付いているのか。</strong>Java は <code>Main</code> の実物を作らずに、クラスに対して <code>main</code> を呼ぶからです。<code>main</code> が動き出した時点では、<code>Main</code> の実物は1つもありません。そのため <code>main</code> から名前だけで呼べるのは、<code>static</code> の付いたメソッドだけです。</p>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①で残高が表示できたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>Account</code> クラス（口座）を作る。フィールド <code>owner</code>（名義）と <code>balance</code>（残高）は <code>private</code>。<code>getOwner()</code> <code>getBalance()</code> と、入金 <code>deposit(int amount)</code>、出金 <code>withdraw(int amount)</code> を持たせる。入金は0以下ならはじき、出金は残高より多ければはじく。<strong>残高の setter は作らない。</strong></li><li>②　<code>Ticket</code> クラス（整理券）を作る。<code>new</code> するたびに、番号が 1・2・3 と自動で振られるようにする。次に渡す番号 <code>nextNo</code> を <code>static</code> で持ち、発行した枚数を返す <code>static</code> メソッド <code>getIssued()</code> も作る。</li></ul>
+<h2>骨組み</h2>
+<p>4つのファイルの全体です。<code>AccountMain</code> と <code>TicketMain</code> はこのまま写し、<code>// ここに…</code> の所を書きます。</p>
+<p>貼った直後は <code>AccountMain</code> と <code>TicketMain</code> に赤い印が出ます。書き足すと消えます。</p>
+<p class="fname">Account.java</p>
+<pre class="code" id="c11">package lesson05;
+
+public class Account {
+    <span class="cm">// ここに private のフィールド owner（String）と balance（int）を書く</span>
+
+    <span class="cm">// ここに2つを受け取るコンストラクタを書く</span>
+
+    <span class="cm">// ここに getOwner() と getBalance() を書く</span>
+
+    public void deposit(int amount) {
+        <span class="cm">// ここに、0以下なら「入金は1円以上にしてください」と出して終わる処理を書く</span>
+        <span class="cm">// ここに、残高を増やす処理を書く</span>
+    }
+
+    public void withdraw(int amount) {
+        <span class="cm">// ここに、残高より多ければ「残高が足りません」と出して終わる処理を書く</span>
+        <span class="cm">// ここに、残高を減らす処理を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c11">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">AccountMain.java</p>
+<pre class="code" id="c12">package lesson05;
+
+public class AccountMain {
+    public static void main(String[] args) {
+        Account a = new Account("高橋", 1000);
+
+        a.deposit(500);
+        a.withdraw(3000);
+        a.deposit(-200);
+        a.withdraw(700);
+
+        System.out.println(a.getOwner() + " の残高: " + a.getBalance() + "円");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c12">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">Ticket.java</p>
+<pre class="code" id="c13">package lesson05;
+
+public class Ticket {
+    <span class="cm">// ここに、次に渡す番号 nextNo（static、最初は 1）を書く</span>
+
+    private int no;
+    private String name;
+
+    public Ticket(String name) {
+        <span class="cm">// ここで no に番号を入れ、nextNo を1増やす</span>
+        this.name = name;
+    }
+
+    public void show() {
+        System.out.println(no + "番 " + name + "さん");
+    }
+
+    <span class="cm">// ここに、発行した枚数を返す static メソッド getIssued() を書く</span>
+}</pre>
+<div class="btn-row"><button data-copy="c13">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">TicketMain.java</p>
+<pre class="code" id="c14">package lesson05;
+
+public class TicketMain {
+    public static void main(String[] args) {
+        Ticket t1 = new Ticket("高橋");
+        Ticket t2 = new Ticket("山田");
+        Ticket t3 = new Ticket("佐藤");
+
+        t1.show();
+        t2.show();
+        t3.show();
+        System.out.println("発行した枚数: " + Ticket.getIssued() + "枚");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c14">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">残高が足りません
+入金は1円以上にしてください
+高橋 の残高: 800円
+
+1番 高橋さん
+2番 山田さん
+3番 佐藤さん
+発行した枚数: 3枚</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　<code>deposit</code> と <code>withdraw</code> の形は、写した <code>Product</code> の <code>setPrice</code> と同じです。「おかしい条件を先に書いて <code>return;</code> で抜け、その下に正しいときの処理を書く」です。</li><li>②　<code>Ticket</code> の <code>nextNo</code> は、整理券1枚1枚ではなく、お店の発券機に1つだけある数です。<code>private static int nextNo = 1;</code> と書きます。</li><li>③　<code>Ticket</code> のコンストラクタは、<code>this.no = nextNo;</code> で今の番号を渡し、<code>nextNo++;</code> で次の番号にします。発行した枚数は <code>nextNo - 1</code> です。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第5回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　Account</summary><div class="sol">
+<p class="fname">Account.java</p>
+<pre class="code" id="c15">package lesson05;
+
+public class Account {
+    <span class="cm">// ここに private のフィールド owner（String）と balance（int）を書く</span>
+    private String owner;
+    private int balance;
+
+    <span class="cm">// ここに2つを受け取るコンストラクタを書く</span>
+    public Account(String owner, int balance) {
+        this.owner = owner;
+        this.balance = balance;
+    }
+
+    <span class="cm">// ここに getOwner() と getBalance() を書く</span>
+    public String getOwner() { return owner; }
+    public int getBalance() { return balance; }
+
+    public void deposit(int amount) {
+        <span class="cm">// ここに、0以下なら「入金は1円以上にしてください」と出して終わる処理を書く</span>
+        if (amount &lt;= 0) {
+            System.out.println("入金は1円以上にしてください");
+            return;
+        }
+
+        <span class="cm">// ここに、残高を増やす処理を書く</span>
+        balance += amount;
+    }
+
+    public void withdraw(int amount) {
+        <span class="cm">// ここに、残高より多ければ「残高が足りません」と出して終わる処理を書く</span>
+        if (amount &gt; balance) {
+            System.out.println("残高が足りません");
+            return;
+        }
+
+        <span class="cm">// ここに、残高を減らす処理を書く</span>
+        balance -= amount;
+    }
+}</pre>
+<p class="fname">AccountMain.java</p>
+<pre class="code" id="c16">package lesson05;
+
+public class AccountMain {
+    public static void main(String[] args) {
+        Account a = new Account("高橋", 1000);
+
+        a.deposit(500);
+        a.withdraw(3000);
+        a.deposit(-200);
+        a.withdraw(700);
+
+        System.out.println(a.getOwner() + " の残高: " + a.getBalance() + "円");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">残高が足りません
+入金は1円以上にしてください
+高橋 の残高: 800円</div>
+<p>1000円に500円を入れて1500円、3000円の出金ははじかれ、-200円の入金もはじかれ、700円を出して800円です。</p>
+<div class="note">setter が無いので、<code>Account</code> の外から残高を変える方法は <code>deposit</code> と <code>withdraw</code> の2つだけです。getter と setter は全部の欄に機械的に作るものではなく、<strong>必要な入口だけを開けます。</strong></div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　Ticket</summary><div class="sol">
+<p class="fname">Ticket.java</p>
+<pre class="code" id="c17">package lesson05;
+
+public class Ticket {
+    <span class="cm">// ここに、次に渡す番号 nextNo（static、最初は 1）を書く</span>
+    private static int nextNo = 1;
+
+    private int no;
+    private String name;
+
+    public Ticket(String name) {
+        <span class="cm">// ここで no に番号を入れ、nextNo を1増やす</span>
+        this.no = nextNo;
+        nextNo++;
+        this.name = name;
+    }
+
+    public void show() {
+        System.out.println(no + "番 " + name + "さん");
+    }
+
+    <span class="cm">// ここに、発行した枚数を返す static メソッド getIssued() を書く</span>
+    public static int getIssued() { return nextNo - 1; }
+}</pre>
+<p class="fname">TicketMain.java</p>
+<pre class="code" id="c18">package lesson05;
+
+public class TicketMain {
+    public static void main(String[] args) {
+        Ticket t1 = new Ticket("高橋");
+        Ticket t2 = new Ticket("山田");
+        Ticket t3 = new Ticket("佐藤");
+
+        t1.show();
+        t2.show();
+        t3.show();
+        System.out.println("発行した枚数: " + Ticket.getIssued() + "枚");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">1番 高橋さん
+2番 山田さん
+3番 佐藤さん
+発行した枚数: 3枚</div>
+<div class="note"><code>nextNo</code> に <code>static</code> が付いているのが要点です。付けないと、整理券1枚1枚が自分の <code>nextNo</code>（最初は1）を持つので、<strong>全員が1番になります。</strong>番号 <code>no</code> のほうには付けません。番号は1枚ずつ違うからです。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li><code>p1.price = -100;</code> が、今日の <code>Product</code> ではなぜ書けないのか説明できる</li><li>getter と setter の名前の決まりを、見ずに書ける</li><li>フィールドに <code>static</code> を付けるかどうかを、「1つ1つで中身が違うか」で決められる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、継承・オーバーライド・super です。</strong>普通の会員とゴールド会員は、名前の持ち方・金額の計算・表示が同じで、違うのは割引率だけです。種類ごとにクラスを丸ごと書き写すと、同じ行が何度も並びます。次回は、<strong>元のクラスを引き継いで、違う所だけを書く方法</strong>を扱います。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>カプセル化</td><td>かぷせるか</td><td>フィールドを外から直接さわれないようにし、決めた入口（メソッド）だけを開けておくこと</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>「そのクラスの中だけ」で使える、という印。フィールドに付けます</td></tr><tr><td>public</td><td>ぱぶりっく</td><td>「どこからでも」使える、という印。コンストラクタやメソッドに付けます</td></tr><tr><td>アクセス修飾子</td><td>あくせすしゅうしょくし</td><td><code>private</code> <code>public</code> など、どこから使えるかを決める言葉</td></tr><tr><td>不可視</td><td>ふかし</td><td>見えない、という意味。<code>private</code> の欄を外から使うと「フィールド … は不可視です」と出ます</td></tr><tr><td>getter</td><td>げったー</td><td>フィールドの値を返すメソッド。<code>getPrice()</code> のように <code>get</code> ＋ フィールド名</td></tr><tr><td>setter</td><td>せったー</td><td>フィールドに値を入れるメソッド。<code>setPrice(int price)</code> のように <code>set</code> ＋ フィールド名。中で検査できます</td></tr><tr><td>static</td><td>すたてぃっく</td><td>「クラスに1つ」という印。付けないと「実物1つにつき1つ」になります</td></tr><tr><td>static フィールド</td><td>―</td><td><code>static</code> を付けたフィールド。全部の実物で1つを共有します。クラス変数ともいいます</td></tr><tr><td>static メソッド</td><td>―</td><td><code>static</code> を付けたメソッド。<code>Product.getCount()</code> のようにクラス名で呼びます。クラスメソッドともいいます</td></tr><tr><td>インスタンスメソッド</td><td>―</td><td><code>static</code> の付かないメソッド。<code>p1.getName()</code> のように、実物に対して呼びます（第4回）</td></tr><tr><td>return;</td><td>りたーん</td><td>メソッドをそこで終わらせる文。<code>void</code> のメソッドでも、途中で抜けるのに使えます</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。今日はここで <code>count</code> を数えています</td></tr><tr><td>this</td><td>でぃす</td><td>「いま動いているこのインスタンスの」という意味。<code>this.price</code> はフィールド（第4回）</td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 5 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
