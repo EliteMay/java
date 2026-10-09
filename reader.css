@@ -149,3 +149,11 @@ details.glossary-fold {
   .glossary-fold { break-inside: auto; }
   .quick-answer > summary { color: #111; }
 }
+
+/* 講義を長くせず、苦手箇所の別ページへ案内するコンパクトなカード */
+.card.concept-guide { background: #fffaf2; border: 1px solid #ebc491; border-left: 5px solid #db7900; padding: 12px 18px; }
+.concept-guide .card-title { color: #985000; font-size: 13px; }
+.concept-guide p { margin: 4px 0; }
+.concept-guide a { color: #884000; font-weight: 750; text-underline-offset: 3px; }
+.concept-guide .concept-small { font-size: 13px; color: #6b5960; }
+@media (max-width: 600px) { .card.concept-guide { padding: 12px 13px; } }
