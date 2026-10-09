@@ -131,7 +131,6 @@
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">インタフェース</span>　<span class="term">ポリモーフィズム</span>　<span class="term">抽象クラス</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>インタフェースを書き、<code>implements</code> でその約束を守るクラスを作れる</li><li>親の型の変数・配列・引数に、種類の違うインスタンスを入れられる</li><li>種類を足しても、使う側のコードを変えずに済むことを説明できる</li></ul></div>
 </div>
-<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　インタフェース・ポリモーフィズム・抽象クラスを、レジと割引券、券の台紙で</li><li>② 写して動かす　<code>Coupon</code> と2種類の券と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑥の順に。よくある間違いと、抽象クラスも一緒に</li><li>④ 自力で書く　送料の計算を作る</li><li>⑤ まとめ・次回</li></ul></div>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>インタフェース</td><td>クラスが持つべきメソッドの名前・引数・戻り値の型だけを決めたもの。中身は書きません。<code>implements</code> したクラスは、そのメソッドを全部書かなければなりません。<code class="ex">public interface Coupon {
@@ -207,11 +206,8 @@ c.apply(1280)</code></td></tr><tr><td>抽象クラス</td><td><code>abstract</co
 <text fill="#64748b" font-size="13" text-anchor="middle" x="528" y="238">子（TimeSale など）が apply を書けば使える</text>
 </svg><p class="figcap">印刷済みの欄は中身のあるメソッド、空いた値引きの欄は abstract のメソッド。台紙のままでは new できない</p><p>券の台紙には、店名や有効期限の欄は印刷済みで、値引きの欄だけが空いているものもあります。種類ごとに値引きの欄を書けば、券ができあがります。この台紙に当たるのが<strong>抽象クラス</strong>です。台紙のままでは券として使えないように、抽象クラスは <code>new</code> できません。</p>
 </div></div>
-<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>レジに通せる券の決まり</td><td>インタフェース　<code>public interface Coupon { ... }</code></td></tr><tr><td>10%オフ券・300円引き券</td><td>決まりを守るクラス　<code>PercentCoupon</code> <code>YenCoupon</code></td></tr><tr><td>「この決まりの券です」と名乗る</td><td><code>implements Coupon</code></td></tr><tr><td>レジ</td><td><code>Coupon</code> 型で受け取るメソッド　<code>register</code></td></tr><tr><td>同じ通し方で、券ごとに値引きが変わる</td><td>ポリモーフィズム</td></tr><tr><td>値引きの欄だけが空いた、券の台紙</td><td>抽象クラス　<code>public abstract class Sale</code></td></tr></table>
 <h2>なぜ必要か</h2>
 <table class="define"><tr><td>インタフェース</td><td>使う側が中身の種類を知らなくても、同じ呼び方で使えるようにするためです。</td></tr><tr><td>ポリモーフィズム</td><td>種類が増えても、使う側のコードを書き換えずに済むからです。</td></tr><tr><td>抽象クラス</td><td>子クラスに共通の処理は親に書いておき、種類ごとに違う所だけを子に書かせたいからです。</td></tr></table>
-<h2>使う場面</h2>
-<table class="define"><tr><td>インタフェース</td><td>割引券・支払い方法のように、種類があとから増えていくもの。</td></tr><tr><td>ポリモーフィズム</td><td>レジが、券の種類を問わず同じ1行で値引きを頼むとき。</td></tr><tr><td>抽象クラス</td><td>セールの種類ごとに値引きの計算だけが違い、ほかは共通のとき。</td></tr></table>
 <p>第6回では <code>extends</code> で親子のクラスを作りました。今日の <code>Coupon</code> も「親の型」の一種で、中身を持たず約束だけを書いたものです。まず写します。</p>
 </div>
 <div class="card"><div class="card-title">② 写して動かす</div>
@@ -534,6 +530,7 @@ public abstract class Sale {                      <span class="cm">// abstract �
 <table><tr><th></th><th>インタフェース</th><th>抽象クラス</th></tr><tr><td>書き方</td><td><code>public interface Coupon</code></td><td><code>public abstract class Sale</code></td></tr><tr><td>子の側</td><td><code>implements Coupon</code></td><td><code>extends Sale</code></td></tr><tr><td>いくつ親にできるか</td><td><strong>いくつでも</strong>（カンマで並べる）</td><td><strong>1つだけ</strong></td></tr><tr><td>書けるもの</td><td>約束（中身の無いメソッド）が中心</td><td>約束に加えて、フィールド・コンストラクタ・中身のあるメソッド</td></tr><tr><td>向いている場面</td><td>「〜できる」ものを、種類を問わず集めたい</td><td>共通の中身があり、「〜の一種」と言える</td></tr></table>
 <p>インタフェースと抽象クラスは、どちらも <code>new</code> できません。<code>new Sale("特売")</code> と書くと「型 Sale のインスタンスを生成できません」というエラーになります。インタフェースと抽象クラスは、<strong>変数・配列・引数の型として使うためのもの</strong>です。</p>
 </div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>インタフェースの役割</h2><p><code>Coupon c = new YenCoupon(...);</code> として <code>c.apply(price)</code> を呼べるのはなぜ？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>YenCouponがCouponの約束を実装しているため。呼ぶ側は具体的な券の種類を知らなくても、同じメソッドを呼べる。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
 <p>ここからは自力です。2問あります。<strong>①で2種類の送料が表示できたら、今日の目的は達成です。</strong></p>
 <h2>課題</h2>
@@ -725,9 +722,9 @@ public class ShippingMain {
 <div class="card"><div class="card-title">⑤ まとめ</div>
 <h2>確認チェック</h2><div class="check"><ul><li>「親の型で受けると、子の動きが出る」を、<code>Coupon</code> の例で説明できる</li><li>インタフェースを書き、<code>implements</code> したクラスで約束のメソッドを全部書ける</li><li>インタフェースと抽象クラスの違いを1つ言える</li></ul></div>
 <h2>次回</h2><p><strong>次回は、コレクションの ArrayList と HashMap です。</strong>今日まで使ってきた配列は、作るときに個数を決めないといけません。次回は<strong>あとから何個でも足せる入れ物</strong>を扱います。そこで出てくる <code>List</code> は、今日のインタフェースそのものです。</p></div>
-<div class="card"><div class="card-title">用語の説明</div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
-<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>インタフェース</td><td>いんたふぇーす</td><td>「このメソッドを持つこと」という約束だけを並べたもの。<code>public interface Coupon { ... }</code>。Eclipse の表示では「インターフェース」</td></tr><tr><td>ポリモーフィズム</td><td>ぽりもーふぃずむ</td><td>親の型で受けて同じ呼び方をしても、中身（子）によって動きが変わること。多態性とも言います</td></tr><tr><td>implements</td><td>いんぷりめんつ</td><td>「そのインタフェースの約束を守ります」という宣言。<code>class PercentCoupon implements Coupon</code></td></tr><tr><td>実装する</td><td>じっそうする</td><td>約束（抽象メソッド）に、中身を書くこと</td></tr><tr><td>親の型</td><td>おやのかた</td><td>いくつもの種類をまとめて受け取れる型。インタフェースか、親クラス（抽象クラスを含む）で作ります</td></tr><tr><td>抽象メソッド</td><td>ちゅうしょうめそっど</td><td>中身の <code>{ }</code> が無く、<code>;</code> で終わるメソッド。子が必ず中身を書きます</td></tr><tr><td>abstract</td><td>あぶすとらくと</td><td>「中身がまだ決まっていない」という印。<code>abstract class</code> <code>abstract int apply(...)</code></td></tr><tr><td>抽象クラス</td><td>ちゅうしょうくらす</td><td><code>abstract</code> を付けたクラス。<code>new</code> できず、親の型として使います。フィールドや中身のあるメソッドも持てます</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親や約束のメソッドを書いています」という印。名前の打ち間違いをエラーで知らせてくれます（第6回）</td></tr><tr><td>extends</td><td>えくすてんず</td><td>親クラスを引き継ぐ宣言。親にできるのは1つだけです（第6回）</td></tr><tr><td>可視性</td><td>かしせい</td><td>そのメソッドをどこから呼べるかの範囲。<code>public</code> や <code>private</code> で決まります</td></tr></table></div>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>インタフェース</td><td>いんたふぇーす</td><td>「このメソッドを持つこと」という約束だけを並べたもの。<code>public interface Coupon { ... }</code>。Eclipse の表示では「インターフェース」</td></tr><tr><td>ポリモーフィズム</td><td>ぽりもーふぃずむ</td><td>親の型で受けて同じ呼び方をしても、中身（子）によって動きが変わること。多態性とも言います</td></tr><tr><td>implements</td><td>いんぷりめんつ</td><td>「そのインタフェースの約束を守ります」という宣言。<code>class PercentCoupon implements Coupon</code></td></tr><tr><td>実装する</td><td>じっそうする</td><td>約束（抽象メソッド）に、中身を書くこと</td></tr><tr><td>親の型</td><td>おやのかた</td><td>いくつもの種類をまとめて受け取れる型。インタフェースか、親クラス（抽象クラスを含む）で作ります</td></tr><tr><td>抽象メソッド</td><td>ちゅうしょうめそっど</td><td>中身の <code>{ }</code> が無く、<code>;</code> で終わるメソッド。子が必ず中身を書きます</td></tr><tr><td>abstract</td><td>あぶすとらくと</td><td>「中身がまだ決まっていない」という印。<code>abstract class</code> <code>abstract int apply(...)</code></td></tr><tr><td>抽象クラス</td><td>ちゅうしょうくらす</td><td><code>abstract</code> を付けたクラス。<code>new</code> できず、親の型として使います。フィールドや中身のあるメソッドも持てます</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親や約束のメソッドを書いています」という印。名前の打ち間違いをエラーで知らせてくれます（第6回）</td></tr><tr><td>extends</td><td>えくすてんず</td><td>親クラスを引き継ぐ宣言。親にできるのは1つだけです（第6回）</td></tr><tr><td>可視性</td><td>かしせい</td><td>そのメソッドをどこから呼べるかの範囲。<code>public</code> や <code>private</code> で決まります</td></tr></table></details>
 <footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 7 回 ／ 全 18 回</footer>
 </div>
 <script>
