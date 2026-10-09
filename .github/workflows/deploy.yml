@@ -24,6 +24,10 @@ jobs:
           java-version: '17'
       - name: Verify lessons and practice content
         run: node tests/validate-content.mjs
+      - name: Verify responsive UI and navigation
+        run: |
+          node --check reader-ux.js
+          node tests/validate-ux.mjs
       - name: Compile and run Java concept examples
         run: node tests/validate-examples.mjs
       - uses: actions/configure-pages@v5
