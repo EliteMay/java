@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第9回｜null・例外と try-catch</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson08.html">前の講義</a><a href="lesson10.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 9 回 ／ 全 18 回</span><h1>null・例外と try-catch</h1><p>第11章 11-4 と 第12章　null ／ 例外と try-catch ／ 入力の検査</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">null</span>　<span class="term">例外</span>　<span class="term">try-catch</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>例外が起きると、その行から先が実行されないことを説明できる</li><li><code>try-catch</code> で例外を受け止め、プログラムを続けられる</li><li><code>null</code> かどうかを <code>==</code> で確かめてから使える</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　null・例外・try-catch を、守備のボールとグローブで</li><li>② 写して動かす　<code>Product</code> と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑧の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>setPrice</code> を例外にする／正しい数字が入るまで聞き直す</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>null</td><td>参照型の変数が「何も指していない」ことを表す値です。<code>null</code> の変数でメソッドを呼ぶと <code>NullPointerException</code> になります。<code class="ex">Product found = null;
+found.show();   // NullPointerException</code></td></tr><tr><td>例外</td><td>プログラムの実行中に起きた、処理を続けられない事態。また、それを表すオブジェクトのこと。例外が起きると処理はそこで止まり、呼び出した側へ伝わります。<code>try</code>-<code>catch</code> で受け止めれば処理を続けられ、どこでも受け止めなければプログラムが止まります。<code class="ex">throw new IllegalArgumentException("...");
+try { ... } catch (NumberFormatException e) { ... }</code></td></tr><tr><td>try-catch</td><td>例外が起きるかもしれない処理を <code>try { }</code> で囲み、起きたときの処理を <code>catch { }</code> に書く文です。<code>finally { }</code> は、成功しても失敗しても最後に必ず動きます。<code class="ex">try {
+    int n = Integer.parseInt(text);
+} catch (NumberFormatException e) {
+    System.out.println("数字で入力してください");
+}</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>例外は「投げられるボール」、catch は「グローブ」</h3><p class="lead">受け止める人がいれば、試合は続きます。誰もいなければ、そこで試合が止まります。</p><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 230" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="20" y="28">catch がある</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="40"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="40"></rect>
+<rect fill="#fff3e6" height="8" width="178" x="21" y="59"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="110" y="58">setStock（呼ばれた側）</text>
+<text fill="#1f2933" font-size="14" x="30" y="86">-5 は受け付けない</text>
+<line marker-end="url(#ar1)" stroke="#b91c1c" stroke-width="1.8" x1="200" x2="290" y1="70" y2="70"></line>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="245" y="62">例外</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="292" y="40"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="292" y="40"></rect>
+<rect fill="#e0f2fe" height="8" width="188" x="293" y="59"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="387" y="58">main（呼んだ側）</text>
+<text fill="#1f2933" font-size="14" x="302" y="86">catch で受け止める</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="482" x2="530" y1="70" y2="70"></line>
+<rect fill="#f0fdf4" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="532" y="40"></rect>
+<text fill="#047857" font-size="14" font-weight="bold" text-anchor="middle" x="617" y="66">続きへ進む</text>
+<text fill="#047857" font-size="13" text-anchor="middle" x="617" y="88">「処理を続けます」</text>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="20" y="138">catch がない</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="150"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="150"></rect>
+<rect fill="#fff3e6" height="8" width="178" x="21" y="169"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="110" y="168">setStock（呼ばれた側）</text>
+<text fill="#1f2933" font-size="14" x="30" y="196">-5 は受け付けない</text>
+<line marker-end="url(#ar1)" stroke="#b91c1c" stroke-width="1.8" x1="200" x2="290" y1="180" y2="180"></line>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="245" y="172">例外</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="292" y="150"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="292" y="150"></rect>
+<rect fill="#e0f2fe" height="8" width="188" x="293" y="169"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="387" y="168">main（呼んだ側）</text>
+<text fill="#1f2933" font-size="14" x="302" y="196">受け止める所が無い</text>
+<line marker-end="url(#ar1)" stroke="#b91c1c" stroke-width="1.8" x1="482" x2="530" y1="180" y2="180"></line>
+<rect fill="#fef2f2" height="60" rx="6" stroke="#b91c1c" stroke-width="1.5" width="170" x="532" y="150"></rect>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="middle" x="617" y="176">プログラムが止まる</text>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="617" y="198">赤い文字が出る</text>
+</svg><p class="figcap">例外は「投げられるボール」。catch が受け止めなければ、そこで止まる</p><p>メソッドの中で「これ以上は続けられない」事態が起きることがあります。在庫に -5 を入れようとした、数字のはずの入力が「abc」だった、などです。そのとき Java は、その場で<strong>例外</strong>というボールを投げます。</p>
+<p>ボールは、そのメソッドを呼んだ側へ飛んでいきます。呼んだ側が <code>catch</code> というグローブを構えていれば、受け止めてその先へ進めます。</p>
+<p><strong>誰も受け止めなければ、プログラムはそこで止まります。</strong>コンソールに出る赤い文字は、ボールがどこから飛んできたかの記録です。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 222" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="180" y="26">たとえ（守備）</text>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="540" y="26">Java</text>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="20" y="38"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="20" y="38"></rect>
+<rect fill="#fff3e6" height="8" width="318" x="21" y="57"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="180" y="56">グローブを構える・捕る</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="34" y="86">飛んでくる間、グローブを構えておく</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="34" y="106">捕って対応する</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="342" x2="378" y1="77" y2="77"></line>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="380" y="38"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="380" y="38"></rect>
+<rect fill="#e0f2fe" height="8" width="318" x="381" y="57"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="540" y="56">try-catch</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="14" x="394" xml:space="preserve" y="86">try { ... }</text>
+<text fill="#047857" font-family="Consolas,monospace" font-size="14" x="394" xml:space="preserve" y="106">catch (...) { ... }</text>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="20" y="130"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="20" y="130"></rect>
+<rect fill="#fff3e6" height="8" width="318" x="21" y="149"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="180" y="148">誰もいない守備位置</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="34" y="178">守備位置に選手がいない</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="34" y="198">そこへ「捕って」と指示を出す</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="342" x2="378" y1="169" y2="169"></line>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="380" y="130"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="380" y="130"></rect>
+<rect fill="#e0f2fe" height="8" width="318" x="381" y="149"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="540" y="148">null</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="394" xml:space="preserve" y="178">Product found = null;</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="14" x="394" xml:space="preserve" y="198">found.show();</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="start" x="504" y="198">→ NullPointerException</text>
+</svg><p class="figcap">構える範囲が try、捕るのが catch。誰もいない所が null</p><p>ボールを捕るには、飛んでくる間グローブを構えておきます。構えている範囲が <code>try</code>、捕って対応するのが <code>catch</code> です（<strong>try-catch</strong>）。</p>
+<p>守備位置に、誰もいないこともあります。選手がいない状態が <strong><code>null</code></strong> です。誰もいない守備位置に「捕って」と指示を出す（メソッドを呼ぶ）と、<code>NullPointerException</code> になります。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>ボール</td><td>例外　<code>IllegalArgumentException</code> など</td></tr><tr><td>ボールを投げる</td><td><code>throw</code></td></tr><tr><td>グローブを構える範囲</td><td><code>try { ... }</code></td></tr><tr><td>受け止めて対応する</td><td><code>catch (...) { ... }</code></td></tr><tr><td>誰も受け止めない</td><td>プログラムが止まり、赤い文字が出る</td></tr><tr><td>誰もいない守備位置に「捕って」と指示を出す</td><td><code>null</code> の変数でメソッドを呼ぶ。<code>NullPointerException</code> になる</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>null</td><td>「見つからなかった」「まだ作っていない」を、はっきり表すためです。</td></tr><tr><td>例外</td><td>続けられない事態が起きたことを、呼んだ側に確実に伝えて、対処させるためです。</td></tr><tr><td>try-catch</td><td>例外が起きてもプログラムを止めずに、代わりの処理をするためです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>null</td><td>探しても見つからなかったときの戻り値。使う前に <code>== null</code> で確かめます。</td></tr><tr><td>例外</td><td>数字のはずの入力に文字が入った、在庫にマイナスを入れようとした、などのとき。</td></tr><tr><td>try-catch</td><td>入力が数字でなかったとき、在庫にマイナスを入れようとしたときに、メッセージを出して続けるとき。</td></tr></table>
+<p>今日のゴールは、ボールを投げる側と受け止める側を、両方書けるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は新しいプロジェクト <code>lesson09</code> に、クラスを2つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson09</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson09</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson09</code> と入っていることを確かめて［完了］（空なら <code>lesson09</code> と入力する）</td></tr><tr><td>⑥</td><td>④⑤をもう一度行い、名前 <code>Main</code> のクラスを作る</td></tr><tr><td>⑦</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑧</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の2つのファイルだけです。どちらも1行目は <code>package lesson09;</code> です。</p>
+<p><code>Product</code> の <code>setStock</code> は、負の値を渡されると①の1行で<strong>例外を投げます。</strong></p>
+<p>下の2つが、それぞれのファイルの中身の全部です。行の右にある ①〜⑧ は、③解説の番号です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson09</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson09（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="180"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="144" y2="144"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="180" y2="180"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="128"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="149">Product.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="164"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="185">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="149">商品。setStock は、負の値なら例外を投げる</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="185">使う側。投げられた例外を受け止める</text>
+</svg><p class="figcap">プロジェクトの中身。この2つのファイルで全部です</p><p class="fname">Product.java　商品（setStock は、負の値なら①で例外を投げる）</p>
+<pre class="code" id="c1">package lesson09;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");  <span class="cm">// <span class="cn">①</span> throw</span>
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="fname">Main.java　使うほう</p>
+<pre class="code" id="c2">package lesson09;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+
+        Product note = products.get(1);                               <span class="cm">// 1番目（0から数える）の「ノート」</span>
+
+        try {                                                         <span class="cm">// <span class="cn">②</span> try</span>
+            note.setStock(-5);                                        <span class="cm">// <span class="cn">③</span> ここで例外が起きる</span>
+            System.out.println("在庫を変えました");                   <span class="cm">// <span class="cn">③</span> 飛ばされる</span>
+        } catch (IllegalArgumentException e) {                        <span class="cm">// <span class="cn">④</span> catch</span>
+            System.out.println("変えられません: " + e.getMessage());  <span class="cm">// <span class="cn">⑤</span> getMessage</span>
+        } finally {                                                   <span class="cm">// <span class="cn">⑥</span> finally</span>
+            note.show();
+        }
+
+        Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();
+        for (Product p : products) {
+            byId.put(p.getId(), p);
+        }
+        Product found = byId.get(9);                        <span class="cm">// <span class="cn">⑦</span> 無い名札なら null</span>
+        if (found == null) {                                <span class="cm">// <span class="cn">⑧</span> null か確かめる</span>
+            System.out.println("ID 9 の商品はありません");
+        } else {
+            found.show();
+        }
+
+        System.out.println("処理を続けます");
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">変えられません: 在庫に負の値は設定できません
+2 / ノート / 220円 / 残り10個
+ID 9 の商品はありません
+処理を続けます</div>
+<p>「在庫を変えました」は表示されず、最後の「処理を続けます」は表示されています。例外が起きたのに、受け止めたのでプログラムは最後まで動きました。</p>
+<p>「ID 9 の商品はありません」は、登録していない ID 9 を探したときの表示です。③解説の4で説明します。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　例外を投げる（①）</h2>
+<p class="fname">Product.java（抜き出し）</p>
+<pre class="code" id="c3">public void setStock(int stock) {
+    if (stock &lt; 0) {
+        throw new IllegalArgumentException("在庫に負の値は設定できません");  <span class="cm">// <span class="cn">①</span> throw</span>
+    }
+    this.stock = stock;
+}</pre>
+<p><strong>throw</strong> は「ここで例外を投げる」命令です。<code>IllegalArgumentException</code> は「渡された値がおかしい」ことを表す例外で、丸括弧の中が理由の文になります。<code>throw</code> の行でメソッドは終わるので、<code>this.stock = stock;</code> まで届きません。</p>
+<p>もし <code>setStock</code> が表示して <code>return</code> するだけなら、<code>Main</code> は失敗に気づかず、次の行へ進んでしまいます。<code>throw</code> してあるので、<code>Main</code> は受け止めるか止まるかのどちらかになり、失敗を見逃しません。</p>
+<h2>2　try で囲む（②③）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c4">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    try {                                               <span class="cm">// <span class="cn">②</span> try</span>
+        note.setStock(-5);                              <span class="cm">// <span class="cn">③</span> ここで例外が起きる</span>
+        System.out.println("在庫を変えました");         <span class="cm">// <span class="cn">③</span> 飛ばされる</span>
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><strong>try</strong> は、例外が起きるかもしれない処理を囲みます。グローブを構える範囲です。<code>try</code> の外で起きた例外は受け止めません。</p>
+<p><code>note.setStock(-5);</code> で例外が起きると、<code>try</code> の残りの「在庫を変えました」は飛ばされ、<code>catch</code> へ移ります。<strong>例外が起きた行から下は実行されません。</strong>失敗したのに「在庫を変えました」と表示しないで済むのは、このためです。<code>-5</code> を <code>25</code> に変えると例外は起きず、「在庫を変えました」が表示されて、<code>catch</code> は動きません。</p>
+<p><strong>よくある間違い：try で囲まずに呼ぶ。</strong>②〜⑥を消して、<code>note.setStock(-5);</code> をそのまま呼んだ形です。<code>Product</code> は写したままです。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c5">package lesson09;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+
+        Product note = products.get(1);                     <span class="cm">// 1番目（0から数える）の「ノート」</span>
+
+        note.setStock(-5);                                  <span class="cm">// try で囲んでいない</span>
+        System.out.println("在庫を変えました");
+        note.show();
+
+        Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();
+        for (Product p : products) {
+            byId.put(p.getId(), p);
+        }
+        Product found = byId.get(9);                        <span class="cm">// <span class="cn">⑦</span> 無い名札なら null</span>
+        if (found == null) {                                <span class="cm">// <span class="cn">⑧</span> null か確かめる</span>
+            System.out.println("ID 9 の商品はありません");
+        } else {
+            found.show();
+        }
+
+        System.out.println("処理を続けます");
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">Exception in thread "main" java.lang.IllegalArgumentException: 在庫に負の値は設定できません
+	at lesson09.Product.setStock(Product.java:34)
+	at lesson09.Main.main(Main.java:17)</div>
+<p>何も表示されないまま止まりました。止まった場所は、<code>lesson09</code> で始まる行です（読み方は第1回と同じです）。自分の行が2つあるときは、上が例外を投げた場所（<code>Product.java</code> の①）、下がそれを呼んだ場所（<code>Main.java</code>）です。</p>
+<p>17行目より下の「在庫を変えました」も、⑦⑧も、「処理を続けます」も表示されていません。写経のコードのように <code>try</code> で囲んで <code>catch</code> すれば、先へ進めます。</p>
+<h2>3　catch で受け止め、finally で締める（④⑤⑥）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c6">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    } catch (IllegalArgumentException e) {                        <span class="cm">// <span class="cn">④</span> catch</span>
+        System.out.println("変えられません: " + e.getMessage());  <span class="cm">// <span class="cn">⑤</span> getMessage</span>
+    } finally {                                                   <span class="cm">// <span class="cn">⑥</span> finally</span>
+        note.show();
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><strong>catch</strong> は、丸括弧に書いた種類の例外が来たときだけ動きます。<code>e</code> は届いた例外そのものです。受け止めたあとの対応をここに書くので、プログラムは止まらずに先へ進めます。</p>
+<p><code>e.getMessage()</code> は、例外に入っている理由の文を取り出します。<code>Product</code> で書いた「在庫に負の値は設定できません」が出てきます。理由は、投げた側（<code>Product</code>）がいちばんよく知っています。</p>
+<p><strong>finally</strong> の中は、例外が起きても起きなくても、最後に必ず実行されます。<strong>なぜ finally に書くのか。</strong>成功でも失敗でもやる後片付け（ここでは今の在庫の表示）を、1か所に書くためです。<code>try</code> と <code>catch</code> の両方に同じ行を書かずに済みます。</p>
+<p><strong>よくある間違い：catch の中を空にする。</strong>止まらないようにしたつもりで、⑤の行を消した形です。<code>Product</code> は写したままです。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c7">package lesson09;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+
+        Product note = products.get(1);                     <span class="cm">// 1番目（0から数える）の「ノート」</span>
+
+        try {
+            note.setStock(-5);
+            System.out.println("在庫を変えました");
+        } catch (IllegalArgumentException e) {
+            <span class="cm">// 何も書いていない                             // ここが問題</span>
+        } finally {
+            note.show();
+        }
+
+        Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();
+        for (Product p : products) {
+            byId.put(p.getId(), p);
+        }
+        Product found = byId.get(9);                        <span class="cm">// <span class="cn">⑦</span> 無い名札なら null</span>
+        if (found == null) {                                <span class="cm">// <span class="cn">⑧</span> null か確かめる</span>
+            System.out.println("ID 9 の商品はありません");
+        } else {
+            found.show();
+        }
+
+        System.out.println("処理を続けます");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">2 / ノート / 220円 / 残り10個
+ID 9 の商品はありません
+処理を続けます</div>
+<p>赤い文字も「変えられません」も出ません。在庫は 10個 のままで、変えられなかったことが誰にも伝わりません。例外を受け止めて何もしないことを<strong>握りつぶし</strong>と言います。あとで「在庫が合わない」と言われても、手がかりが残っていません。<code>catch</code> の中は空にせず、最低でも何が起きたかを表示します。</p>
+<h2>4　無い名札で探し、null を確かめる（⑦⑧）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c8">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();
+    for (Product p : products) {
+        byId.put(p.getId(), p);
+    }
+    Product found = byId.get(9);                        <span class="cm">// <span class="cn">⑦</span> 無い名札なら null</span>
+    if (found == null) {                                <span class="cm">// <span class="cn">⑧</span> null か確かめる</span>
+        System.out.println("ID 9 の商品はありません");
+    } else {
+        found.show();
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p>⑦ 第8回と同じく、商品の ID を名札にした <code>Map</code> を作り、<code>get(9)</code> で ID 9 を探します。ID 9 は登録していないので、エラーにはならず <strong><code>null</code></strong> が返ります。<code>null</code> は「どの実物も指していない」ことを表す値です。<code>found</code> には何の商品も入っていません。</p>
+<p>⑧ <code>if (found == null)</code> で、<code>null</code> かどうかを確かめてから使います。<code>null</code> と比べるときは <code>==</code> を使います。<strong>なぜ確かめるのか。</strong><code>null</code> のまま <code>found.show()</code> を呼ぶと、呼ぶ相手がいないので、そこでプログラムが止まるからです。</p>
+<div class="words"><b>ここで出た言葉</b><span><b><code>null</code></b>　「どの実物も指していない」ことを表す値。<code>Map</code> に無い名札で <code>get</code> すると返ってきます</span></div>
+<p><strong>よくある間違い：null を確かめずに使う。</strong>⑧の <code>if</code> を書かずに、そのまま <code>show()</code> を呼んだ形です。<code>Product</code> は写したままです。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c9">package lesson09;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+
+        Product note = products.get(1);                               <span class="cm">// 1番目（0から数える）の「ノート」</span>
+
+        try {                                                         <span class="cm">// <span class="cn">②</span> try</span>
+            note.setStock(-5);                                        <span class="cm">// <span class="cn">③</span> ここで例外が起きる</span>
+            System.out.println("在庫を変えました");                   <span class="cm">// <span class="cn">③</span> 飛ばされる</span>
+        } catch (IllegalArgumentException e) {                        <span class="cm">// <span class="cn">④</span> catch</span>
+            System.out.println("変えられません: " + e.getMessage());  <span class="cm">// <span class="cn">⑤</span> getMessage</span>
+        } finally {                                                   <span class="cm">// <span class="cn">⑥</span> finally</span>
+            note.show();
+        }
+
+        Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();
+        for (Product p : products) {
+            byId.put(p.getId(), p);
+        }
+        Product found = byId.get(9);                        <span class="cm">// <span class="cn">⑦</span> 無い名札なら null</span>
+        found.show();                                       <span class="cm">// ここで止まる</span>
+
+        System.out.println("処理を続けます");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">変えられません: 在庫に負の値は設定できません
+2 / ノート / 220円 / 残り10個</div>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">Exception in thread "main" java.lang.NullPointerException: Cannot invoke "lesson09.Product.show()" because "found" is null
+	at lesson09.Main.main(Main.java:31)</div>
+<svg class="fig" role="img" viewbox="0 0 720 180" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="110" x="30" y="36"></rect>
+<text fill="#1f2933" font-size="14" x="40" y="56">note</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="140" x2="210" y1="52" y2="52"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="190" x="212" y="36"></rect>
+<text fill="#1f2933" font-size="14" x="222" y="56">Product「ノート」</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="430" xml:space="preserve" y="57">note.show()</text>
+<text fill="#047857" font-size="14" font-weight="bold" text-anchor="start" x="540" y="57">→ 表示できる</text>
+<rect fill="#fef2f2" height="32" rx="6" stroke="#b91c1c" stroke-width="1.5" width="110" x="30" y="116"></rect>
+<text fill="#1f2933" font-size="14" x="40" y="136">found : null</text>
+<line marker-end="url(#ar3)" stroke="#94a3b8" stroke-dasharray="6 4" stroke-width="1.8" x1="140" x2="210" y1="132" y2="132"></line>
+<rect fill="#f8fafc" height="32" rx="6" stroke="#94a3b8" stroke-dasharray="6 4" stroke-width="1.5" width="190" x="212" y="116"></rect>
+<text fill="#1f2933" font-size="14" x="222" y="136">（何も指していない）</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="14" x="430" xml:space="preserve" y="137">found.show()</text>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="start" x="540" y="137">→ 止まる</text>
+</svg><p class="figcap">null は「どの実物も指していない」印。指す先が無いので、メソッドを呼べない</p><p><code>because "found" is null</code> が「<code>found</code> が <code>null</code> だったから」という理由です。<code>found</code> はどの商品も指していないので、<code>show()</code> を呼ぶ相手がいません。この例外を <strong>NullPointerException</strong> と言います。止まったので、最後の「処理を続けます」も表示されていません。</p>
+<div class="words"><b>ここで出た言葉</b><span><b><code>NullPointerException</code></b>　<code>null</code> に対してメソッドを呼んだり、フィールドを使ったりしたときの例外</span></div>
+<p><code>NullPointerException</code> が起きるのは、ほぼ次の3つの型です。今日の⑦は①の型です。</p>
+<table><tr><th>型</th><th>例</th></tr><tr><td>① 探したが無かった</td><td><code>Map</code> の <code>get</code> に無い名札を渡すと <code>null</code> が返る</td></tr><tr><td>② フィールドを <code>new</code> していない</td><td><code>private List&lt;Product&gt; items;</code> のまま <code>items.add(p)</code> を呼ぶ</td></tr><tr><td>③ 配列の箱に入れていない</td><td><code>new Product[3]</code> の3つ目に何も入れずに <code>show()</code> を呼ぶ</td></tr></table>
+<div class="note"><code>NullPointerException</code> は、<code>catch</code> で受け止めるより、<strong>起きないように書く</strong>のが基本です。①の型は⑧のように確かめ、②の型は宣言と同時に <code>new ArrayList&lt;&gt;()</code> しておき、③の型は入れる数が決まっていないなら <code>List</code> に替えます。</div>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①で「変えられません」が表示できたら、今日の目的は達成です。</strong></p>
+<p><strong>②で使う道具。</strong>キーボードから入力を受け取るには <code>Scanner</code> を使います（<code>import java.util.Scanner;</code>）。<code>sc.nextLine()</code> で1行読み、読んだものは文字列です。<code>Integer.parseInt(文字列)</code> で数字にします。<code>"25"</code> は <code>25</code> になり、<code>"abc"</code> は数字にできないので <code>NumberFormatException</code> を投げます。</p>
+<p><code>catch</code> は続けて何個も書けます。上から順に調べ、当てはまった1つだけが動きます。<code>NumberFormatException</code> は <code>IllegalArgumentException</code> の子クラス（第6回の継承）なので、両方書くときは<strong>子を先に書きます。</strong>逆にすると「NumberFormatException の到達不可能な catch ブロック。すでに IllegalArgumentException の catch ブロックによって処理されています」というコンパイルエラーになります。</p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>Product</code> の <code>setPrice</code> を、負の値なら <code>IllegalArgumentException</code> を投げる形に書き換える。<code>PriceMain</code> で <code>-100</code> と <code>180</code> を順に設定し、例外は <code>catch</code> して理由を表示する。</li><li>②　<code>StockInput</code> で、正しい在庫数が入るまで聞き直す。数字でないときと、負の値のときは、それぞれ知らせてもう一度聞く。うまく設定できたら、ループを抜けて商品を表示する。</li></ul>
+<h2>骨組み</h2>
+<p>3つのファイルの全体です。<code>// ここに…</code> の所を書きます。<code>Product</code> は②の <code>Product.java</code> を書き換えます。</p>
+<p><code>StockInput</code> は、貼った直後は <code>note.show();</code> の行に「到達不能コード」の赤い印が出ます。<code>while (true)</code> は <code>break</code>（ループをその場で抜ける命令）するまで抜けないループなので、<code>break</code> を書くと消えます。</p>
+<p class="fname">Product.java（setPrice の中を書き換える）</p>
+<pre class="code" id="c10">package lesson09;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        <span class="cm">// ここに、price が負の値なら IllegalArgumentException を投げる処理を書く</span>
+        <span class="cm">// メッセージは「価格に負の値は設定できません」</span>
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c10">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">PriceMain.java</p>
+<pre class="code" id="c11">package lesson09;
+
+public class PriceMain {
+    public static void main(String[] args) {
+        Product pen = new Product(1, "ボールペン", 150, 30);
+        int[] prices = {-100, 180};
+
+        for (int price : prices) {
+            <span class="cm">// ここに try-catch を書き、pen.setPrice(price) を呼ぶ</span>
+            <span class="cm">// 例外が来たら「変えられません: 」のあとに理由を表示する</span>
+        }
+
+        pen.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c11">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">StockInput.java</p>
+<pre class="code" id="c12">package lesson09;
+
+import java.util.Scanner;
+
+public class StockInput {
+    public static void main(String[] args) {
+        Product note = new Product(2, "ノート", 220, 10);
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("在庫数を入力してください");
+            String input = sc.nextLine();
+
+            <span class="cm">// ここに try-catch を書く</span>
+            <span class="cm">// うまく setStock できたら break でループを抜ける</span>
+            <span class="cm">// 数字でなければ「数字で入力してください: 」のあとに入力した値</span>
+            <span class="cm">// 負の値なら「変えられません: 」のあとに理由</span>
+        }
+
+        note.show();
+        sc.close();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c12">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">変えられません: 価格に負の値は設定できません
+1 / ボールペン / 180円 / 残り30個
+
+在庫数を入力してください
+数字で入力してください: abc
+在庫数を入力してください
+変えられません: 在庫に負の値は設定できません
+在庫数を入力してください
+2 / ノート / 220円 / 残り25個</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①の <code>setPrice</code> は <code>setStock</code> と同じ形で、<code>if</code> の中で <code>throw</code> します。<code>try</code> は <code>for</code> の中に書くと、<code>-100</code> で失敗しても次の <code>180</code> へ進みます。</li><li>②　②は <code>try</code> の中で <code>setStock</code> が終わったら <code>break;</code> と書きます。例外が起きると <code>break</code> まで届かないので、ループがもう1周します。</li><li>③　②の <code>catch</code> は2つ書き、<code>NumberFormatException</code> を先にします。実行結果は、<code>abc</code>、<code>-5</code>、<code>25</code> の順に入力したときのものです。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第9回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　setPrice を例外にする</summary><div class="sol">
+<p class="fname">Product.java</p>
+<pre class="code" id="c13">package lesson09;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        <span class="cm">// ここに、price が負の値なら IllegalArgumentException を投げる処理を書く</span>
+        if (price &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="fname">PriceMain.java</p>
+<pre class="code" id="c14">package lesson09;
+
+public class PriceMain {
+    public static void main(String[] args) {
+        Product pen = new Product(1, "ボールペン", 150, 30);
+        int[] prices = {-100, 180};
+
+        for (int price : prices) {
+            <span class="cm">// ここに try-catch を書き、pen.setPrice(price) を呼ぶ</span>
+            try {
+                pen.setPrice(price);
+            } catch (IllegalArgumentException e) {
+                System.out.println("変えられません: " + e.getMessage());
+            }
+        }
+
+        pen.show();
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">変えられません: 価格に負の値は設定できません
+1 / ボールペン / 180円 / 残り30個</div>
+<div class="note"><code>-100</code> のときは <code>throw</code> の行で止まるので、<code>this.price = price;</code> まで届きません。150円のまま残り、次の <code>180</code> で変わります。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　正しい数字が入るまで聞き直す</summary><div class="sol">
+<p class="fname">StockInput.java</p>
+<pre class="code" id="c15">package lesson09;
+
+import java.util.Scanner;
+
+public class StockInput {
+    public static void main(String[] args) {
+        Product note = new Product(2, "ノート", 220, 10);
+        Scanner sc = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("在庫数を入力してください");
+            String input = sc.nextLine();
+
+            <span class="cm">// ここに try-catch を書く</span>
+            try {
+                note.setStock(Integer.parseInt(input));
+                break;
+            } catch (NumberFormatException e) {
+                System.out.println("数字で入力してください: " + input);
+            } catch (IllegalArgumentException e) {
+                System.out.println("変えられません: " + e.getMessage());
+            }
+        }
+
+        note.show();
+        sc.close();
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">在庫数を入力してください
+数字で入力してください: abc
+在庫数を入力してください
+変えられません: 在庫に負の値は設定できません
+在庫数を入力してください
+2 / ノート / 220円 / 残り25個</div>
+<div class="note"><code>while (true)</code> は、<code>break</code> するまで回り続けるループです。例外が起きると <code>break;</code> の行は飛ばされ、<code>catch</code> のあとにループの先頭へ戻ります。正しい値のときだけ <code>break</code> に届きます。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>例外が起きた行から下が実行されないことを、ボールとグローブで説明できる</li><li><code>NullPointerException</code> が起きる3つの型を挙げられる</li><li><code>null</code> かどうかを <code>==</code> で確かめてから使える</li></ul></div>
+<h2>次回</h2><p><strong>次回は、ストリームと検査例外、ファイル入出力と CSV です。</strong><code>products.csv</code> を作り、読み書きします。ファイルを扱うときは、備えを書かないとコンパイルが通らない例外（検査例外）が出てきます。今日の <code>try-catch</code> をそのまま使います。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>例外</td><td>れいがい</td><td>続けられない事態が起きたときに、Java が投げる知らせ。受け止めないとプログラムが止まります</td></tr><tr><td>throw</td><td>すろー</td><td>「ここで例外を投げる」命令。<code>throw new IllegalArgumentException("理由");</code></td></tr><tr><td>try</td><td>とらい</td><td>例外が起きるかもしれない処理を囲む範囲</td></tr><tr><td>catch</td><td>きゃっち</td><td>丸括弧に書いた種類の例外が来たときに動く所。<code>catch (NumberFormatException e)</code></td></tr><tr><td>finally</td><td>ふぁいなりー</td><td>例外が起きても起きなくても、最後に必ず動く所。後片付けを書きます</td></tr><tr><td>getMessage()</td><td>げっとめっせーじ</td><td>例外に入っている理由の文を取り出すメソッド</td></tr><tr><td>IllegalArgumentException</td><td>いりーがる あーぎゅめんと えくせぷしょん</td><td>「渡された値がおかしい」ことを表す例外。自分で投げるときによく使います</td></tr><tr><td>NumberFormatException</td><td>なんばー ふぉーまっと えくせぷしょん</td><td>文字列が数字の形になっていないことを表す例外。<code>Integer.parseInt</code> が投げます。<code>IllegalArgumentException</code> の子クラスです</td></tr><tr><td>NullPointerException</td><td>ぬる ぽいんたー えくせぷしょん</td><td><code>null</code> に対してメソッドを呼んだり、フィールドを使ったりしたときの例外</td></tr><tr><td>null</td><td>ぬる</td><td>「どの実物も指していない」ことを表す値。比べるときは <code>==</code> を使います</td></tr><tr><td>握りつぶし</td><td>にぎりつぶし</td><td>例外を <code>catch</code> して何もしないこと。失敗が誰にも伝わらなくなります</td></tr><tr><td>while (true)</td><td>ほわいる とぅるー</td><td>条件がいつも <code>true</code> なので、<code>break</code> するまで回り続けるループ</td></tr><tr><td>break</td><td>ぶれーく</td><td>ループをその場で抜ける命令。ループの後ろの行へ進みます</td></tr><tr><td>Scanner</td><td>すきゃなー</td><td>キーボードからの入力を読む道具。<code>nextLine()</code> で1行読みます</td></tr><tr><td>Integer.parseInt</td><td>いんてじゃー ぱーすいんと</td><td>文字列を <code>int</code> に変えるメソッド。変えられないときは <code>NumberFormatException</code> を投げます</td></tr><tr><td>子クラス</td><td>こくらす</td><td>ほかのクラスを継承したクラス（第6回）。<code>catch</code> では子を先に書きます</td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 9 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
