@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第8回｜コレクションの ArrayList と HashMap</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson07.html">前の講義</a><a href="lesson09.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 8 回 ／ 全 18 回</span><h1>コレクションの ArrayList と HashMap</h1><p>第11章　ArrayList ／ HashMap ／ ラッパークラス</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">コレクション</span>　<span class="term">List（ArrayList）</span>　<span class="term">Map（HashMap）</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li><code>List</code> に商品を何個でも入れて、全部を表示できる</li><li><code>Map</code> に名札（キー）を付けて入れ、名札で1つ取り出せる</li><li><code>List</code> と <code>Map</code> を、使い道で選び分けられる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　コレクション・List（ArrayList）・Map（HashMap）を、伸びる棚と名札つきの引き出しで</li><li>② 写して動かす　<code>Product</code> と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑦の順に。よくある間違いも一緒に</li><li>④ 自力で書く　在庫の少ない商品を集める／売れた数を数える</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>コレクション</td><td>複数のオブジェクトをまとめて扱うためのクラスの集まり（<code>java.util</code>）。配列と違い、数を決めずに作り、追加・削除に合わせて大きさが変わります。順番に並べる <code>List</code>、キーと値の組で持つ <code>Map</code> などがあります。<code class="ex">List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+Map&lt;String, Integer&gt; stocks = new HashMap&lt;&gt;();</code></td></tr><tr><td>List（ArrayList）</td><td>入れた順に並べて持つコレクションです。<code>add</code> で足し、<code>get(番号)</code> で取り出し、<code>size()</code> で数を数えます。<code>ArrayList</code> は <code>List</code> の実装クラスです。<code class="ex">List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+products.add(p);
+products.get(0)</code></td></tr><tr><td>Map（HashMap）</td><td>キー（名札）と値の組で持つコレクションです。<code>put(キー, 値)</code> で入れ、<code>get(キー)</code> で取り出します。<code>HashMap</code> は <code>Map</code> の実装クラスです。<code class="ex">Map&lt;String, Integer&gt; stocks = new HashMap&lt;&gt;();
+stocks.put("ノート", 10);
+stocks.get("ノート")</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>コレクションは「伸びる棚」と「名札つきの引き出し」</h3><p class="lead">配列は、作るときに仕切りの数を決めた箱です。コレクションは、入れた分だけ伸びます。</p><svg class="fig" role="img" viewbox="0 0 720 300" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="284" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="226" x="10" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="123" y="30">配列（第2回）</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="123" y="54">仕切りの数が決まった箱</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="62" y="72"></rect>
+<text fill="#1f2933" font-size="14" x="72" y="92">ボールペン</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="54" y="92">[0]</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="62" y="108"></rect>
+<text fill="#1f2933" font-size="14" x="72" y="128">ノート</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="54" y="128">[1]</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="62" y="144"></rect>
+<text fill="#1f2933" font-size="14" x="72" y="164">消しゴム</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="54" y="164">[2]</text>
+<rect fill="#fef2f2" height="30" rx="6" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.5" width="150" x="62" y="180"></rect>
+<text fill="#1f2933" font-size="14" x="72" y="200">定規</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="middle" x="137" y="238">4つ目を入れる所が無い</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="137" y="260">数は作るときに決まる</text>
+<rect fill="#f8fafc" height="284" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="226" x="247" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="30">List（伸びる棚）</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="360" y="54">入れた分だけ伸びる</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="300" y="72"></rect>
+<text fill="#1f2933" font-size="14" x="310" y="92">ボールペン</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="292" y="92">0</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="300" y="108"></rect>
+<text fill="#1f2933" font-size="14" x="310" y="128">ノート</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="292" y="128">1</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="300" y="144"></rect>
+<text fill="#1f2933" font-size="14" x="310" y="164">消しゴム</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="292" y="164">2</text>
+<rect fill="#f0fdf4" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="300" y="180"></rect>
+<text fill="#1f2933" font-size="14" x="310" y="200">定規</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="292" y="200">3</text>
+<rect fill="#f8fafc" height="30" rx="6" stroke="#94a3b8" stroke-dasharray="6 4" stroke-width="1.5" width="150" x="300" y="216"></rect>
+<text fill="#1f2933" font-size="14" x="310" y="236">まだ足せる</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="360" y="272">番号は0から、入れた順</text>
+<rect fill="#f8fafc" height="284" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="226" x="484" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="597" y="30">Map（名札つきの引き出し）</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="597" y="54">名札で直接開ける</text>
+<rect fill="#e0f2fe" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="44" x="500" y="72"></rect>
+<text fill="#1f2933" font-size="14" x="510" y="92">1</text>
+<rect fill="#e0f2fe" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="44" x="500" y="108"></rect>
+<text fill="#1f2933" font-size="14" x="510" y="128">2</text>
+<rect fill="#e0f2fe" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="44" x="500" y="144"></rect>
+<text fill="#1f2933" font-size="14" x="510" y="164">3</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="140" x="554" y="72"></rect>
+<text fill="#1f2933" font-size="14" x="564" y="92">ボールペン</text>
+<rect fill="#fff3e6" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="140" x="554" y="108"></rect>
+<text fill="#1f2933" font-size="14" x="564" y="128">ノート</text>
+<rect fill="#fff" height="30" rx="6" stroke="#334155" stroke-width="1.5" width="140" x="554" y="144"></rect>
+<text fill="#1f2933" font-size="14" x="564" y="164">消しゴム</text>
+<text fill="#1d4ed8" font-size="12" text-anchor="middle" x="522" y="196">名札</text>
+<text fill="#64748b" font-size="12" text-anchor="middle" x="624" y="196">中身</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="15" x="506" xml:space="preserve" y="234">byId.get(2)</text>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="597" y="262">→ ノートの引き出しを開ける</text>
+</svg><p class="figcap">コレクションは、数を決めずに使える入れ物。並べるのが List、名札で引くのが Map</p><p>第2回の配列は「3つ分」と決めて作ります。4つ目の商品が来ても、入れる所がありません。お店の商品は増えたり減ったりするので、<strong>数を先に決められない場面のほうが多い</strong>です。</p>
+<p>そこで使うのが<strong>コレクション</strong>です。数を決めずに作り、入れた分だけ伸びる入れ物の総称です。今日はその中から2つを使います。</p>
+<p><code>List</code> は<strong>伸びる棚</strong>です。入れた順に並び、左から0番、1番…と数えます。<code>Map</code> は<strong>名札つきの引き出し</strong>です。名札（キー）を見て、その引き出しを直接開けます。</p>
+</div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>仕切りの数が決まった箱</td><td>配列　<code>new Product[3]</code></td></tr><tr><td>伸びる棚</td><td><code>List</code>　<code>new ArrayList&lt;&gt;()</code></td></tr><tr><td>棚の左から0番、1番…</td><td><code>products.get(0)</code></td></tr><tr><td>名札つきの引き出し</td><td><code>Map</code>　<code>new HashMap&lt;&gt;()</code></td></tr><tr><td>名札を見て開ける</td><td><code>byId.get(2)</code>　名札が <code>2</code> の中身を取り出す</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>コレクション</td><td>配列は作るときに数を決める必要があり、あとから増やせないからです。</td></tr><tr><td>List（ArrayList）</td><td>数が決まっていない物を、順番どおりに並べて持つためです。</td></tr><tr><td>Map（HashMap）</td><td>番号ではなく、名前や ID から1件を直接取り出すためです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>コレクション</td><td>増えたり減ったりする商品の一覧（<code>List</code>）。ID や名前から1件を探したいとき（<code>Map</code>）。</td></tr><tr><td>List（ArrayList）</td><td>商品の一覧のように、あとから足したり、順に全部表示したりするもの。</td></tr><tr><td>Map（HashMap）</td><td>商品名から在庫数を調べる、ID から商品を探すとき。</td></tr></table>
+<p>今日のゴールは、この棚と引き出しに商品を入れて、取り出せるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は1つのプロジェクト <code>lesson08</code> に、クラスを2つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson08</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson08</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson08</code> と入っていることを確かめて［完了］（空なら <code>lesson08</code> と入力する）</td></tr><tr><td>⑥</td><td>④⑤をもう一度行い、名前 <code>Main</code> のクラスを作る</td></tr><tr><td>⑦</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑧</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の2つのファイルだけです。</p>
+<p><code>Product</code> のコードは第5回と同じです（1行目は <code>package lesson08;</code> にし、行末の番号のメモは外しています）。今日は <code>Product</code> には手を入れず、<code>Main</code> の中で入れ物に入れて使います。</p>
+<p>下の2つが、それぞれのファイルの中身の全部です。<code>Main</code> の行の右にある ①〜⑦ は、③解説の番号です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson08</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson08（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="180"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="144" y2="144"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="180" y2="180"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="128"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="149">Product.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="140" y="164"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="185">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="149">商品。第5回で作ったものと同じ中身</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="310" y="185">商品を List と Map に入れて使う。ここから実行する</text>
+</svg><p class="figcap">プロジェクトの中身。この2つのファイルで全部です</p><p class="fname">Product.java　入れ物に入れる商品</p>
+<pre class="code" id="c1">package lesson08;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="fname">Main.java　入れ物を使うほう</p>
+<pre class="code" id="c2">package lesson08;
+
+import java.util.ArrayList;                                   <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.HashMap;                                     <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.List;                                        <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.Map;                                         <span class="cm">// <span class="cn">①</span> import</span>
+
+public class Main {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();                  <span class="cm">// <span class="cn">②</span> List を作る</span>
+        products.add(new Product(1, "ボールペン", 150, 30));         <span class="cm">// <span class="cn">③</span> 足す</span>
+        products.add(new Product(2, "ノート", 220, 10));             <span class="cm">// <span class="cn">③</span> 足す</span>
+        products.add(new Product(3, "消しゴム", 100, 50));           <span class="cm">// <span class="cn">③</span> 足す</span>
+
+        System.out.println("件数 : " + products.size());             <span class="cm">// <span class="cn">④</span> 数える</span>
+        System.out.println("0番目 : " + products.get(0).getName());  <span class="cm">// <span class="cn">④</span> 取り出す</span>
+        for (Product p : products) {                                 <span class="cm">// <span class="cn">⑤</span> 全部回す</span>
+            p.show();
+        }
+
+        Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();         <span class="cm">// <span class="cn">⑥</span> Map を作る</span>
+        for (Product p : products) {
+            byId.put(p.getId(), p);                           <span class="cm">// <span class="cn">⑦</span> 名札を付けて入れる</span>
+        }
+        Product found = byId.get(2);                          <span class="cm">// <span class="cn">⑦</span> 名札で引く</span>
+        System.out.println("ID 2 : " + found.getName());
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">件数 : 3
+0番目 : ボールペン
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個
+ID 2 : ノート</div>
+<p>この <code>Main</code> は、<code>List</code> と <code>Map</code> を両方使っています。<strong>順番に並べて全部見るときは <code>List</code>、名札で1つ引くときは <code>Map</code></strong> と、役割を分けています。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　import（①）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c3">import java.util.ArrayList;                                   <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.HashMap;                                     <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.List;                                        <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.Map;                                         <span class="cm">// <span class="cn">①</span> import</span></pre>
+<p><strong>import</strong> は、「<code>java.util</code> という場所にある <code>ArrayList</code> を使います」という宣言です。</p>
+<p><strong>なぜ import が要るのか。</strong><code>List</code> や <code>Map</code> は Java に最初から用意されている部品ですが、<code>java.util</code> という別のパッケージにあります。宣言しないと Eclipse が見つけられず、赤い波線が出ます。［ソース］→［インポートの編成］（<code>Ctrl</code> + <code>Shift</code> + <code>O</code>）で自動で足せます。</p>
+<h2>2　List を作って、商品を足す（②③）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c4">public static void main(String[] args) {
+    List&lt;Product&gt; products = new ArrayList&lt;&gt;();           <span class="cm">// <span class="cn">②</span> List を作る</span>
+    products.add(new Product(1, "ボールペン", 150, 30));  <span class="cm">// <span class="cn">③</span> 足す</span>
+    products.add(new Product(2, "ノート", 220, 10));      <span class="cm">// <span class="cn">③</span> 足す</span>
+    products.add(new Product(3, "消しゴム", 100, 50));    <span class="cm">// <span class="cn">③</span> 足す</span>
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><code>List&lt;Product&gt; products = new ArrayList&lt;&gt;();</code> で、商品を入れる <code>List</code> を1つ作ります。<code>&lt;Product&gt;</code> は「中に入れるのは <code>Product</code> だけ」という指定で、この書き方を<strong>ジェネリクス</strong>と呼びます。右の <code>&lt;&gt;</code> は左と同じなので中を省略できます。<code>Product</code> 以外のものを入れようとすると、その時点でエラーにしてくれます。</p>
+<p>左の <code>List</code> は第7回のインタフェースで、<code>ArrayList</code> はそれを実装したクラスです。受ける側を <code>List</code> にしておくと、あとで別の実装に替えても使う側を書き換えずに済みます。</p>
+<p><code>add</code> で後ろに1つ足します。足すたびに <code>List</code> が伸びます。<strong>なぜ List にするのか。</strong>数を決めずに作れるからです。何件になるか前もって分からなくても、来た分だけ入れられます。</p>
+<p><strong>配列で持つと、どうなるか。</strong>第2回の配列で同じことをして、4つ目を入れようとした形です。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c5">package lesson08;
+
+public class Main {
+    public static void main(String[] args) {
+        Product[] products = new Product[3];                  <span class="cm">// 3つ分と決めて作る</span>
+        products[0] = new Product(1, "ボールペン", 150, 30);
+        products[1] = new Product(2, "ノート", 220, 10);
+        products[2] = new Product(3, "消しゴム", 100, 50);
+        products[3] = new Product(4, "定規", 180, 20);        <span class="cm">// ここが問題</span>
+
+        for (Product p : products) {
+            p.show();
+        }
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3
+	at lesson08.Main.main(Main.java:9)</div>
+<p><code>new Product[3]</code> で作った配列には、<code>[0]</code> <code>[1]</code> <code>[2]</code> の3つしか場所がありません。<code>products[3]</code> に入れようとした9行目で、プログラムが止まります。エラー文の <code>Index 3 out of bounds for length 3</code> は「長さ3の配列に、3番は無い」という意味です。写経のコードのとおり <code>List</code> にすれば、4つ目も <code>add</code> を1行足すだけで入ります。</p>
+<div class="words"><b>ここで出た言葉</b><span><b><code>ArrayIndexOutOfBoundsException</code></b>　配列の範囲の外の番号を使ったときに出るエラー。このように実行中に止まるエラーの扱いは、次回扱います</span></div>
+<h2>3　数える・取り出す・全部回す（④⑤）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c6">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    System.out.println("件数 : " + products.size());             <span class="cm">// <span class="cn">④</span> 数える</span>
+    System.out.println("0番目 : " + products.get(0).getName());  <span class="cm">// <span class="cn">④</span> 取り出す</span>
+    for (Product p : products) {                                 <span class="cm">// <span class="cn">⑤</span> 全部回す</span>
+        p.show();
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><code>size()</code> は入っている数、<code>get(0)</code> は0番目を取り出します。配列の <code>length</code> と <code>[0]</code> に当たる操作です。<code>List</code> には <code>[ ]</code> が使えないので、メソッドで書きます。番号は配列と同じく0から始まり、最後は <code>size() - 1</code> 番です。</p>
+<p><code>products.get(0).getName()</code> は左から読み、<code>get(0)</code> で取り出した商品の <code>getName()</code> を呼んでいます。</p>
+<p>拡張for文は、第2回の配列と同じ書き方で、入れた順に1つずつ取り出します。<code>List</code> は入れた順番を覚えているので、表示も入れた順になります。</p>
+<h2>4　Map を作る（⑥）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c7">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();         <span class="cm">// <span class="cn">⑥</span> Map を作る</span>
+    <span class="cm">// （中略）</span>
+}</pre>
+<p>名札（<strong>キー</strong>）と中身（<strong>値</strong>）を組にして入れる <code>Map</code> を作ります。<code>&lt;Integer, Product&gt;</code> は「名札は整数、中身は <code>Product</code>」という指定です。</p>
+<p><strong>なぜ Map を使うのか。</strong>ID で一発で引けるようにするためです。<code>List</code> で ID 2 を探すと前から順に見ていくことになりますが、<code>Map</code> は名札から直接たどれます。</p>
+<p><code>Integer</code> は <code>int</code> をクラスとして包んだもので、<strong>ラッパークラス</strong>と呼びます。<code>&lt; &gt;</code> の中には参照型（クラスなど）しか書けないので、<code>int</code> ではなく <code>Integer</code> と書きます。</p>
+<p><strong>よくある間違い：&lt; &gt; の中に int と書く。</strong>名札は整数なので、⑥を <code>Map&lt;int, Product&gt;</code> と書いた形です。<code>Product</code> は写したままです。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c8">package lesson08;
+
+import java.util.ArrayList;                                   <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.HashMap;                                     <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.List;                                        <span class="cm">// <span class="cn">①</span> import</span>
+import java.util.Map;                                         <span class="cm">// <span class="cn">①</span> import</span>
+
+public class Main {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();                  <span class="cm">// <span class="cn">②</span> List を作る</span>
+        products.add(new Product(1, "ボールペン", 150, 30));         <span class="cm">// <span class="cn">③</span> 足す</span>
+        products.add(new Product(2, "ノート", 220, 10));             <span class="cm">// <span class="cn">③</span> 足す</span>
+        products.add(new Product(3, "消しゴム", 100, 50));           <span class="cm">// <span class="cn">③</span> 足す</span>
+
+        System.out.println("件数 : " + products.size());             <span class="cm">// <span class="cn">④</span> 数える</span>
+        System.out.println("0番目 : " + products.get(0).getName());  <span class="cm">// <span class="cn">④</span> 取り出す</span>
+        for (Product p : products) {                                 <span class="cm">// <span class="cn">⑤</span> 全部回す</span>
+            p.show();
+        }
+
+        Map&lt;int, Product&gt; byId = new HashMap&lt;&gt;();             <span class="cm">// ここが問題</span>
+        for (Product p : products) {
+            byId.put(p.getId(), p);                           <span class="cm">// <span class="cn">⑦</span> 名札を付けて入れる</span>
+        }
+        Product found = byId.get(2);                          <span class="cm">// <span class="cn">⑦</span> 名札で引く</span>
+        System.out.println("ID 2 : " + found.getName());
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">構文エラーがあります。"Dimensions" を挿入して TypeArgument を完了してください
+（Syntax error, insert "Dimensions" to complete TypeArgument）</div>
+<p>「<code>&lt; &gt;</code> の中には参照型（クラスなど）を書く必要がある」という意味のエラーです。<code>Dimensions</code> は配列の <code>[]</code> のことです。<code>int</code> を <code>Integer</code> にする1か所で直ります。</p>
+<svg class="fig" role="img" viewbox="0 0 720 200" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="16" font-weight="bold" text-anchor="middle" x="100" y="36">int</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="32" x="88" xml:space="preserve" y="96">2</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="100" y="150">数字そのもの</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="100" y="170">（基本データ型）</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="160" x2="290" y1="66" y2="66"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="225" y="58">put で自動で包む</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="290" x2="160" y1="110" y2="110"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="225" y="130">取り出すと自動で戻る</text>
+<text fill="#1f2933" font-size="16" font-weight="bold" text-anchor="middle" x="350" y="36">Integer</text>
+<rect fill="#fff3e6" height="70" rx="8" stroke="#334155" stroke-width="1.5" width="100" x="300" y="52"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="32" x="338" xml:space="preserve" y="98">2</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="350" y="150">数字を包んだクラス</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="350" y="170">（ラッパークラス）</text>
+<rect fill="#f8fafc" height="170" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="270" x="440" y="14"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="575" y="36">Map&lt;Integer, Product&gt;</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="72" x="458" y="62"></rect>
+<text fill="#1f2933" font-size="16" x="468" y="82">1</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="72" x="540" y="62"></rect>
+<text fill="#1f2933" font-size="16" x="550" y="82">2</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="72" x="622" y="62"></rect>
+<text fill="#1f2933" font-size="16" x="632" y="82">3</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="middle" x="575" y="140">&lt; &gt; の中は参照型（クラスなど）だけ</text>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="575" y="162">int は書けず、Integer と書く</text>
+</svg><p class="figcap">名札の int は、包んだ形の Integer で書く</p><table><tr><th>基本データ型</th><th>包んだクラス（ラッパークラス）</th></tr><tr><td><code>int</code></td><td><code>Integer</code></td></tr><tr><td><code>double</code></td><td><code>Double</code></td></tr><tr><td><code>boolean</code></td><td><code>Boolean</code></td></tr><tr><td><code>char</code></td><td><code>Character</code></td></tr></table>
+<p>⑦の <code>byId.put(p.getId(), p)</code> では、<code>getId()</code> が返す <code>int</code> が自動で <code>Integer</code> に包まれます。<code>byId.get(2)</code> の <code>2</code> も同じです。この仕組みを<strong>オートボクシング</strong>と言います。</p>
+<div class="words"><b>ここで出た言葉</b><span><b>オートボクシング</b>　<code>int</code> と <code>Integer</code> を、Java が自動で包んだり戻したりする仕組み</span></div>
+<h2>5　名札を付けて入れ、名札で引く（⑦）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c9">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    for (Product p : products) {
+        byId.put(p.getId(), p);                           <span class="cm">// <span class="cn">⑦</span> 名札を付けて入れる</span>
+    }
+    Product found = byId.get(2);                          <span class="cm">// <span class="cn">⑦</span> 名札で引く</span>
+    System.out.println("ID 2 : " + found.getName());
+}</pre>
+<p><code>put(キー, 値)</code> で名札を付けて入れ、<code>get(キー)</code> で名札から取り出します。商品の ID（<code>getId()</code>）を名札にしておけば、<code>get(2)</code> で ID 2 の商品がすぐ出ます。</p>
+<p>同じ名札でもう一度 <code>put</code> すると、前の中身は消えて新しい中身に置き換わります（上書き）。無い名札で <code>get</code> すると、エラーにはならず <code>null</code>（何も入っていない）が返ります。名札があるかは、<code>containsKey(キー)</code> が <code>true</code> / <code>false</code> で返します。</p>
+<p><strong>なぜ一覧は List で出すのか。</strong>商品名を名札にした <code>Map</code> を作り、入れた順に一覧を出そうとした形です。</p>
+<p class="fname">StockMap.java（間違いあり）</p>
+<pre class="code" id="c10">package lesson08;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class StockMap {
+    public static void main(String[] args) {
+        Map&lt;String, Integer&gt; stocks = new HashMap&lt;&gt;();        <span class="cm">// 商品名 → 在庫</span>
+        stocks.put("ボールペン", 30);
+        stocks.put("ノート", 10);
+        stocks.put("消しゴム", 50);
+        stocks.put("定規", 20);
+        stocks.put("のり", 40);
+
+        for (String name : stocks.keySet()) {                 <span class="cm">// 入れた順に出したい</span>
+            System.out.println(name + " : 残り" + stocks.get(name) + "個");
+        }
+    }
+}</pre>
+<div class="words"><b>ここで出た言葉</b><span><b><code>keySet()</code></b>　<code>Map</code> に入っている名札（キー）を全部まとめたもの。拡張for文で1つずつ取り出せます</span></div>
+<p class="expected-label">実行結果</p>
+<div class="expected">ボールペン : 残り30個
+ノート : 残り10個
+のり : 残り40個
+消しゴム : 残り50個
+定規 : 残り20個</div>
+<p>5番目に入れたのりが、3番目に出ています。<code>HashMap</code> は名札で1つ引くための入れ物で、<strong>中の並び順は約束していません。</strong>エラーにはならないので、「たまたまこの順」を正しい順だと思い込みやすい所です。写経のコードが一覧表示に <code>List</code> を使っているのは、このためです。</p>
+<table><tr><th>やりたいこと</th><th>使うもの</th></tr><tr><td>入れた順に並べて、全部を見る</td><td><code>List</code></td></tr><tr><td>番号（何番目）で取り出す</td><td><code>List</code></td></tr><tr><td>名札（IDや商品名）で1つ引く</td><td><code>Map</code></td></tr></table>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①で在庫の少ない商品が表示できたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>LowStockMain</code> を作る。5つの商品が入った <code>List</code> から、<strong>在庫が20個より少ない商品だけ</strong>を新しい <code>List</code>（名前は <code>low</code>）に集め、件数と中身を表示する。</li><li>②　<code>SalesMain</code> を作る。売れた商品名が並んだ配列 <code>sold</code> を1つずつ見て、商品名ごとの売れた数を <code>Map&lt;String, Integer&gt;</code> に数える。</li></ul>
+<h2>骨組み</h2>
+<p>2つのファイルの全体です。<code>// ここに…</code> の所を書きます。<code>Product</code> は②のものをそのまま使います。</p>
+<p><code>LowStockMain</code> は、<code>low</code> を作る行を書くまで、<code>low</code> に赤い印が出ます。</p>
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c11">package lesson08;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+        products.add(new Product(4, "定規", 180, 5));
+        products.add(new Product(5, "のり", 120, 25));
+
+        <span class="cm">// ここに、在庫が少ない商品を入れる空の List（名前は low）を作る</span>
+
+        <span class="cm">// ここに拡張for文を書き、在庫が20個より少ない商品だけ low に足す</span>
+
+        System.out.println("在庫が少ない商品 : " + low.size() + "件");
+        <span class="cm">// ここに、low の中身を1つずつ show() で表示する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c11">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">SalesMain.java</p>
+<pre class="code" id="c12">package lesson08;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class SalesMain {
+    public static void main(String[] args) {
+        String[] sold = {"ノート", "ボールペン", "ノート", "消しゴム", "ノート", "ボールペン"};
+        Map&lt;String, Integer&gt; count = new HashMap&lt;&gt;();
+
+        <span class="cm">// ここに拡張for文を書き、sold の名前を1つずつ数える</span>
+        <span class="cm">//   初めて出た名前なら 1 を入れる</span>
+        <span class="cm">//   2回目からは、いまの数に 1 を足して入れ直す</span>
+
+        System.out.println("ノート : " + count.get("ノート") + "個");
+        System.out.println("ボールペン : " + count.get("ボールペン") + "個");
+        System.out.println("消しゴム : " + count.get("消しゴム") + "個");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c12">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">在庫が少ない商品 : 2件
+2 / ノート / 220円 / 残り10個
+4 / 定規 / 180円 / 残り5個
+
+ノート : 3個
+ボールペン : 2個
+消しゴム : 1個</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①の空の <code>List</code> は <code>List&lt;Product&gt; low = new ArrayList&lt;&gt;();</code> です。条件は <code>p.getStock() &lt; 20</code> です。</li><li>②　②の「初めて出た名前か」は <code>count.containsKey(name)</code> で調べられます。名札があれば <code>true</code> です。</li><li>③　②の「いまの数に1を足して入れ直す」は <code>count.put(name, count.get(name) + 1);</code> です。同じ名札で <code>put</code> すると上書きされることを使います。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第8回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　在庫の少ない商品</summary><div class="sol">
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c13">package lesson08;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+        products.add(new Product(4, "定規", 180, 5));
+        products.add(new Product(5, "のり", 120, 25));
+
+        <span class="cm">// ここに、在庫が少ない商品を入れる空の List（名前は low）を作る</span>
+        List&lt;Product&gt; low = new ArrayList&lt;&gt;();
+
+        <span class="cm">// ここに拡張for文を書き、在庫が20個より少ない商品だけ low に足す</span>
+        for (Product p : products) {
+            if (p.getStock() &lt; 20) {
+                low.add(p);
+            }
+        }
+
+        System.out.println("在庫が少ない商品 : " + low.size() + "件");
+        <span class="cm">// ここに、low の中身を1つずつ show() で表示する</span>
+        for (Product p : low) {
+            p.show();
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">在庫が少ない商品 : 2件
+2 / ノート / 220円 / 残り10個
+4 / 定規 / 180円 / 残り5個</div>
+<div class="note">「空の <code>List</code> を作る → 条件に合うものだけ <code>add</code> する」は、絞り込みの型です。このあとの回でも何度も出てきます。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　売れた数を数える</summary><div class="sol">
+<p class="fname">SalesMain.java</p>
+<pre class="code" id="c14">package lesson08;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class SalesMain {
+    public static void main(String[] args) {
+        String[] sold = {"ノート", "ボールペン", "ノート", "消しゴム", "ノート", "ボールペン"};
+        Map&lt;String, Integer&gt; count = new HashMap&lt;&gt;();
+
+        <span class="cm">// ここに拡張for文を書き、sold の名前を1つずつ数える</span>
+        for (String name : sold) {
+            if (count.containsKey(name)) {
+                count.put(name, count.get(name) + 1);
+            } else {
+                count.put(name, 1);
+            }
+        }
+
+        System.out.println("ノート : " + count.get("ノート") + "個");
+        System.out.println("ボールペン : " + count.get("ボールペン") + "個");
+        System.out.println("消しゴム : " + count.get("消しゴム") + "個");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">ノート : 3個
+ボールペン : 2個
+消しゴム : 1個</div>
+<div class="note">表示は <code>get</code> で名札を指定して取り出しているので、書いた順に出ます。<code>keySet()</code> で回すと、③解説の5のとおり順番は約束されません。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>配列と <code>List</code> の違いを、「数」の点から説明できる</li><li><code>add</code> <code>get</code> <code>size</code> と <code>put</code> <code>get</code> を、見ずに書ける</li><li><code>List</code> と <code>Map</code> を、使い道から選び分けられる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、null・例外と try-catch です。</strong>今日は、無い名札で引くと <code>null</code> が返ること、配列の範囲の外を使うと実行が止まることを見ました。次回は<strong>そうした「止まる」を読み解き、受け止める方法</strong>を扱います。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>コレクション</td><td>これくしょん</td><td>数を決めずに使える入れ物の総称。<code>List</code> や <code>Map</code> のこと</td></tr><tr><td>List</td><td>りすと</td><td>入れた順に並べる入れ物。番号（0から）で取り出せます</td></tr><tr><td>ArrayList</td><td>あれいりすと</td><td><code>List</code> を実装したクラス。<code>new ArrayList&lt;&gt;()</code> で作ります</td></tr><tr><td>Map</td><td>まっぷ</td><td>名札（キー）と中身（値）を組にして入れる入れ物。名札で直接取り出せます</td></tr><tr><td>HashMap</td><td>はっしゅまっぷ</td><td><code>Map</code> を実装したクラス。<code>new HashMap&lt;&gt;()</code> で作ります。並び順は約束しません</td></tr><tr><td>キー</td><td>きー</td><td><code>Map</code> の名札。同じキーは1つしか持てず、同じキーで <code>put</code> すると上書きされます</td></tr><tr><td>値</td><td>あたい</td><td><code>Map</code> で、キーに結び付けて入れる中身</td></tr><tr><td>add</td><td>あど</td><td><code>List</code> の後ろに1つ足すメソッド</td></tr><tr><td>get</td><td>げっと</td><td><code>List</code> では番号で、<code>Map</code> ではキーで1つ取り出すメソッド</td></tr><tr><td>size</td><td>さいず</td><td>入っている数を返すメソッド。配列の <code>length</code> に当たります</td></tr><tr><td>put</td><td>ぷっと</td><td><code>Map</code> にキーと値を組にして入れるメソッド</td></tr><tr><td>containsKey</td><td>こんていんずきー</td><td><code>Map</code> にそのキーがあるかを <code>true</code> / <code>false</code> で返すメソッド</td></tr><tr><td>keySet</td><td>きーせっと</td><td><code>Map</code> のキーを全部まとめたもの。拡張for文で回せます</td></tr><tr><td>import</td><td>いんぽーと</td><td>別のパッケージにあるクラスを使うための宣言。ファイルの上のほうに書きます</td></tr><tr><td>ジェネリクス</td><td>じぇねりくす</td><td><code>&lt;Product&gt;</code> のように、入れ物に入れる型を指定する書き方</td></tr><tr><td>基本データ型</td><td>きほんでーたがた</td><td><code>int</code> <code>double</code> <code>boolean</code> <code>char</code> など、クラスではない型（第2回）</td></tr><tr><td>ラッパークラス</td><td>らっぱーくらす</td><td>基本データ型をクラスとして包んだもの。<code>int</code> に対する <code>Integer</code> など</td></tr><tr><td>Integer</td><td>いんてじゃー</td><td><code>int</code> を包んだクラス。比べるときは <code>equals</code> を使います</td></tr><tr><td>オートボクシング</td><td>おーとぼくしんぐ</td><td><code>int</code> と <code>Integer</code> を、Java が自動で包んだり戻したりする仕組み</td></tr><tr><td>インタフェース</td><td>いんたふぇーす</td><td>クラスが持つべきメソッドを決めた約束ごと。<code>List</code> はこれで、<code>ArrayList</code> が実装しています（第7回）</td></tr><tr><td>拡張for文</td><td>かくちょうふぉーぶん</td><td><code>for (Product p : products)</code> の形。中身を1つずつ取り出します（第2回）</td></tr><tr><td>ArrayIndexOutOfBoundsException</td><td>―</td><td>配列の範囲の外の番号を使ったときに出るエラー</td></tr><tr><td>null</td><td>ぬる</td><td>「何も入っていない」を表す値。<code>Map</code> に無いキーで <code>get</code> すると返ってきます。次回詳しく扱います</td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 8 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
