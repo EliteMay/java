@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第6回｜継承・オーバーライド・super</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson05.html">前の講義</a><a href="lesson07.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 6 回 ／ 全 18 回</span><h1>継承・オーバーライド・super</h1><p>第10章 10-1　継承とオーバーライド ／ super ／ protected</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">継承</span>　<span class="term">オーバーライド</span>　<span class="term">super</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li><code>extends</code> で、親のクラスを書き写さずに子クラスを作れる</li><li>親のメソッドを子で書き直し（オーバーライド）、<code>@Override</code> を付けられる</li><li>子のコンストラクタに <code>super(...)</code> を書く理由を説明できる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　継承・オーバーライド・<code>super</code> を、会員規約と付則で</li><li>② 写して動かす　<code>Member</code>・<code>GoldMember</code>・<code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑥の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>PlatinumMember</code> と <code>StudentMember</code> を作る</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>継承</td><td>あるクラス（親クラス）のフィールドとメソッドを引き継いで、新しいクラス（子クラス）を作る仕組み。子クラスには、追加や変更する所だけを書きます。親にできるクラスは1つだけです。<code class="ex">public class GoldMember extends Member { ... }</code></td></tr><tr><td>オーバーライド</td><td>親クラスにあるメソッドを、子クラスで同じ名前・同じ引数のまま書き直すこと。<code class="ex">@Override
+public int getDiscountRate() { return 10; }</code></td></tr><tr><td>super</td><td>親クラスを指す言葉です。<code>super(...)</code> で親のコンストラクタを、<code>super.メソッド名()</code> で親のメソッドを呼びます。<code class="ex">super(name);
+super.show();</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>継承は「基本の規約をそのまま使い、違う所だけ付則に書く」ことです</h3><p class="lead">会員の種類が増えても、規約を丸ごと書き写したりはしません。</p><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="234" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="300" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="162" y="30">基本の会員規約</text>
+<rect fill="#fff" height="126" rx="6" stroke="#334155" stroke-width="1.5" width="260" x="32" y="44"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="260" x="32" y="44"></rect>
+<rect fill="#e0f2fe" height="8" width="258" x="33" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="162" y="62">Member（親クラス）</text>
+<text fill="#1f2933" font-size="14" x="42" y="90">名前を持つ</text>
+<text fill="#1f2933" font-size="14" x="42" y="110">割引率を答える　→ 0%</text>
+<text fill="#1f2933" font-size="14" x="42" y="130">金額を計算する</text>
+<text fill="#1f2933" font-size="14" x="42" y="150">表示する</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="162" y="200">共通の部分を1か所に書く</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="402" x2="318" y1="107" y2="107"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="360" y="97">extends</text>
+<text fill="#334155" font-size="13" text-anchor="middle" x="360" y="128">親を指す</text>
+<rect fill="#f8fafc" height="234" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="300" x="408" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="558" y="30">ゴールド会員の付則</text>
+<rect fill="#fff" height="66" rx="6" stroke="#334155" stroke-width="1.5" width="260" x="428" y="44"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="260" x="428" y="44"></rect>
+<rect fill="#fff3e6" height="8" width="258" x="429" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="558" y="62">GoldMember（子クラス）</text>
+<text fill="#1f2933" font-size="14" x="438" y="90">割引率を答える　→ 10%</text>
+<rect fill="#f8fafc" height="56" rx="6" stroke="#334155" stroke-dasharray="6 4" stroke-width="1.5" width="260" x="428" y="122"></rect>
+<text fill="#1f2933" font-size="14" x="438" y="142">名前・計算・表示は書かない</text>
+<text fill="#1f2933" font-size="14" x="438" y="162">親のものがそのまま使える</text>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="middle" x="558" y="205">書くのは、親と違う所だけ</text>
+</svg><p class="figcap">継承は、基本の規約を引き継いで、違う所だけを付則に書くこと</p><p>普通の会員もゴールド会員も、名前の持ち方・金額の計算・表示のしかたは同じです。違うのは割引率だけです。<strong>基本の規約を1つ作り、ゴールド会員の付則には「割引率は10%」とだけ書きます。</strong></p>
+<p>Java も同じです。<code>GoldMember extends Member</code> と書くと、<code>Member</code> に書いたフィールドとメソッドが <code>GoldMember</code> に引き継がれます。これが<strong>継承</strong>です。子のほうに書くのは、親と違う所だけです。</p>
+<p>共通の部分が1か所にまとまるので、計算のしかたを直すときも <code>Member</code> の1か所で済みます。種類ごとに書き写していたら、直し忘れが出ます。</p>
+<p>継承を使ってよいのは、<strong>「子は親の一種」と言えるとき</strong>です。「ゴールド会員は会員の一種」は言えますが、「注文は商品の一種」は言えません。注文は商品を継承しません。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 240" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="224" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="182" y="30">オーバーライド　条文を書き換える</text>
+<rect fill="#fff" height="56" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="32" y="44"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="32" y="44"></rect>
+<rect fill="#e0f2fe" height="8" width="298" x="33" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="182" y="62">基本の規約（Member）</text>
+<text fill="#1f2933" font-size="14" x="42" y="90">割引率を答える → 0%</text>
+<rect fill="#fff" height="56" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="32" y="132"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="32" y="132"></rect>
+<rect fill="#fff3e6" height="8" width="298" x="33" y="151"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="182" y="150">ゴールド会員の付則（GoldMember）</text>
+<text fill="#1f2933" font-size="14" x="42" y="178">割引率を答える → 10%</text>
+<line marker-end="url(#ar2)" stroke="#b91c1c" stroke-width="1.8" x1="110" x2="110" y1="130" y2="102"></line>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="122" y="121">付則で条文を書き換える</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="13" x="40" xml:space="preserve" y="216">@Override public int getDiscountRate()</text>
+<rect fill="#f8fafc" height="224" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="368" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="538" y="30">super　基本の規約のとおり</text>
+<rect fill="#fff" height="56" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="388" y="44"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="388" y="44"></rect>
+<rect fill="#e0f2fe" height="8" width="298" x="389" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="538" y="62">基本の規約（Member）</text>
+<text fill="#1f2933" font-size="14" x="398" y="90">名前を登録する</text>
+<rect fill="#fff" height="56" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="388" y="132"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="388" y="132"></rect>
+<rect fill="#fff3e6" height="8" width="298" x="389" y="151"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="538" y="150">ゴールド会員の付則（GoldMember）</text>
+<text fill="#1f2933" font-size="14" x="398" y="178">名前の登録は、基本の規約のとおり</text>
+<line marker-end="url(#ar2)" stroke="#1d4ed8" stroke-width="1.8" x1="466" x2="466" y1="130" y2="102"></line>
+<text fill="#1d4ed8" font-size="13" text-anchor="start" x="478" y="121">基本の規約を呼び出す</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="14" x="492" xml:space="preserve" y="216">super(name);</text>
+</svg><p class="figcap">オーバーライドは「付則で条文を書き換える」、super は「付則から『基本の規約のとおり』と呼び出す」</p><p>付則で、基本の規約の条文を書き換えることを<strong>オーバーライド</strong>と言います。ゴールド会員の付則は、「割引率」の条文だけを書き換えています。</p>
+<p>付則の中で「名前の登録は、基本の規約のとおり」と、基本の規約を呼び出すのが <strong><code>super</code></strong> です。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>基本の会員規約</td><td>親クラス　<code>Member</code></td></tr><tr><td>ゴールド会員の付則</td><td>子クラス　<code>public class GoldMember extends Member</code></td></tr><tr><td>付則に書かない条文</td><td>そのまま引き継がれる　<code>show()</code> <code>calcPrice()</code></td></tr><tr><td>付則で差し替える条文</td><td>子で書き直すメソッド　<code>getDiscountRate()</code></td></tr><tr><td>条文を付則で書き換える</td><td>オーバーライド　<code>@Override</code></td></tr><tr><td>「基本の規約のとおり」と呼び出す</td><td><code>super</code>　<code>super(name);</code></td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>継承</td><td>共通の部分を何度も書かず、違う所だけを書くためです。共通の部分を直すときも、親の1か所で済みます。</td></tr><tr><td>オーバーライド</td><td>親と同じ呼び方のまま、子に合った動きに変えるためです。</td></tr><tr><td>super</td><td>子クラスからは、親の <code>private</code> なフィールドに直接値を入れられないので、親に頼んで入れてもらうためです。<code>super.メソッド名()</code> は、親の処理をそのまま使い、そこに付け足すためです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>継承</td><td>普通会員とゴールド会員のように、「〜の一種」と言える関係のクラスを作るとき。</td></tr><tr><td>オーバーライド</td><td>会員の種類ごとに、割引率だけを変えるとき。</td></tr><tr><td>super</td><td>子クラスのコンストラクタで、親の部分に値を入れるとき。親のメソッドの動きに、少し付け足したいとき。</td></tr></table>
+<p>今日のゴールは、この付則をコードで書けるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は1つのプロジェクト <code>lesson06</code> に、クラスを3つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson06</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson06</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Member</code> と入力する。パッケージ欄に <code>lesson06</code> と入っていることを確かめて［完了］（空なら <code>lesson06</code> と入力する）</td></tr><tr><td>⑥</td><td>④⑤をあと2回行い、名前 <code>GoldMember</code> と <code>Main</code> のクラスを作る</td></tr><tr><td>⑦</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑧</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の3つのファイルだけです。どれも1行目は <code>package lesson06;</code> です。</p>
+<p><code>Member</code> のフィールド <code>name</code> は <code>private</code> にして、読み出し用の <code>getName()</code> を付けています。</p>
+<p>下の3つが、それぞれのファイルの中身の全部です。行の右にある ①〜⑥ は、③解説の番号です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 240" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson06</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson06（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="216"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="144" y2="144"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="180" y2="180"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="216" y2="216"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="160" x="140" y="128"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="149">Member.java</text>
+<rect fill="#fef9c3" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="160" x="140" y="164"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="185">GoldMember.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="160" x="140" y="200"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="221">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="318" y="149">親クラス。会員に共通のことを書く</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="318" y="185">子クラス。Member を引き継ぎ、割引率だけ書き直す</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="318" y="221">使う側。main があり、ここから実行する</text>
+</svg><p class="figcap">プロジェクトの中身。この3つのファイルで全部です</p><p class="fname">Member.java　親クラス</p>
+<pre class="code" id="c1">package lesson06;
+
+public class Member {
+    private String name;
+
+    public Member(String name) {
+        this.name = name;
+    }
+
+    public String getName() { return name; }
+
+    public int getDiscountRate() {                <span class="cm">// <span class="cn">①</span> 割引率</span>
+        return 0;
+    }
+
+    public int calcPrice(int price) {             <span class="cm">// <span class="cn">②</span> 共通の計算</span>
+        return price * (100 - getDiscountRate()) / 100;
+    }
+
+    public void show() {                          <span class="cm">// <span class="cn">②</span> 共通の表示</span>
+        System.out.println(name + " / 割引 " + getDiscountRate() + "%");
+    }
+}</pre>
+<p class="fname">GoldMember.java　子クラス</p>
+<pre class="code" id="c2">package lesson06;
+
+public class GoldMember extends Member {   <span class="cm">// <span class="cn">③</span> extends</span>
+
+    public GoldMember(String name) {
+        super(name);                              <span class="cm">// <span class="cn">④</span> super</span>
+    }
+
+    @Override                                     <span class="cm">// <span class="cn">⑤</span> オーバーライド</span>
+    public int getDiscountRate() {                <span class="cm">// <span class="cn">⑤</span> オーバーライド</span>
+        return 10;
+    }
+}</pre>
+<p class="fname">Main.java　使うほう</p>
+<pre class="code" id="c3">package lesson06;
+
+public class Main {
+    public static void main(String[] args) {
+        Member m = new Member("高橋");
+        GoldMember g = new GoldMember("山田");
+
+        m.show();
+        System.out.println("  1000円 → " + m.calcPrice(1000) + "円");
+        g.show();                                                        <span class="cm">// <span class="cn">⑥</span> 書いていないのに呼べる</span>
+        System.out.println("  1000円 → " + g.calcPrice(1000) + "円");   <span class="cm">// <span class="cn">⑥</span></span>
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">高橋 / 割引 0%
+  1000円 → 1000円
+山田 / 割引 10%
+  1000円 → 900円</div>
+<p>実行するのは <code>Main</code> です。<code>GoldMember</code> には <code>show()</code> も <code>calcPrice()</code> も書いていませんが、山田さんは割引 10%・900円で表示されます。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　違う所を1つのメソッドに切り出す（①②）</h2>
+<p><code>Member.java</code> から抜き出しています。</p>
+<pre class="code" id="c4">public int getDiscountRate() {                <span class="cm">// <span class="cn">①</span> 割引率</span>
+    return 0;
+}
+
+public int calcPrice(int price) {             <span class="cm">// <span class="cn">②</span> 共通の計算</span>
+    return price * (100 - getDiscountRate()) / 100;
+}
+
+public void show() {                          <span class="cm">// <span class="cn">②</span> 共通の表示</span>
+    System.out.println(name + " / 割引 " + getDiscountRate() + "%");
+}</pre>
+<p><code>getDiscountRate()</code> は割引率を答えるメソッドです。普通の会員は 0% なので <code>0</code> を返します。<strong>なぜメソッドに切り出すのか。</strong>会員の種類ごとに違うのは割引率だけなので、そこを1つのメソッドにしておけば、子クラスはここだけ書き直せば済むからです。</p>
+<p><code>calcPrice</code> と <code>show</code> は金額の計算と表示で、どちらも中で <code>getDiscountRate()</code> を呼んでいます。計算と表示は全部の会員で同じなので、親に1回だけ書きます。<strong>なぜ 0 と直接書かないのか。</strong><code>getDiscountRate()</code> を呼んでおくと、子が割引率を書き直したとき、計算と表示も子の割引率で動くからです。</p>
+<h2>2　親を引き継ぎ、名前を親に渡す（③④）</h2>
+<p><code>GoldMember.java</code> から抜き出しています。</p>
+<pre class="code" id="c5">public class GoldMember extends Member {   <span class="cm">// <span class="cn">③</span> extends</span>
+
+    public GoldMember(String name) {
+        super(name);                              <span class="cm">// <span class="cn">④</span> super</span>
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><strong>extends</strong> は「〜を引き継ぐ」という意味です。引き継がれる <code>Member</code> を<strong>親クラス</strong>、引き継ぐ <code>GoldMember</code> を<strong>子クラス</strong>と呼びます。名前・計算・表示を書き写さずに使えるので、<code>GoldMember</code> の中には親と違う割引率しか書いていません。</p>
+<p><strong>super</strong> は「親」を指す言葉です。<code>super(name)</code> で親のコンストラクタを呼び、名前を渡します。<strong>なぜ親に渡すのか。</strong><code>name</code> は <code>Member</code> の <code>private</code> フィールドなので、子からは直接入れられないからです。入れるのは親のコンストラクタの仕事です。</p>
+<p><strong>よくある間違い：super(...) を書かない。</strong>子のコンストラクタで、登録のメッセージだけを出すようにした形です。<code>Member</code> と <code>Main</code> は写したままです。</p>
+<p class="fname">GoldMember.java（間違いあり）</p>
+<pre class="code" id="c6">package lesson06;
+
+public class GoldMember extends Member {
+
+    public GoldMember(String name) {              <span class="cm">// エラー</span>
+        System.out.println(name + " さんを登録します");
+    }
+
+    @Override
+    public int getDiscountRate() {
+        return 10;
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">暗黙的スーパー・コンストラクター Member() は未定義です。別のコンストラクターを明示的に呼び出す必要があります
+（Implicit super constructor Member() is undefined. Must explicitly invoke another constructor）</div>
+<svg class="fig" role="img" viewbox="0 0 720 230" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="110" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="30" y="30"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="30" y="30"></rect>
+<rect fill="#fff3e6" height="8" width="298" x="31" y="49"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="180" y="48">GoldMember(String name)</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="16" x="50" xml:space="preserve" y="84">super();</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="140" y="84">← 書かなくても入る</text>
+<text fill="#64748b" font-size="13" text-anchor="start" x="50" y="118">（自分では何も書いていない）</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="334" x2="396" y1="80" y2="80"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="365" y="72">探す</text>
+<rect fill="#fff" height="110" rx="6" stroke="#334155" stroke-width="1.5" width="290" x="400" y="30"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="290" x="400" y="30"></rect>
+<rect fill="#e0f2fe" height="8" width="288" x="401" y="49"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="545" y="48">Member（親クラス）</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="16" x="420" xml:space="preserve" y="84">Member()</text>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="start" x="520" y="84">→ 無い</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="16" x="420" xml:space="preserve" y="118">Member(String name)</text>
+<text fill="#15803d" font-size="14" font-weight="bold" text-anchor="start" x="612" y="118">→ ある</text>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="360" y="180">子を作るときは、最初に親のコンストラクタが動く決まり</text>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="205">引数の無い Member() を呼ぼうとして、見つからない</text>
+</svg><p class="figcap">super(...) を書かないと、引数なしの super() が入る</p><p>子のインスタンスを作るときは、先に親の部分を作ります。そのため子のコンストラクタは、1行目で必ず親のコンストラクタを呼びます。<strong>自分で書かなければ、Java が引数なしの <code>super();</code> を入れます。</strong>ところが <code>Member</code> にあるのは、名前を受け取る <code>Member(String name)</code> だけです。コンストラクタを自分で書いたクラスには、引数なしのコンストラクタは作られません。</p>
+<p>写したコードのとおり、1行目に <code>super(name);</code> を書けば動きます。</p>
+<div class="trap"><code>super(name);</code> は<strong>1行目</strong>でなければなりません。メッセージの行より下に書くと、「コンストラクター呼び出しは、コンストラクター内の最初のステートメントである必要があります」（Constructor call must be the first statement in a constructor）というエラーになります。</div>
+<h2>3　親のメソッドを書き直す（⑤）</h2>
+<pre class="code" id="c7">@Override                                     <span class="cm">// <span class="cn">⑤</span> オーバーライド</span>
+public int getDiscountRate() {                <span class="cm">// <span class="cn">⑤</span> オーバーライド</span>
+    return 10;
+}</pre>
+<p>親と同じ名前・同じ引数のメソッドを、子で書き直しています。これを<strong>オーバーライド</strong>と呼びます。ゴールド会員で違うのは割引率だけなので、そこだけ差し替えます。</p>
+<p><code>@Override</code> は「親のメソッドを書き直しています」という印です。<strong>なぜ付けるのか。</strong>付けずにメソッド名を <code>getDiscountRete</code> と打ち間違えると、エラーは出ず、新しいメソッドが1つ増えただけになるからです。<code>show()</code> の中では親の <code>getDiscountRate()</code>（0%）が使われ、山田さんの割引が 0% になります。</p>
+<p><strong>よくある間違い：綴りを間違える。</strong>同じ打ち間違いを、<code>@Override</code> を付けたまま書いた形です。<code>Member</code> と <code>Main</code> は写したままです。</p>
+<p class="fname">GoldMember.java（間違いあり）</p>
+<pre class="code" id="c8">package lesson06;
+
+public class GoldMember extends Member {
+
+    public GoldMember(String name) {
+        super(name);
+    }
+
+    @Override
+    public int getDiscountRete() {                <span class="cm">// エラー（Rate → Rete）</span>
+        return 10;
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">型 GoldMember のメソッド getDiscountRete() はスーパータイプ・メソッドをオーバーライドまたは実装する必要があります
+（The method getDiscountRete() of type GoldMember must override or implement a supertype method）</div>
+<svg class="fig" role="img" viewbox="0 0 720 196" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="180" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="182" y="30">@Override なし</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="30" xml:space="preserve" y="72">int getDiscountRete()</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="30" y="100">新しいメソッドが1つ増えただけ</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="30" y="124">親の getDiscountRate() の 0% が使われる</text>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="start" x="30" y="160">エラーは出ない → 気づけない</text>
+<rect fill="#f8fafc" height="180" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="340" x="368" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="538" y="30">@Override あり</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="14" x="386" xml:space="preserve" y="52">@Override</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="386" xml:space="preserve" y="72">int getDiscountRete()</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="386" y="100">親に同じメソッドがあるか確かめる</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="386" y="124">Member に getDiscountRete() は無い</text>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="start" x="386" y="160">その場でエラー → すぐ直せる</text>
+</svg><p class="figcap">@Override は「親のメソッドを書き直しています」という印</p><p><code>@Override</code> が付いていると、Java は親に同じ名前・同じ引数のメソッドがあるかを確かめます。<code>Member</code> に <code>getDiscountRete()</code> は無いので、その場でエラーになります。<strong>オーバーライドするときは、必ず <code>@Override</code> を付けてください。</strong></p>
+<div class="trap"><code>getDiscountRate(int price)</code> のように引数を付けた場合も、名前が同じでも別のメソッドとして扱われ、割引は 0% のままです。同じ名前で引数の違うメソッドを並べることを<strong>オーバーロード</strong>と呼び、オーバーライドとは別物です。<code>@Override</code> を付けていれば、同じエラーで気づけます。</div>
+<p><code>show()</code> を子で書き直すときに親の表示も使いたい場合は、中で <code>super.show();</code> と書きます。<code>super(...)</code> は親のコンストラクタ、<code>super.メソッド名()</code> は親のメソッドを呼びます。</p>
+<h2>4　子に書いていないメソッドを呼ぶ（⑥）</h2>
+<p><code>Main.java</code> から抜き出しています。</p>
+<pre class="code" id="c9">public static void main(String[] args) {
+    <span class="cm">// （中略）</span>
+    GoldMember g = new GoldMember("山田");
+    <span class="cm">// （中略）</span>
+    g.show();                                                        <span class="cm">// <span class="cn">⑥</span> 書いていないのに呼べる</span>
+    System.out.println("  1000円 → " + g.calcPrice(1000) + "円");   <span class="cm">// <span class="cn">⑥</span></span>
+}</pre>
+<p><code>GoldMember</code> に書いていない <code>show()</code> と <code>calcPrice()</code> を呼んでいます。親から引き継いでいるので呼べます。中で呼ぶ <code>getDiscountRate()</code> は、子で書き直したほうが使われるので、割引 10%・900円になります。</p>
+<p><strong>よくある間違い：親の private のフィールドを、子で使う。</strong><code>show()</code> を子で書き直し、その中で親のフィールド <code>name</code> を直接使った形です。<code>Member</code> と <code>Main</code> は写したままです。</p>
+<p class="fname">GoldMember.java（間違いあり）</p>
+<pre class="code" id="c10">package lesson06;
+
+public class GoldMember extends Member {
+
+    public GoldMember(String name) {
+        super(name);
+    }
+
+    @Override
+    public int getDiscountRate() {
+        return 10;
+    }
+
+    @Override
+    public void show() {
+        System.out.println(name + " / ゴールド会員 / 割引 " + getDiscountRate() + "%");   <span class="cm">// エラー</span>
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">フィールド Member.name は不可視です
+（The field Member.name is not visible）</div>
+<p><code>private</code> は「そのクラスの中だけ」です。子クラスは親を引き継いでいますが、<strong>別のクラスなので、<code>private</code> のフィールドは見えません。</strong><code>name</code> を <code>getName()</code> に変えて、getter を通せば動きます。</p>
+<p>もう1つの直し方は、<code>Member</code> のフィールドを <code>protected String name;</code> にすることです。<strong>protected</strong> は、子クラスと同じパッケージのクラスから使えるようにする修飾子で、<code>private</code> と <code>public</code> の中間です。</p>
+<table><tr><th>修飾子</th><th>そのクラスの中</th><th>同じパッケージ</th><th>別のパッケージの子クラス</th><th>どこからでも</th></tr><tr><td><code>private</code></td><td>○</td><td>×</td><td>×</td><td>×</td></tr><tr><td>何も書かない</td><td>○</td><td>○</td><td>×</td><td>×</td></tr><tr><td><code>protected</code></td><td>○</td><td>○</td><td>○</td><td>×</td></tr><tr><td><code>public</code></td><td>○</td><td>○</td><td>○</td><td>○</td></tr></table>
+<div class="note">フィールドは <code>private</code> にして getter を通すのが基本です。<code>protected</code> にすると、子クラスから値を自由に書き換えられるようになります。</div>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①が表示できたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　割引 20% のプラチナ会員 <code>PlatinumMember</code> を、<code>Member</code> の子クラスとして作る。<code>PlatinumMain</code> で「田中」さんを作り、表示と 1000円の金額を出す。</li><li>②　割引 15% の学生会員 <code>StudentMember</code> を、<code>Member</code> の子クラスとして作る。学校名 <code>school</code> を自分のフィールドとして持ち、コンストラクタは名前と学校名を受け取る。<code>show()</code> を書き直し、親の表示のあとに学校名の行を出す（形は下の実行結果のとおり）。</li></ul>
+<h2>骨組み</h2>
+<p>4つのファイルの全体です。<code>// ここに…</code> の所を書きます。<code>Member</code> は②のまま使います。</p>
+<p>コンストラクタを書くまで、<code>PlatinumMember</code>・<code>StudentMember</code> の <code>class</code> の行に赤い印が出ます（暗黙的スーパー・コンストラクター Member() は、デフォルト・コンストラクターについては未定義です。明示的コンストラクターを定義する必要があります）。③解説の2と同じ理由です。<code>PlatinumMain</code>・<code>StudentMain</code> の <code>new</code> の行にも赤い印が出ます。どちらもコンストラクタを書くと消えます。</p>
+<p class="fname">PlatinumMember.java</p>
+<pre class="code" id="c11">package lesson06;
+
+public class PlatinumMember extends Member {
+
+    <span class="cm">// ここにコンストラクタを書く（名前を親に渡す）</span>
+
+    <span class="cm">// ここに割引率 20 を返すメソッドを書く</span>
+}</pre>
+<div class="btn-row"><button data-copy="c11">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">PlatinumMain.java</p>
+<pre class="code" id="c12">package lesson06;
+
+public class PlatinumMain {
+    public static void main(String[] args) {
+        PlatinumMember p = new PlatinumMember("田中");
+
+        <span class="cm">// ここで p を表示し、1000円の金額を「  1000円 → ○円」の形で出す</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c12">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">StudentMember.java</p>
+<pre class="code" id="c13">package lesson06;
+
+public class StudentMember extends Member {
+    private String school;
+
+    <span class="cm">// ここにコンストラクタを書く（名前は親に渡し、学校名は自分のフィールドに入れる）</span>
+
+    <span class="cm">// ここに割引率 15 を返すメソッドを書く</span>
+
+    <span class="cm">// ここに show() を書く（親の表示のあとに学校名を出す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c13">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">StudentMain.java</p>
+<pre class="code" id="c14">package lesson06;
+
+public class StudentMain {
+    public static void main(String[] args) {
+        StudentMember s = new StudentMember("中村", "なにわ高校");
+
+        s.show();
+        System.out.println("  1000円 → " + s.calcPrice(1000) + "円");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c14">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">田中 / 割引 20%
+  1000円 → 800円
+
+中村 / 割引 15%
+  学校 : なにわ高校
+  1000円 → 850円</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①は、写した <code>GoldMember</code> と同じ形です。変わるのは割引率の数字だけです。<code>PlatinumMain</code> の表示は、写した <code>Main</code> の <code>g.show();</code> とその下の1行を真似ます。</li><li>②　②のコンストラクタは、1行目に <code>super(name);</code>、2行目に <code>this.school = school;</code> です。順番を逆にするとエラーになります。</li><li>③　②の <code>show()</code> は、中で <code>super.show();</code> を呼んで親の表示を出してから、学校名の1行を出します。オーバーライドするメソッドには、どれも <code>@Override</code> を付けます。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第6回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　PlatinumMember</summary><div class="sol">
+<p class="fname">PlatinumMember.java</p>
+<pre class="code" id="c15">package lesson06;
+
+public class PlatinumMember extends Member {
+
+    <span class="cm">// ここにコンストラクタを書く（名前を親に渡す）</span>
+    public PlatinumMember(String name) {
+        super(name);
+    }
+
+    <span class="cm">// ここに割引率 20 を返すメソッドを書く</span>
+    @Override
+    public int getDiscountRate() {
+        return 20;
+    }
+}</pre>
+<p class="fname">PlatinumMain.java</p>
+<pre class="code" id="c16">package lesson06;
+
+public class PlatinumMain {
+    public static void main(String[] args) {
+        PlatinumMember p = new PlatinumMember("田中");
+
+        <span class="cm">// ここで p を表示し、1000円の金額を「  1000円 → ○円」の形で出す</span>
+        p.show();
+        System.out.println("  1000円 → " + p.calcPrice(1000) + "円");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">田中 / 割引 20%
+  1000円 → 800円</div>
+<div class="note">会員の種類を1つ増やすのに、書いたのは割引率の違いだけです。<code>Member</code> は1行も変えていません。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　StudentMember</summary><div class="sol">
+<p class="fname">StudentMember.java</p>
+<pre class="code" id="c17">package lesson06;
+
+public class StudentMember extends Member {
+    private String school;
+
+    <span class="cm">// ここにコンストラクタを書く（名前は親に渡し、学校名は自分のフィールドに入れる）</span>
+    public StudentMember(String name, String school) {
+        super(name);
+        this.school = school;
+    }
+
+    <span class="cm">// ここに割引率 15 を返すメソッドを書く</span>
+    @Override
+    public int getDiscountRate() {
+        return 15;
+    }
+
+    <span class="cm">// ここに show() を書く（親の表示のあとに学校名を出す）</span>
+    @Override
+    public void show() {
+        super.show();
+        System.out.println("  学校 : " + school);
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">中村 / 割引 15%
+  学校 : なにわ高校
+  1000円 → 850円</div>
+<div class="note">名前は親の <code>Member</code> が、学校名は子の <code>StudentMember</code> が持っています。それぞれ自分のコンストラクタで入れるので、<code>super(name);</code> と <code>this.school = school;</code> の2行になります。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>継承を、会員規約と付則以外の自分のたとえで説明できる</li><li>子クラスに書くのは親と違う所だけ、と説明できる</li><li><code>@Override</code> を付ける理由を、綴りを間違えたときの動きで説明できる</li><li>子のコンストラクタに <code>super(...)</code> を書く理由を説明できる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、インタフェース・抽象クラスとポリモーフィズムです。</strong>今日は会員を1人ずつ別の変数に入れて表示しました。次回は、10%オフ券や300円引き券のような種類の違う割引券を<strong>1つの配列にまとめて入れ、同じ1行で呼んでも種類ごとに違う動きをする</strong>書き方を扱います。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>継承</td><td>けいしょう</td><td>すでにあるクラスの中身を引き継いで、新しいクラスを作ること</td></tr><tr><td>extends</td><td>えくすてんず</td><td>「〜を引き継ぐ」。<code>public class GoldMember extends Member</code> のように書きます。親は1つだけ書けます</td></tr><tr><td>親クラス</td><td>おやくらす</td><td>引き継がれるほう。スーパークラスとも言います。例では <code>Member</code></td></tr><tr><td>子クラス</td><td>こくらす</td><td>引き継ぐほう。サブクラスとも言います。例では <code>GoldMember</code></td></tr><tr><td>Object</td><td>おぶじぇくと</td><td><code>extends</code> を書かないクラスも、Java が自動で <code>Object</code> というクラスを親にします。<code>Object</code> はすべてのクラスの親です</td></tr><tr><td>オーバーライド</td><td>おーばーらいど</td><td>親のメソッドを、子で同じ名前・同じ引数のまま書き直すこと</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親のメソッドを書き直しています」という印。親に同じメソッドが無いとエラーにしてくれます</td></tr><tr><td>アノテーション</td><td>あのてーしょん</td><td><code>@Override</code> のように <code>@</code> で始まる印。Eclipse の表示では「注釈」</td></tr><tr><td>super</td><td>すーぱー</td><td>親を指す言葉。<code>super(name)</code> で親のコンストラクタ、<code>super.show()</code> で親のメソッドを呼びます</td></tr><tr><td>オーバーロード</td><td>おーばーろーど</td><td>同じ名前で、引数の違うメソッドを並べること。オーバーライドとは別物です</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>そのクラスの中だけで使える、という修飾子。子クラスからも見えません（第5回）</td></tr><tr><td>protected</td><td>ぷろてくてっど</td><td>子クラスと、同じパッケージのクラスから使える、という修飾子</td></tr><tr><td>修飾子</td><td>しゅうしょくし</td><td><code>public</code> <code>private</code> <code>protected</code> など、どこから使えるかを決める言葉（第5回）</td></tr><tr><td>getter</td><td>げったー</td><td><code>private</code> のフィールドの値を読み出すためのメソッド。<code>getName()</code> など（第5回）</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。子のコンストラクタは、1行目で親のコンストラクタを呼びます</td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 6 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
