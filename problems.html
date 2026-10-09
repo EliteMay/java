@@ -1,0 +1,3138 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>問題集</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>.course-nav{max-width:920px;margin:0 auto 18px}.course-nav a{padding:9px 15px;border-radius:8px;background:#fff7ed;color:#9a3412;text-decoration:none;border:1px solid #fdba74;font-weight:700}</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav class="course-nav"><a href="index.html">← 講義一覧</a></nav>
+<header><span class="badge">Java復習講座</span><h1>問題集</h1><p>自力の演習が早く終わった人のための追加問題。答えは「問題集_解答」にあります</p></header>
+<div class="card"><p>各回3問です。1問目は資料と同じ型で別の題、2問目はひねりが1つ入り、3問目は次の回の内容を先取りします。3問目は分からなくて構いません。次の回で扱います。</p><p>答えは別のファイル <strong>問題集_解答.html</strong> にあります。自分の実行結果と見比べてください。</p></div>
+<div class="card"><div class="card-title">目次</div><table><tr><th style="width:5rem">回</th><th>テーマ</th><th>問題</th></tr><tr><td><a href="#q01">第1回</a></td><td>コンパイルと JVM、2種類のエラー</td><td>1-1 赤い印を3つ消す　1-2 エラーは出ないのに、税込が合わない　1-3 商品を配列に入れて一覧にする（次回の先取り）</td></tr><tr><td><a href="#q02">第2回</a></td><td>変数と演算子・条件分岐・配列と繰り返し</td><td>2-1 1週間の売上を集計する　2-2 いちばん売れた商品の名前を出す　2-3 合計を求める処理に名前を付ける（次回の先取り）</td></tr><tr><td><a href="#q03">第3回</a></td><td>メソッド・引数・戻り値と値渡し</td><td>3-1 在庫の少ない商品を数えて補充する　3-2 元の価格を変えずに、セール価格の配列を返す　3-3 商品をまとめて渡す（次回の先取り）</td></tr><tr><td><a href="#q04">第4回</a></td><td>クラスとインスタンス、コンストラクタ</td><td>4-1 Student クラスと平均点　4-2 在庫を減らす sell メソッド　4-3 価格をマイナスにさせない（次回の先取り）</td></tr><tr><td><a href="#q05">第5回</a></td><td>カプセル化と static</td><td>5-1 生徒の点数を守る Student クラス　5-2 全商品の売上合計を数える　5-3 食品クラスを作ってみる（次回の先取り）</td></tr><tr><td><a href="#q06">第6回</a></td><td>継承・オーバーライド・super</td><td>6-1 食品は税率 8%　6-2 セール品は、税込価格から値引き　6-3 3種類を1つの配列に入れる（次回の先取り）</td></tr><tr><td><a href="#q07">第7回</a></td><td>インタフェース・抽象クラスとポリモーフィズム</td><td>7-1 支払い方法ごとのポイント　7-2 1つのクラスに、約束を2つ　7-3 List も親の型（次回の先取り）</td></tr><tr><td><a href="#q08">第8回</a></td><td>コレクションの ArrayList と HashMap</td><td>8-1 英単語帳を List と Map で作る　8-2 Map から取り出して在庫を減らす　8-3 無い ID を受け止める（次回の先取り）</td></tr><tr><td><a href="#q09">第9回</a></td><td>null・例外と try-catch</td><td>9-1 ポイントを足す addPoint に例外を付ける　9-2 見つからないときは null ではなく例外にする　9-3 null を確かめてから使う</td></tr><tr><td><a href="#q10">第10回</a></td><td>ストリームと検査例外、ファイル入出力と CSV</td><td>10-1 点数の CSV を読んで、合格者だけ書き出す　10-2 記録のファイルに、続きを足していく　10-3 ID で1件探す（次回の先取り）</td></tr><tr><td><a href="#q11">第11回</a></td><td>MySQL・SQL・JDBC</td><td>11-1 会員の表を読む　11-2 件数を数える（返ってくる表が1行）　11-3 ? に値を入れて絞り込む（次回の先取り）</td></tr><tr><td><a href="#q12">第12回</a></td><td>PreparedStatement で追加・更新・削除</td><td>12-1 会員を追加し、ポイントを足す MemberDao　12-2 在庫が足りるときだけ売る（条件を SQL に入れる）　12-3 入力の検査を、Service に任せる（次回の先取り）</td></tr><tr><td><a href="#q13">第13回</a></td><td>DTO・DAO・3層</td><td>13-1 値引きを Service に任せる　13-2 同じ名前の商品は登録させない　13-3 画面の表に並べる形を作る（次回の先取り）</td></tr><tr><td><a href="#q14">第14回</a></td><td>Swing の画面とイベント</td><td>14-1 税込み価格を出す画面　14-2 表の行を選んだら、入力欄に入れる　14-3 担当者ができることを書き出す（次回の先取り）</td></tr><tr><td><a href="#q15">第15回</a></td><td>UML とユースケース</td><td>15-1 図書館の貸出システムのユースケース図　15-2 毎月末に、会計システムへ在庫を送る　15-3 記述から、クラスを見つける（次回の先取り）</td></tr><tr><td><a href="#q16">第16回</a></td><td>クラス図とオブジェクト図</td><td>16-1 Book のクラス図とオブジェクト図　16-2 図を見てコードを書く　16-3 findAll() が呼ばれる順番（次回の先取り）</td></tr><tr><td><a href="#q17">第17回</a></td><td>シーケンス図と複合フラグメント</td><td>17-1 商品を更新する　17-2 図からコードを書く　17-3 コミュニケーション図に描き直す（次回の先取り）</td></tr><tr><td><a href="#q18">第18回</a></td><td>ステートマシン図・アクティビティ図・コミュニケーション図と総まとめ</td><td>18-1 「注文」のステートマシン図　18-2 月末の在庫締めのアクティビティ図　18-3 「発注」を図から作る（講座のあとの先取り）</td></tr></table></div>
+<div class="card" id="q01"><div class="card-title">第 1 回　コンパイルと JVM、2種類のエラー</div>
+<p>新しいプロジェクト <code>quiz01</code> を作って解きます（授業の <code>lesson01</code> とクラスを分けるためです）。クラスを作るときのパッケージ欄は <code>quiz01</code> のままにします。どのファイルも1行目は <code>package quiz01;</code> です。</p>
+<div class="step"><span class="step-id">1-1</span><h3>赤い印を3つ消す</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p><code>Fix</code> というクラスを作り、下のコードをそのまま貼って保存します。赤い印が3つ出ます。</p>
+<p>いちばん上の行から1つずつ、<strong>行番号とメッセージを書き取ってから</strong>直してください。直したら実行します。</p>
+<pre class="code" id="c1">package quiz01;
+
+public class Fix {
+    public static void main(String[] args) {
+        String name = 消しゴム;
+        int price = 100;
+        int count = 3.0;
+
+        system.out.println(name + " × " + count + "個");
+        System.out.println("合計 " + price * count + "円");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c1">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">消しゴム × 3個
+合計 300円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　メッセージの出だしで何の間違いか分かります。授業の③解説の3の表を見てください。</li><li>②　5行目の <code>消しゴム</code> は、Java から見ると「変数の名前」に見えています。</li><li>③　Java は大文字と小文字を区別します。</li></ul>
+</div>
+<div class="step"><span class="step-id">1-2</span><h3>エラーは出ないのに、税込が合わない</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p><code>TaxPrice</code> というクラスを作り、下のコードを貼って実行します。<strong>赤い印は出ず、落ちもしません。</strong></p>
+<pre class="code" id="c2">package quiz01;
+
+public class TaxPrice {
+    public static void main(String[] args) {
+        int price = 200;
+        int tax = 20;
+
+        System.out.println("本体 " + price + "円");
+        System.out.println("税込 " + price + tax + "円");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c2">コピーする</button><span class="copy-msg"></span></div>
+<p>いまのまま実行すると、こう出ます（正しくありません）。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">本体 200円
+税込 20020円</div>
+<p>税込は 200 + 20 で 220円のはずです。1か所だけ直して、次のように出るようにしてください。</p>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">本体 200円
+税込 220円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>+</code> は左から順に計算されます。<code>"税込 " + price</code> を先に計算すると、何ができるかを考えます。</li><li>②　文字列と数を <code>+</code> でつなぐと、文字列になります。</li><li>③　先に足し算をさせたい所を、丸括弧で囲みます。</li></ul>
+</div>
+<div class="step"><span class="step-id">1-3</span><h3>商品を配列に入れて一覧にする（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>3つの商品の名前と在庫を、配列 <code>names</code> と <code>stocks</code> に入れてあります。<code>for</code> 文で1行ずつ表示し、最後に在庫の合計を表示してください。</p>
+<p><code>StockList</code> の全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c3">package quiz01;
+
+public class StockList {
+    public static void main(String[] args) {
+        String[] names = {"ボールペン", "ノート", "消しゴム"};
+        int[] stocks = {30, 12, 5};
+        int total = 0;
+
+        <span class="cm">// ここに for 文を書き、「名前 : 在庫個」を1行ずつ表示しながら、total に足していく</span>
+
+        System.out.println("合計 " + total + "個");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c3">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ボールペン : 30個
+ノート : 12個
+消しゴム : 5個
+合計 47個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　配列の <code>i</code> 番目は <code>names[i]</code> と書きます。番号は 0 から始まります。</li><li>②　配列の長さは <code>names.length</code> で取れます。<code>for (int i = 0; i &lt; names.length; i++)</code> の形です。</li><li>③　合計は、<code>for</code> の中で <code>total += stocks[i];</code> と足していきます。</li></ul>
+</div>
+</div>
+<div class="card" id="q02"><div class="card-title">第 2 回　変数と演算子・条件分岐・配列と繰り返し</div>
+<p>新しいプロジェクト <code>quiz02</code> を作って解きます。クラスを作るときのパッケージ欄は <code>quiz02</code> のままにします。どのファイルも1行目は <code>package quiz02;</code> です。</p>
+<div class="step"><span class="step-id">2-1</span><h3>1週間の売上を集計する</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>ある商品の、1週間の販売個数が配列 <code>sales</code> に入っています。合計・平均（小数第1位まで）・最多・最少と、10個未満だった日の数と、その個数の一覧を表示してください。</p>
+<p>ファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c4">package quiz02;
+
+public class SalesReport {
+    public static void main(String[] args) {
+        int[] sales = {12, 8, 15, 0, 9, 20, 7};
+
+        System.out.println("販売日数 : " + sales.length + " 日");
+
+        <span class="cm">// ここに、合計と平均（小数第1位まで）を求めて表示する</span>
+
+        <span class="cm">// ここに、最多と最少を求めて表示する</span>
+
+        <span class="cm">// ここに、10個未満の日数と、その個数の一覧を表示する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c4">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">販売日数 : 7 日
+合計     : 71 個
+平均     : 10.1 個
+最多     : 20 個
+最少     : 0 個
+10個未満 : 4 日（8, 0, 9, 7）</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　授業の <code>ScoreReport</code> の課題①〜④と、同じ形です。</li><li>②　平均は <code>(double) sum / sales.length</code> です。<code>int</code> どうしで割ると 10 になり、小数が消えます。</li><li>③　表示の左側の空白は、コロンの位置をそろえるためのものです。上の実行結果と同じになるように入れます。</li></ul>
+</div>
+<div class="step"><span class="step-id">2-2</span><h3>いちばん売れた商品の名前を出す</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>商品名の配列 <code>names</code> と、売れた個数の配列 <code>sold</code> があります。同じ番号どうしが、同じ商品です。</p>
+<p>全商品の「商品名 : 個数個」を表示したあと、<strong>いちばん売れた商品の名前</strong>と個数を表示してください。</p>
+<p>ファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c5">package quiz02;
+
+public class BestSeller {
+    public static void main(String[] args) {
+        String[] names = {"ボールペン", "ノート", "消しゴム", "定規", "のり"};
+        int[] sold = {35, 42, 0, 18, 27};
+
+        <span class="cm">// ここに、「商品名 : 個数個」を1行ずつ表示する</span>
+
+        <span class="cm">// ここに、いちばん売れた商品の名前と個数を表示する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c5">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ボールペン : 35個
+ノート : 42個
+消しゴム : 0個
+定規 : 18個
+のり : 27個
+いちばん売れた商品 : ノート（42個）</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　2つの配列を同じ番号で読むので、拡張for文ではなく、番号 <code>i</code> を使う <code>for</code> 文にします。</li><li>②　最大の<strong>値</strong>ではなく、最大の値がある<strong>番号</strong>を覚えておきます。<code>int best = 0;</code> から始めます。</li><li>③　番号が分かれば、<code>names[best]</code> で名前が、<code>sold[best]</code> で個数が取り出せます。</li></ul>
+</div>
+<div class="step"><span class="step-id">2-3</span><h3>合計を求める処理に名前を付ける（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>点数の合計と売上の合計を、同じ処理で求めます。合計を求める for 文を2回書く代わりに、<code>sum</code> という名前のまとまり（メソッド）にして、2回呼び出します。</p>
+<p><code>main</code> はこのまま使います。<code>// ここに…</code> の所に、<code>sum</code> を書いてください。</p>
+<pre class="code" id="c6">package quiz02;
+
+public class SumMethod {
+    <span class="cm">// ここに、int の配列を受け取って、合計を返すメソッド sum を書く</span>
+
+    public static void main(String[] args) {
+        int[] scores = {82, 55, 91};
+        int[] sales = {12, 8, 15, 0};
+
+        System.out.println("点数の合計 : " + sum(scores));
+        System.out.println("売上の合計 : " + sum(sales));
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c6">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">点数の合計 : 228
+売上の合計 : 35</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　形は <code>static int sum(int[] nums) { … }</code> です。丸括弧の中が受け取る値、<code>int</code> が返す値の型です。</li><li>②　中身は授業の課題①と同じです。合計を求めたら、最後に <code>return total;</code> で返します。</li><li>③　<code>sum(scores)</code> と呼ぶと <code>nums</code> に <code>scores</code> が、<code>sum(sales)</code> と呼ぶと <code>sales</code> が入ります。</li></ul>
+</div>
+</div>
+<div class="card" id="q03"><div class="card-title">第 3 回　メソッド・引数・戻り値と値渡し</div>
+<p>新しいプロジェクト <code>quiz03</code> を作って解きます（授業の <code>lesson03</code> と分けます）。クラスを作るときのパッケージ欄は <code>quiz03</code> のままにします。どのファイルも1行目は <code>package quiz03;</code> です。メソッドはどれも <code>static</code> を付けて、<code>main</code> と同じクラスの中に書きます。</p>
+<div class="step"><span class="step-id">3-1</span><h3>在庫の少ない商品を数えて補充する</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>在庫の配列を受け取り、<code>limit</code> より少ない商品の数を<strong>返す</strong> <code>countLow</code> と、<code>limit</code> より少ない商品にだけ <code>add</code> 個を足す <code>restock</code>（戻り値なし）を作ってください。</p>
+<p>ファイルの全体です。<code>// ここに…</code> の所を書きます。<code>main</code> はこのまま写します。</p>
+<pre class="code" id="c7">package quiz03;
+
+public class StockCheck {
+    public static void main(String[] args) {
+        int[] stocks = {30, 4, 12, 2};
+
+        System.out.println("少ない商品 : " + countLow(stocks, 5) + "件");
+        restock(stocks, 5, 20);
+        System.out.println("補充後 : " + stocks[0] + " " + stocks[1] + " " + stocks[2] + " " + stocks[3]);
+        System.out.println("少ない商品 : " + countLow(stocks, 5) + "件");
+    }
+
+    static int countLow(int[] stocks, int limit) {
+        <span class="cm">// ここに、limit より少ない要素の数を数えて返す処理を書く</span>
+    }
+
+    static void restock(int[] stocks, int limit, int add) {
+        <span class="cm">// ここに、limit より少ない要素にだけ add を足す処理を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c7">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">少ない商品 : 2件
+補充後 : 30 24 12 22
+少ない商品 : 0件</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>countLow</code> は、数を入れる変数を <code>int count = 0;</code> と用意し、条件に合うたびに <code>count++;</code> して、最後に返します。</li><li>②　<code>restock</code> は配列の中身を書き換えるので、添字 <code>i</code> を使う for 文にします。</li><li>③　<code>restock</code> は何も返しませんが、<code>main</code> の <code>stocks</code> は変わります。授業の③の4と同じ理由です。</li></ul>
+</div>
+<div class="step"><span class="step-id">3-2</span><h3>元の価格を変えずに、セール価格の配列を返す</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>価格の配列から <code>yen</code> 円ずつ引いた<strong>新しい配列</strong>を返す <code>discounted</code> を作ってください。</p>
+<p><strong>元の配列 <code>prices</code> は変えてはいけません。</strong>戻り値の型が <code>int[]</code>（配列）になっている所に注意します。</p>
+<p>ファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c8">package quiz03;
+
+public class SalePrice {
+    public static void main(String[] args) {
+        int[] prices = {150, 220, 100};
+        int[] sale = discounted(prices, 20);
+
+        System.out.println("元の価格 : " + prices[0] + " " + prices[1] + " " + prices[2]);
+        System.out.println("セール価格 : " + sale[0] + " " + sale[1] + " " + sale[2]);
+    }
+
+    static int[] discounted(int[] prices, int yen) {
+        <span class="cm">// ここに、prices と同じ長さの新しい配列を作る処理を書く</span>
+        <span class="cm">// ここに、新しい配列へ「元の価格 - yen」を入れていく処理を書く</span>
+        <span class="cm">// ここに、新しい配列を返す処理を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c8">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">元の価格 : 150 220 100
+セール価格 : 130 200 80</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　新しい配列は <code>new int[prices.length]</code> で作れます。中身は全部 <code>0</code> で始まります。</li><li>②　<code>prices[i] -= yen;</code> と書くと、元の配列が変わります。書き込むのは新しい配列のほうです。</li><li>③　最後に <code>return</code> で新しい配列を返します。</li></ul>
+</div>
+<div class="step"><span class="step-id">3-3</span><h3>商品をまとめて渡す（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>ここまでは、名前と価格を別々の変数や配列で持っていました。次回は、それをひとまとめにした <code>Product</code> を作ります。ここでは先に少しだけ使ってみます。</p>
+<p><code>Product</code> は下のとおり写します。<code>RaiseMain</code> の <code>raise</code> に、受け取った商品の価格を <code>yen</code> 円上げる処理を書いてください。</p>
+<pre class="code" id="c9">package quiz03;
+
+public class Product {
+    String name;
+    int price;
+}</pre>
+<div class="btn-row"><button data-copy="c9">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c10">package quiz03;
+
+public class RaiseMain {
+    public static void main(String[] args) {
+        Product p = new Product();
+        p.name = "ボールペン";
+        p.price = 150;
+
+        raise(p, 30);
+        System.out.println(p.name + " / " + p.price + "円");
+    }
+
+    static void raise(Product item, int yen) {
+        <span class="cm">// ここに、item の価格に yen を足す処理を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c10">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ボールペン / 180円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>new Product()</code> で商品を1つ作り、<code>p.name</code> と <code>p.price</code> に値を入れています。<code>p.price</code> は「<code>p</code> の価格」と読みます。</li><li>②　<code>raise</code> の中では、受け取った <code>item</code> の価格を <code>item.price</code> と書きます。</li><li>③　<code>raise</code> は何も返しません。それでも <code>main</code> の <code>p</code> の価格が変わるかどうかが、この問題の見どころです。</li></ul>
+</div>
+</div>
+<div class="card" id="q04"><div class="card-title">第 4 回　クラスとインスタンス、コンストラクタ</div>
+<p>新しいプロジェクト <code>quiz04</code> を作って解きます（授業の <code>lesson04</code> にも <code>Product</code> があるため、分けます）。クラスを作るときのパッケージ欄は <code>quiz04</code> のままにします。どのファイルも1行目は <code>package quiz04;</code> です。2問目と3問目は同じ <code>Product</code> を育てていきます。</p>
+<div class="step"><span class="step-id">4-1</span><h3>Student クラスと平均点</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p><code>Student</code> クラス（<code>name</code> / <code>score</code>）を作ります。コンストラクタと、「名前 : 点数」を表示する <code>show()</code> を持たせてください。</p>
+<p><code>StudentMain</code> では3人分を配列 <code>Student[]</code> に入れ、拡張for文で全員を表示したあと、<strong>平均点</strong>を表示してください。</p>
+<p>2つのファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c11">package quiz04;
+
+public class Student {
+    String name;
+    int score;
+
+    <span class="cm">// ここにコンストラクタを書く</span>
+
+    void show() {
+        <span class="cm">// ここに「名前 : 点数」の表示を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c11">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c12">package quiz04;
+
+public class StudentMain {
+    public static void main(String[] args) {
+        Student[] students = {
+            new Student("高橋", 85),
+            new Student("山田", 62),
+            new Student("佐藤", 91)
+        };
+
+        <span class="cm">// ここに拡張for文を書き、全員を表示しながら点数を合計する</span>
+
+        <span class="cm">// ここに平均点の表示を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c12">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">高橋 : 85点
+山田 : 62点
+佐藤 : 91点
+平均 : 79点</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　平均は「合計 ÷ 人数」です。合計を入れる変数を、for の前に <code>int total = 0;</code> と用意します。</li><li>②　人数は <code>students.length</code> で取れます。</li><li>③　<code>int</code> 同士の割り算は小数が切り捨てられます（238 ÷ 3 ＝ 79）。今回はそれでよいです。</li></ul>
+</div>
+<div class="step"><span class="step-id">4-2</span><h3>在庫を減らす sell メソッド</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>授業の <code>Product</code> に、在庫 <code>stock</code> を足します。コンストラクタは3つを受け取る形にしてください。</p>
+<p>さらに <code>sell(int count)</code> メソッドを作ります。<code>count</code> 個だけ在庫を減らしますが、<strong>在庫より多いときはメッセージを出して、減らしません。</strong></p>
+<p>2つのファイルの全体です。<code>SellMain</code> はこのまま写します。</p>
+<pre class="code" id="c13">package quiz04;
+
+public class Product {
+    String name;
+    int price;
+    int stock;
+
+    <span class="cm">// ここに3つを受け取るコンストラクタを書く</span>
+
+    void sell(int count) {
+        <span class="cm">// 在庫より多ければメッセージを出して終わる</span>
+        <span class="cm">// そうでなければ在庫を減らす</span>
+    }
+
+    void show() {
+        System.out.println(name + " / " + price + "円 / 残り" + stock + "個");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c13">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c14">package quiz04;
+
+public class SellMain {
+    public static void main(String[] args) {
+        Product p1 = new Product("ボールペン", 150, 30);
+        Product p2 = new Product("ノート", 220, 10);
+
+        p1.sell(5);
+        p2.sell(20);
+
+        p1.show();
+        p2.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c14">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ノート は在庫が足りません（残り10個）
+ボールペン / 150円 / 残り25個
+ノート / 220円 / 残り10個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　「おかしい条件を先に書いて <code>return</code> する」形にすると、入れ子が浅くなります。</li><li>②　<code>void</code> のメソッドでも、<code>return;</code> と書けば、そこで終われます。</li><li>③　メッセージの中の残り個数は、フィールドの <code>stock</code> をそのまま使います。</li></ul>
+</div>
+<div class="step"><span class="step-id">4-3</span><h3>価格をマイナスにさせない（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>2問目の <code>Product</code> は、外から <code>p.price = -100;</code> と書けてしまいます。</p>
+<p>そこで <code>setPrice(int price)</code> メソッドを足します。負の値なら「価格に負の値は設定できません」と表示して変えず、0以上ならフィールドに入れます。</p>
+<p>2問目の <code>Product</code> に <code>setPrice</code> の枠を足した全体と、新しい <code>PriceMain</code> です。</p>
+<pre class="code" id="c15">package quiz04;
+
+public class Product {
+    String name;
+    int price;
+    int stock;
+
+    Product(String name, int price, int stock) {
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    void sell(int count) {
+        if (count &gt; stock) {
+            System.out.println(name + " は在庫が足りません（残り" + stock + "個）");
+            return;
+        }
+        stock -= count;
+    }
+
+    void setPrice(int price) {
+        <span class="cm">// ここに、負の値ならメッセージを出して終わる処理を書く</span>
+        <span class="cm">// ここに、そうでなければフィールドに入れる処理を書く</span>
+    }
+
+    void show() {
+        System.out.println(name + " / " + price + "円 / 残り" + stock + "個");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c15">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c16">package quiz04;
+
+public class PriceMain {
+    public static void main(String[] args) {
+        Product p = new Product("ボールペン", 150, 30);
+
+        p.setPrice(-100);
+        p.show();
+
+        p.setPrice(180);
+        p.show();
+
+        p.price = -100;     <span class="cm">// これは今日は防げない</span>
+        p.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c16">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">価格に負の値は設定できません
+ボールペン / 150円 / 残り30個
+ボールペン / 180円 / 残り30個
+ボールペン / -100円 / 残り30個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　引数名を <code>price</code> にすると、フィールドと同じ名前になります。代入するときは <code>this.price = price;</code> です。</li><li>②　最後の1行で <code>-100円</code> が出てしまうのは、<strong>正しい</strong>です。<code>setPrice</code> を通らずに直接書き込めるからです。これを防ぐ方法（<code>private</code>）が次回の主役です。</li></ul>
+</div>
+</div>
+<div class="card" id="q05"><div class="card-title">第 5 回　カプセル化と static</div>
+<p>新しいプロジェクト <code>quiz05</code> を作って解きます（授業の <code>lesson05</code> にも <code>Product</code> があるため、分けます）。クラスを作るときのパッケージ欄は <code>quiz05</code> のままにします。どのファイルも1行目は <code>package quiz05;</code> です。3問目は、2問目で書き上げた <code>Product</code> をそのまま使います。</p>
+<div class="step"><span class="step-id">5-1</span><h3>生徒の点数を守る Student クラス</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p><code>Student</code> クラス（<code>name</code> / <code>score</code>）を、授業の <code>Product</code> と同じ形で作ります。フィールドは <code>private</code> にし、getter を2つ持たせてください。</p>
+<p><code>setScore(int score)</code> では、<strong>0より小さい点数と、100より大きい点数</strong>をはじきます。あわせて、作った生徒の人数を <code>static</code> で数え、<code>Student.getCount()</code> で聞けるようにしてください。</p>
+<p>2つのファイルの全体です。<code>StudentMain</code> はこのまま写し、<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c17">package quiz05;
+
+public class Student {
+    <span class="cm">// ここに、生徒の人数 count（static、最初は 0）を書く</span>
+
+    private String name;
+    private int score;
+
+    public Student(String name, int score) {
+        this.name = name;
+        this.score = score;
+        <span class="cm">// ここで人数を1増やす</span>
+    }
+
+    public String getName() { return name; }
+    public int getScore() { return score; }
+
+    public void setScore(int score) {
+        <span class="cm">// ここに、0より小さいか100より大きければ「点数は0〜100で入力してください」と出して終わる処理を書く</span>
+        <span class="cm">// ここに、そうでなければフィールドに入れる処理を書く</span>
+    }
+
+    <span class="cm">// ここに、人数を返す static メソッド getCount() を書く</span>
+}</pre>
+<div class="btn-row"><button data-copy="c17">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c18">package quiz05;
+
+public class StudentMain {
+    public static void main(String[] args) {
+        Student s1 = new Student("高橋", 85);
+        Student s2 = new Student("山田", 62);
+
+        s1.setScore(120);
+        s2.setScore(70);
+
+        System.out.println(s1.getName() + " : " + s1.getScore() + "点");
+        System.out.println(s2.getName() + " : " + s2.getScore() + "点");
+        System.out.println("生徒数: " + Student.getCount() + "人");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c18">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">点数は0〜100で入力してください
+高橋 : 85点
+山田 : 70点
+生徒数: 2人</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　人数を数える形は、授業の <code>Product</code> の <code>count</code> と同じです。</li><li>②　「0より小さい、または100より大きい」は、<code>score &lt; 0 || score &gt; 100</code> と書きます。<code>||</code> は「または」です。</li></ul>
+</div>
+<div class="step"><span class="step-id">5-2</span><h3>全商品の売上合計を数える</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>授業の <code>Product</code> に、<code>sell(int quantity)</code> メソッドを足します。<code>quantity</code> 個だけ在庫を減らしますが、在庫より多いときはメッセージを出して、減らしません。</p>
+<p>さらに、<strong>全商品を合わせた売上の合計</strong> <code>totalSales</code> を持たせます。売れるたびに「価格 × 個数」を足し、<code>Product.getTotalSales()</code> で聞けるようにしてください。</p>
+<p>授業の <code>Product</code> に書く所を足した全体と、新しい <code>SalesMain</code> です。</p>
+<pre class="code" id="c19">package quiz05;
+
+public class Product {
+    private static int count = 0;        <span class="cm">// 作った商品の数（全体で1つ）</span>
+    <span class="cm">// ここに、全商品の売上合計 totalSales（static、最初は 0）を書く</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void sell(int quantity) {
+        <span class="cm">// ここに、在庫より多ければ「名前 は在庫が足りません（残りN個）」と出して終わる処理を書く</span>
+        <span class="cm">// ここに、在庫を減らし、売上合計に「価格 × 個数」を足す処理を書く</span>
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+
+    <span class="cm">// ここに、売上合計を返す static メソッド getTotalSales() を書く</span>
+}</pre>
+<div class="btn-row"><button data-copy="c19">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c20">package quiz05;
+
+public class SalesMain {
+    public static void main(String[] args) {
+        Product p1 = new Product(1, "ボールペン", 150, 30);
+        Product p2 = new Product(2, "ノート", 220, 10);
+
+        p1.sell(4);
+        p2.sell(20);
+        p2.sell(3);
+
+        p1.show();
+        p2.show();
+        System.out.println("売上合計: " + Product.getTotalSales() + "円");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c20">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ノート は在庫が足りません（残り10個）
+1 / ボールペン / 150円 / 残り26個
+2 / ノート / 220円 / 残り7個
+売上合計: 1260円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　売上合計は、ボールペンの分もノートの分も1つの数にまとめます。商品ごとに持つものか、全体で1つのものかを考えてください。</li><li>②　<code>sell</code> には <code>static</code> を付けません。どの商品の在庫を減らすかが、呼ぶたびに違うからです。</li><li>③　ボールペン4個で600円、ノート3個で660円、合わせて1260円です。</li></ul>
+</div>
+<div class="step"><span class="step-id">5-3</span><h3>食品クラスを作ってみる（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>おにぎりのような食品には、賞味期限があります。そこで、<code>Product</code> の欄に賞味期限 <code>expire</code> を足した <code>Food</code> クラスを作ります。</p>
+<p><code>Food</code> の骨組みと、新しい <code>FoodMain</code> です。<code>Product</code> は2問目のものをそのまま使います。</p>
+<pre class="code" id="c21">package quiz05;
+
+public class Food {
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+    <span class="cm">// ここに、賞味期限 expire（String）のフィールドを書く</span>
+
+    <span class="cm">// ここに、5つを受け取るコンストラクタを書く</span>
+
+    public String getName() { return name; }
+
+    public void show() {
+        <span class="cm">// ここに「番号 / 名前 / 価格円 / 残りN個 / 期限 賞味期限」の表示を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c21">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c22">package quiz05;
+
+public class FoodMain {
+    public static void main(String[] args) {
+        Product p1 = new Product(1, "ボールペン", 150, 30);
+        Product p2 = new Product(2, "ノート", 220, 10);
+        Food f1 = new Food(3, "おにぎり", 130, 12, "10/01");
+
+        p1.show();
+        p2.show();
+        f1.show();
+        System.out.println("登録した商品: " + Product.getCount() + "個");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c22">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / おにぎり / 130円 / 残り12個 / 期限 10/01
+登録した商品: 2個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　コンストラクタは <code>Product</code> のものに、<code>String expire</code> を1つ足した形です。</li><li>②　最後の行が <strong>2個</strong> になるのは、<strong>正しい</strong>です。<code>Food</code> を作っても、<code>Product</code> の <code>count</code> は増えないからです。おにぎりも商品のはずなのに、数に入りません。これを解くのが次回の主役です。</li></ul>
+</div>
+</div>
+<div class="card" id="q06"><div class="card-title">第 6 回　継承・オーバーライド・super</div>
+<p>新しいプロジェクト <code>quiz06</code> を作って解きます。クラスを作るときのパッケージ欄は <code>quiz06</code> のままにします。どのファイルも1行目は <code>package quiz06;</code> です。3問とも、1問目で写す <code>Item</code> を親クラスとして使います。</p>
+<div class="step"><span class="step-id">6-1</span><h3>食品は税率 8%</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>商品 <code>Item</code> は、税率 10% で税込価格を出します。これを親クラスにして、税率 8% の食品 <code>FoodItem</code> を子クラスとして作ってください。</p>
+<p>3つのファイルの全体です。<code>Item</code> と <code>TaxMain</code> はこのまま写し、<code>FoodItem</code> の <code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c23">package quiz06;
+
+public class Item {
+    private String name;
+    private int price;
+
+    public Item(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+
+    public int getTaxRate() {
+        return 10;
+    }
+
+    public int priceWithTax() {
+        return price * (100 + getTaxRate()) / 100;
+    }
+
+    public void show() {
+        System.out.println(name + " / 税率 " + getTaxRate() + "% / 税込 " + priceWithTax() + "円");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c23">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c24">package quiz06;
+
+public class FoodItem extends Item {
+
+    <span class="cm">// ここにコンストラクタを書く（名前と価格を親に渡す）</span>
+
+    <span class="cm">// ここに税率 8 を返すメソッドを書く（親のメソッドを書き直す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c24">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c25">package quiz06;
+
+public class TaxMain {
+    public static void main(String[] args) {
+        Item pen = new Item("ボールペン", 150);
+        FoodItem rice = new FoodItem("おにぎり", 150);
+
+        pen.show();
+        rice.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c25">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ボールペン / 税率 10% / 税込 165円
+おにぎり / 税率 8% / 税込 162円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　コンストラクタでは、1行目に <code>super(name, price);</code> と書いて、名前と価格を親に渡します。</li><li>②　税率を答えるメソッドを、名前も引数も親と同じにして書き直します。<code>@Override</code> を付けます。</li><li>③　<code>show()</code> と <code>priceWithTax()</code> は書きません。親のものがそのまま使われます。</li></ul>
+</div>
+<div class="step"><span class="step-id">6-2</span><h3>セール品は、税込価格から値引き</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>税込価格から決まった金額を引くセール品 <code>SaleItem</code> を、<code>Item</code> の子クラスとして作ってください。値引き額 <code>discount</code> は、<code>SaleItem</code> が自分のフィールドとして持ちます。</p>
+<p>今度は税率ではなく、<code>priceWithTax()</code> を書き直します。<strong>親の計算した税込価格を使い、そこから値引き額を引きます。</strong></p>
+<p>2つのファイルの全体です。<code>Item</code> は1問目のまま使います。<code>SaleMain</code> はこのまま写します。</p>
+<pre class="code" id="c26">package quiz06;
+
+public class SaleItem extends Item {
+    private int discount;     <span class="cm">// 値引きする金額</span>
+
+    <span class="cm">// ここにコンストラクタを書く（名前・価格・値引き額を受け取る）</span>
+
+    <span class="cm">// ここに priceWithTax() を書き直す（親の税込価格から discount を引いて返す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c26">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c27">package quiz06;
+
+public class SaleMain {
+    public static void main(String[] args) {
+        Item cup = new Item("マグカップ", 1000);
+        SaleItem saleCup = new SaleItem("マグカップ", 1000, 100);
+
+        cup.show();
+        saleCup.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c27">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">マグカップ / 税率 10% / 税込 1100円
+マグカップ / 税率 10% / 税込 1000円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　コンストラクタは、1行目で <code>super(name, price);</code>、2行目で <code>this.discount = discount;</code> です。</li><li>②　親のメソッドの結果は <code>super.priceWithTax()</code> で受け取れます。</li><li>③　<code>show()</code> は書き直しません。親の <code>show()</code> が <code>priceWithTax()</code> を呼ぶとき、子で書き直したほうが使われます。</li></ul>
+</div>
+<div class="step"><span class="step-id">6-3</span><h3>3種類を1つの配列に入れる（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p><code>Item</code>・<code>FoodItem</code>・<code>SaleItem</code> を1つずつ、<strong><code>Item[]</code> という1つの配列</strong>に入れます。拡張for文で全部を表示しながら、税込価格の合計を出してください。</p>
+<p>新しい <code>CartMain</code> の全体です。<code>// ここに…</code> の所を書きます。商品は1問目・2問目と同じもの（ボールペン 150円、おにぎり 150円、マグカップ 1000円で100円引き）を使います。</p>
+<pre class="code" id="c28">package quiz06;
+
+public class CartMain {
+    public static void main(String[] args) {
+        Item[] cart = {
+            <span class="cm">// ここに Item・FoodItem・SaleItem を1つずつ new して並べる</span>
+        };
+
+        <span class="cm">// ここに拡張for文を書き、1つずつ show() しながら税込価格を合計する</span>
+
+        <span class="cm">// ここに合計の表示を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c28">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ボールペン / 税率 10% / 税込 165円
+おにぎり / 税率 8% / 税込 162円
+マグカップ / 税率 10% / 税込 1000円
+合計 1327円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　子クラスのインスタンスは、親の型 <code>Item</code> の配列に入れられます。ゴールド会員は会員の一種なので、会員の名簿に載せられるのと同じです。</li><li>②　拡張for文は <code>for (Item it : cart)</code> です。</li><li>③　合計は for の前に <code>int total = 0;</code> を用意し、<code>it.priceWithTax()</code> を足していきます。</li></ul>
+</div>
+</div>
+<div class="card" id="q07"><div class="card-title">第 7 回　インタフェース・抽象クラスとポリモーフィズム</div>
+<p>新しいプロジェクト <code>quiz07</code> を作って解きます。クラスを作るときのパッケージ欄は <code>quiz07</code> のままにします。どのファイルも1行目は <code>package quiz07;</code> です。インタフェースは <code>src</code> を右クリック →［新規］→［インターフェース］で作ります（［クラス］で作っても、中身を全部貼り替えれば同じです）。1問目で作った <code>Payment</code> と3つのクラスは、3問目でもそのまま使います。</p>
+<div class="step"><span class="step-id">7-1</span><h3>支払い方法ごとのポイント</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>インタフェース <code>Payment</code>（支払い方法）を作ります。約束は、名前を返す <code>getName()</code> と、支払額を受け取ってポイントを返す <code>getPoint(int price)</code> の2つです。</p>
+<p><code>Cash</code>（現金・0ポイント）は完成しています。これを手本に、<code>Card</code>（カード・支払額の1%）と <code>AppPay</code>（アプリ払い・支払額の3%）を書いてください。<code>PayMain</code> はこのまま写します。</p>
+<p>5つのファイルの全体です。<code>// ここに…</code> の所を書きます。先に <code>Payment</code> の約束を書いてください。書くまでは <code>Cash</code> に赤い印が出ます。</p>
+<pre class="code" id="c29">package quiz07;
+
+public interface Payment {
+    <span class="cm">// ここに、名前を返す getName() の約束を書く</span>
+    <span class="cm">// ここに、支払額 price を受け取ってポイントを返す getPoint(int price) の約束を書く</span>
+}</pre>
+<div class="btn-row"><button data-copy="c29">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c30">package quiz07;
+
+public class Cash implements Payment {
+    @Override
+    public String getName() {
+        return "現金";
+    }
+
+    @Override
+    public int getPoint(int price) {
+        return 0;
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c30">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c31">package quiz07;
+
+public class Card implements Payment {
+    <span class="cm">// ここに getName() を書く（「カード」を返す）</span>
+
+    <span class="cm">// ここに getPoint(int price) を書く（支払額の1%を返す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c31">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c32">package quiz07;
+
+public class AppPay implements Payment {
+    <span class="cm">// ここに getName() を書く（「アプリ払い」を返す）</span>
+
+    <span class="cm">// ここに getPoint(int price) を書く（支払額の3%を返す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c32">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c33">package quiz07;
+
+public class PayMain {
+    public static void main(String[] args) {
+        Payment[] pays = {
+            new Cash(),
+            new Card(),
+            new AppPay()
+        };
+
+        for (Payment p : pays) {
+            showPoint(p, 2000);
+        }
+    }
+
+    static void showPoint(Payment p, int price) {
+        System.out.println(p.getName() + " : " + price + "円 → " + p.getPoint(price) + "ポイント");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c33">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">現金 : 2000円 → 0ポイント
+カード : 2000円 → 20ポイント
+アプリ払い : 2000円 → 60ポイント</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>Payment</code> の約束は、中身の <code>{ }</code> を書かず <code>;</code> で終えます。</li><li>②　1%は <code>price / 100</code>、3%は <code>price * 3 / 100</code> です。</li><li>③　<code>Card</code> と <code>AppPay</code> は、<code>Cash</code> の <code>return</code> の中身を変えるだけで書けます。</li></ul>
+</div>
+<div class="step"><span class="step-id">7-2</span><h3>1つのクラスに、約束を2つ</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>インタフェースが2つあります。<code>Priced</code> は「値段が言える」、<code>Printable</code> は「表示できる」という約束です。</p>
+<p>商品 <code>Goods</code> は、<strong>両方の約束を守ります。</strong>送料 <code>Fee</code> は値段は言えますが、表示はしません。<code>Goods</code> の <code>【　】</code> と <code>// ここに…</code> の所を書いてください。ほかの4つはこのまま写します。</p>
+<pre class="code" id="c34">package quiz07;
+
+public interface Priced {
+    int getPrice();
+}</pre>
+<div class="btn-row"><button data-copy="c34">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c35">package quiz07;
+
+public interface Printable {
+    void print();
+}</pre>
+<div class="btn-row"><button data-copy="c35">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c36">package quiz07;
+
+public class Goods 【　　　　　　　　　　　　　　　　　】 {
+    private String name;
+    private int price;
+
+    public Goods(String name, int price) {
+        this.name = name;
+        this.price = price;
+    }
+
+    <span class="cm">// ここに getPrice() を書く</span>
+
+    <span class="cm">// ここに print() を書く（「名前 / 価格円」と表示する）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c36">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c37">package quiz07;
+
+public class Fee implements Priced {
+    private int amount;
+
+    public Fee(int amount) {
+        this.amount = amount;
+    }
+
+    @Override
+    public int getPrice() {
+        return amount;
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c37">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c38">package quiz07;
+
+public class CartMain {
+    public static void main(String[] args) {
+        Goods g1 = new Goods("ボールペン", 150);
+        Goods g2 = new Goods("ノート", 220);
+        Fee f = new Fee(500);
+
+        Printable[] labels = { g1, g2 };
+        for (Printable p : labels) {
+            p.print();
+        }
+
+        Priced[] cart = { g1, g2, f };
+        int total = 0;
+        for (Priced x : cart) {
+            total += x.getPrice();
+        }
+        System.out.println("合計 : " + total + "円");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c38">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ボールペン / 150円
+ノート / 220円
+合計 : 870円</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>extends</code> は1つしか書けませんが、<code>implements</code> はカンマで区切っていくつでも並べられます。</li><li>②　両方の約束を守るので、<code>getPrice()</code> と <code>print()</code> の2つを書きます。どちらにも <code>@Override</code> と <code>public</code> を付けます。</li><li>③　<code>CartMain</code> で、同じ <code>g1</code> が <code>labels</code> にも <code>cart</code> にも入っていることに注目してください。</li></ul>
+</div>
+<div class="step"><span class="step-id">7-3</span><h3>List も親の型（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>次回は、あとから何個でも足せる入れ物 <code>ArrayList</code> を扱います。1問目の <code>Payment</code> と3つのクラスを、配列ではなくこれに入れてみます。</p>
+<p><code>List&lt;Payment&gt; list = new ArrayList&lt;&gt;();</code> の1行で、<code>Payment</code> を入れる空の入れ物ができます。<code>list.add(...)</code> で1つずつ足し、<code>list.size()</code> で件数が分かります。</p>
+<p><code>ListMain</code> の全体です。<code>// ここに…</code> の所を書きます。<code>import</code> の2行もそのまま写します。</p>
+<pre class="code" id="c39">package quiz07;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ListMain {
+    public static void main(String[] args) {
+        List&lt;Payment&gt; list = new ArrayList&lt;&gt;();
+
+        <span class="cm">// ここに、list.add(...) で Cash・Card・AppPay を1つずつ入れる</span>
+
+        for (Payment p : list) {
+            System.out.println(p.getName() + " : " + p.getPoint(5000) + "ポイント");
+        }
+        System.out.println("件数 : " + list.size());
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c39">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">現金 : 0ポイント
+カード : 50ポイント
+アプリ払い : 150ポイント
+件数 : 3</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　1つ目は <code>list.add(new Cash());</code> です。同じ形で3行書きます。</li><li>②　<code>for (Payment p : list)</code> は、配列のときの拡張for文と同じ書き方です。</li></ul>
+</div>
+</div>
+<div class="card" id="q08"><div class="card-title">第 8 回　コレクションの ArrayList と HashMap</div>
+<p>新しいプロジェクト <code>quiz08</code> を作って解きます（授業の <code>lesson08</code> にも <code>Product</code> があるため、分けます）。クラスを作るときのパッケージ欄は <code>quiz08</code> のままにします。どのファイルも1行目は <code>package quiz08;</code> です。2問目と3問目は同じ <code>Product</code> を使います。</p>
+<div class="step"><span class="step-id">8-1</span><h3>英単語帳を List と Map で作る</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>授業の <code>Main</code> と同じく、<strong>並べる用の <code>List</code></strong> と<strong>引く用の <code>Map</code></strong> を両方使います。</p>
+<p><code>words</code> には出題する順に英単語を入れ、<code>meanings</code> には「英単語 → 意味」を入れます。最後に、<code>words</code> の順に英単語と意味を表示してください。</p>
+<p>ファイルの全体です。<code>// ここ…</code> の所を書きます。</p>
+<pre class="code" id="c40">package quiz08;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class WordMain {
+    public static void main(String[] args) {
+        List&lt;String&gt; words = new ArrayList&lt;&gt;();           <span class="cm">// 出題する順</span>
+        Map&lt;String, String&gt; meanings = new HashMap&lt;&gt;();   <span class="cm">// 英単語 → 意味</span>
+
+        <span class="cm">// ここで、apple / book / cat の3語をこの順に words に足す</span>
+
+        <span class="cm">// ここで、3語の意味（りんご / 本 / ねこ）を meanings に入れる</span>
+
+        System.out.println("単語数 : " + words.size());
+        <span class="cm">// ここに拡張for文を書き、words の順に「英単語 : 意味」を表示する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c40">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">単語数 : 3
+apple : りんご
+book : 本
+cat : ねこ</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>List</code> に足すのは <code>add</code>、<code>Map</code> に入れるのは <code>put(キー, 値)</code> です。</li><li>②　表示の拡張for文は <code>for (String w : words)</code> です。意味は <code>meanings.get(w)</code> で引けます。</li><li>③　<code>meanings</code> を <code>keySet()</code> で回すと、順番が約束されません（授業の③の5）。順番は <code>words</code> に任せます。</li></ul>
+</div>
+<div class="step"><span class="step-id">8-2</span><h3>Map から取り出して在庫を減らす</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>3つの注文（ID と個数）を順に処理して、在庫を減らします。商品は <code>byId</code>（<code>Map</code>）から ID で取り出し、<code>setStock</code> で在庫を減らしてください。</p>
+<p><strong>最後の表示は <code>Map</code> ではなく <code>List</code> のほうから行います。</strong><code>Map</code> から取り出して減らした在庫が、<code>List</code> の表示にも反映されるかを予想してから実行してください。</p>
+<p>2つのファイルの全体です。<code>Product</code> は授業のものと同じ中身で、1行目だけ <code>package quiz08;</code> です。</p>
+<pre class="code" id="c41">package quiz08;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c41">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c42">package quiz08;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public class StockMain {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+
+        Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();
+        for (Product p : products) {
+            byId.put(p.getId(), p);
+        }
+
+        int[] orderIds = {2, 1, 2};        <span class="cm">// 注文された商品のID</span>
+        int[] orderCounts = {3, 5, 4};     <span class="cm">// 注文された個数</span>
+
+        for (int i = 0; i &lt; orderIds.length; i++) {
+            <span class="cm">// ここで、byId から商品を取り出し、在庫を注文の個数だけ減らす（setStock を使う）</span>
+        }
+
+        for (Product p : products) {       <span class="cm">// List のほうを表示する</span>
+            p.show();
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c42">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">1 / ボールペン / 150円 / 残り25個
+2 / ノート / 220円 / 残り3個
+3 / 消しゴム / 100円 / 残り50個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>i</code> 番目の注文の商品は <code>byId.get(orderIds[i])</code> で取り出せます。</li><li>②　在庫を減らすのは <code>p.setStock(p.getStock() - orderCounts[i]);</code> です。<code>stock</code> は <code>private</code> なので、getter と setter を通します（第5回）。</li><li>③　ノートは2回注文されています（3個と4個）。10個から7個減って3個になれば正解です。</li></ul>
+</div>
+<div class="step"><span class="step-id">8-3</span><h3>無い ID を受け止める（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>ID 2・9・3 の順に商品を探して表示します。ID 9 は登録していないので、<code>byId.get(9)</code> は <code>null</code> を返します。</p>
+<p><code>p</code> が <code>null</code> のときは「ID 9 は見つかりません」と表示して、次の ID へ進むようにしてください。<code>Product</code> は2問目のものをそのまま使います。</p>
+<p>ファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c43">package quiz08;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class SearchMain {
+    public static void main(String[] args) {
+        Map&lt;Integer, Product&gt; byId = new HashMap&lt;&gt;();
+        byId.put(1, new Product(1, "ボールペン", 150, 30));
+        byId.put(2, new Product(2, "ノート", 220, 10));
+        byId.put(3, new Product(3, "消しゴム", 100, 50));
+
+        int[] ids = {2, 9, 3};             <span class="cm">// 探すID</span>
+        for (int id : ids) {
+            Product p = byId.get(id);
+            <span class="cm">// ここに、p が null なら「ID ◯ は見つかりません」と表示して、次の id へ進む処理を書く</span>
+            p.show();
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c43">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">2 / ノート / 220円 / 残り10個
+ID 9 は見つかりません
+3 / 消しゴム / 100円 / 残り50個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>null</code> かどうかは <code>p == null</code> で調べます。</li><li>②　ループの残りを飛ばして次の回へ進むのは <code>continue;</code> です。<code>for</code> の中で書くと、その回の残りの行を飛ばして、次の要素に進みます。</li><li>③　書く前に一度、このまま実行してみてください。ID 9 の所で止まります。止まり方を読むのが次回の主役です。</li></ul>
+</div>
+</div>
+<div class="card" id="q09"><div class="card-title">第 9 回　null・例外と try-catch</div>
+<p>新しいプロジェクト <code>quiz09</code> を作って解きます（授業の <code>lesson09</code> にも <code>Product</code> や <code>Main</code> があるため、分けます）。クラスを作るときのパッケージ欄は <code>quiz09</code> のままにします。どのファイルも1行目は <code>package quiz09;</code> です。</p>
+<div class="step"><span class="step-id">9-1</span><h3>ポイントを足す addPoint に例外を付ける</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>会員を表す <code>Member</code> の <code>addPoint</code> を、0 以下のポイントを渡されたら <code>IllegalArgumentException</code> を投げる形にします。</p>
+<p><code>MemberMain</code> では、文字列で届いた3つの入力を順に足します。数字でないときと、<code>addPoint</code> が例外を投げたときは、それぞれ知らせて次へ進みます。</p>
+<p>2つのファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c44">package quiz09;
+
+public class Member {
+    private String name;
+    private int point;
+
+    public Member(String name, int point) {
+        this.name = name;
+        this.point = point;
+    }
+
+    public void addPoint(int p) {
+        <span class="cm">// ここに、p が 0 以下なら IllegalArgumentException を投げる処理を書く</span>
+        <span class="cm">// メッセージは「足すポイントは1以上にしてください」</span>
+        this.point += p;
+    }
+
+    public void show() {
+        System.out.println(name + " : " + point + " ポイント");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c44">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c45">package quiz09;
+
+public class MemberMain {
+    public static void main(String[] args) {
+        Member m = new Member("高橋", 100);
+        String[] inputs = {"20", "三十", "-5"};
+
+        for (String s : inputs) {
+            <span class="cm">// ここに try-catch を書く</span>
+            <span class="cm">// 数字に変えて addPoint し、「20 ポイント足しました」のように表示する</span>
+            <span class="cm">// 数字でなければ「三十 は数字ではありません」のように表示する</span>
+            <span class="cm">// addPoint が例外を投げたら、その理由を表示する</span>
+        }
+
+        m.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c45">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">20 ポイント足しました
+三十 は数字ではありません
+足すポイントは1以上にしてください
+高橋 : 120 ポイント</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>addPoint</code> は、授業の <code>setStock</code> と同じ形です。<code>if</code> の中で <code>throw</code> します。</li><li>②　<code>try</code> は <code>for</code> の中に書きます。1つ失敗しても、次の入力へ進むためです。</li><li>③　<code>catch</code> は <code>NumberFormatException</code> を先に書きます。<code>IllegalArgumentException</code> の子クラスだからです。</li></ul>
+</div>
+<div class="step"><span class="step-id">9-2</span><h3>見つからないときは null ではなく例外にする</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>授業の③の4では、<code>Map</code> の <code>get</code> が <code>null</code> を返し、それを使って止まりました。</p>
+<p>今回は ID で商品を探す <code>findById</code> を自分で作ります。<strong>見つからないときは <code>null</code> を返さず、<code>IllegalArgumentException</code> を投げます。</strong>呼んだ側は <code>null</code> を確かめる代わりに、<code>catch</code> で受け止めます。</p>
+<p>3つのファイルの全体です。<code>Product</code> は第8回と同じもの（1行目だけ <code>quiz09</code>）で、このまま写します。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c46">package quiz09;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c46">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c47">package quiz09;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class FindMain {
+    public static void main(String[] args) {
+        List&lt;Product&gt; products = new ArrayList&lt;&gt;();
+        products.add(new Product(1, "ボールペン", 150, 30));
+        products.add(new Product(2, "ノート", 220, 10));
+        products.add(new Product(3, "消しゴム", 100, 50));
+
+        int[] ids = {2, 9};
+        for (int id : ids) {
+            <span class="cm">// ここに try-catch を書く</span>
+            <span class="cm">// findById で見つけた商品を show() で表示する</span>
+            <span class="cm">// 例外が来たら、その理由を表示する</span>
+        }
+    }
+
+    static Product findById(List&lt;Product&gt; products, int id) {
+        for (Product p : products) {
+            if (p.getId() == id) {
+                return p;
+            }
+        }
+        <span class="cm">// ここで、null を返す代わりに例外を投げる</span>
+        <span class="cm">// メッセージは「ID 9 の商品はありません」の形</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c47">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">2 / ノート / 220円 / 残り10個
+ID 9 の商品はありません</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>for</code> を最後まで回って <code>return</code> しなかったら、見つからなかったということです。<code>for</code> の後ろに <code>throw</code> を書きます。</li><li>②　<code>throw</code> を書けば、その後ろに <code>return</code> は要りません。例外を投げた時点でメソッドは終わるからです。</li><li>③　呼ぶ側は <code>findById(products, id).show();</code> の1行を <code>try</code> で囲みます。</li></ul>
+</div>
+<div class="step"><span class="step-id">9-3</span><h3>null を確かめてから使う</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>商品名を名札にした <code>Map</code> から、3つの名前を順に探します。見つかったときは「ノート : 残り10個」、無いときは「定規 : 取り扱いがありません」と表示してください。</p>
+<p>授業の⑦⑧と同じく、<code>get</code> が返した値が <code>null</code> かどうかを先に確かめます。</p>
+<pre class="code" id="c48">package quiz09;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class StockCheck {
+    public static void main(String[] args) {
+        Map&lt;String, Integer&gt; stocks = new HashMap&lt;&gt;();   <span class="cm">// 商品名 → 在庫</span>
+        stocks.put("ボールペン", 30);
+        stocks.put("ノート", 10);
+        stocks.put("消しゴム", 50);
+
+        String[] names = {"ノート", "定規", "消しゴム"};
+        for (String name : names) {
+            Integer stock = stocks.get(name);
+            <span class="cm">// ここに、stock が null なら「取り扱いがありません」、そうでなければ「残り○個」と表示する処理を書く</span>
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c48">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ノート : 残り10個
+定規 : 取り扱いがありません
+消しゴム : 残り50個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>if (stock == null) { ... } else { ... }</code> の形です。<code>null</code> と比べるときは <code>==</code> を使います。</li><li>②　<code>stock</code> は <code>int</code> ではなく <code>Integer</code> で受けています。<code>Integer</code> には <code>null</code> を入れられますが、<code>int</code> には入れられません。</li></ul>
+</div>
+</div>
+<div class="card" id="q10"><div class="card-title">第 10 回　ストリームと検査例外、ファイル入出力と CSV</div>
+<p>新しいプロジェクト <code>quiz10</code> を作って解きます（授業の <code>lesson10</code> にも <code>Product</code> や <code>products.csv</code> があるため、分けます）。クラスを作るときのパッケージ欄は <code>quiz10</code> のままにします。どのファイルも1行目は <code>package quiz10;</code> です。CSV などのデータのファイルは、授業と同じく <code>quiz10</code> を右クリック →［新規］→［ファイル］で、<code>src</code> の外（プロジェクトの直下）に作ります。</p>
+<div class="step"><span class="step-id">10-1</span><h3>点数の CSV を読んで、合格者だけ書き出す</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p><code>scores.csv</code> には、1行に「名前,点数」が並んでいます。1人ずつ表示して平均点を出し、60点以上の人の行だけを <code>passed.csv</code> に書き出します。</p>
+<p><code>scores.csv</code>（<code>quiz10</code> の直下に作る）</p>
+<pre class="code" id="c49">高橋,72
+山田,45
+佐藤,90</pre>
+<div class="btn-row"><button data-copy="c49">コピーする</button><span class="copy-msg"></span></div>
+<p><code>ScoreMain.java</code>　<code>// ここ…</code> の所を書きます。</p>
+<pre class="code" id="c50">package quiz10;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ScoreMain {
+    public static void main(String[] args) {
+        List&lt;String&gt; passed = new ArrayList&lt;&gt;();   <span class="cm">// 60点以上の人の行</span>
+        int sum = 0;
+        int count = 0;
+
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("scores.csv", StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                <span class="cm">// ここで line をカンマで分け、「高橋 : 72点」の形で表示する</span>
+                <span class="cm">// sum と count を増やし、60点以上なら line を passed に足す</span>
+            }
+        } catch (IOException e) {
+            System.out.println("scores.csv を読めません: " + e.getMessage());
+            return;
+        }
+        System.out.println("平均 : " + (sum / count) + "点");
+
+        <span class="cm">// ここに、passed.csv に書くストリームを try ( ) で開き、passed の行を1行ずつ書く処理を書く</span>
+        <span class="cm">//   書き終わったら「passed.csv に2人書き出しました」の形で表示する</span>
+        <span class="cm">//   書けなかったときは「passed.csv に書けません: 」のあとに理由を表示する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c50">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">高橋 : 72点
+山田 : 45点
+佐藤 : 90点
+平均 : 69点
+passed.csv に2人書き出しました</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　点数は <code>parts[1]</code> です。文字列なので <code>Integer.parseInt</code> で数字にします。</li><li>②　<code>passed</code> に足すのは、読んだ行 <code>line</code> そのままで構いません。「名前,点数」の形のまま書き出せます。</li><li>③　書く所は、授業の <code>saveAll</code> と同じ形です。開くファイル名を <code>passed.csv</code> にし、<code>passed</code> を拡張for文で回します。</li><li>④　実行したら、<code>quiz10</code> をリフレッシュして <code>passed.csv</code> を開き、高橋さんと佐藤さんの2行があることを確かめます。</li></ul>
+</div>
+<div class="step"><span class="step-id">10-2</span><h3>記録のファイルに、続きを足していく</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p><code>LogMain</code> は、実行するたびに <code>log.txt</code> へ「在庫を確かめました」を1行書き、そのあと <code>log.txt</code> が何行になったかを数えます。</p>
+<p><strong>前の実行で書いた行を消さずに、続きに足していきます。</strong>授業の <code>FileWriter</code> のままでは、毎回1行になります。</p>
+<p>クラスの全体です。<code>// ここに…</code> の所を書きます。<code>log.txt</code> は作らずに始めます。無ければ、書くときに作られます。</p>
+<pre class="code" id="c51">package quiz10;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+public class LogMain {
+    public static void main(String[] args) {
+        <span class="cm">// ここに、log.txt に書くストリームを try ( ) で開き、「在庫を確かめました」を1行書く処理を書く</span>
+        <span class="cm">//   前の実行で書いた行を消さずに、続きに足す形で開く</span>
+        <span class="cm">//   書けなかったときは「log.txt に書けません: 」のあとに理由を表示する</span>
+
+        int lines = 0;
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("log.txt", StandardCharsets.UTF_8))) {
+            while (br.readLine() != null) {
+                lines++;
+            }
+        } catch (IOException e) {
+            System.out.println("log.txt を読めません: " + e.getMessage());
+        }
+        System.out.println("log.txt は" + lines + "行になりました");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c51">コピーする</button><span class="copy-msg"></span></div>
+<p>下の枠は、上から1回目・2回目・3回目に実行したときの結果です。</p>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">log.txt は1行になりました
+
+log.txt は2行になりました
+
+log.txt は3行になりました</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　上から、1回目・2回目・3回目に実行したときの結果です。</li><li>②　<code>FileWriter</code> の3つ目に <code>true</code> を渡すと、追記になります。<code>new FileWriter("log.txt", StandardCharsets.UTF_8, true)</code> です（授業の③の4）。</li><li>③　もう一度1行目からやり直したいときは、<code>log.txt</code> を右クリック →［削除］で消します。</li></ul>
+</div>
+<div class="step"><span class="step-id">10-3</span><h3>ID で1件探す（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>授業の <code>CsvProductDao</code> に、ID で1件探す <code>findById</code> を足します。見つかったらその商品を、見つからなければ <code>null</code> を返します。</p>
+<p><code>quiz10</code> の直下に、授業と同じ <code>products.csv</code> を作ります。<code>Product</code> と <code>CsvProductDao</code> は授業と同じもの（1行目だけ <code>quiz10</code>）で、<code>CsvProductDao</code> の最後に <code>findById</code> を足しています。<code>// ここに…</code> の所を書きます。</p>
+<p><code>products.csv</code>（<code>quiz10</code> の直下に作る）</p>
+<pre class="code" id="c52">1,ボールペン,150,30
+2,ノート,220,10
+3,消しゴム,100,50</pre>
+<div class="btn-row"><button data-copy="c52">コピーする</button><span class="copy-msg"></span></div>
+<p><code>Product.java</code>（授業と同じ）</p>
+<pre class="code" id="c53">package quiz10;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c53">コピーする</button><span class="copy-msg"></span></div>
+<p><code>CsvProductDao.java</code>（最後に <code>findById</code> を足す）</p>
+<pre class="code" id="c54">package quiz10;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CsvProductDao {
+
+    public List&lt;Product&gt; findAll() throws IOException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("products.csv", StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                int id = Integer.parseInt(parts[0]);
+                String name = parts[1];
+                int price = Integer.parseInt(parts[2]);
+                int stock = Integer.parseInt(parts[3]);
+                list.add(new Product(id, name, price, stock));
+            }
+        }
+        return list;
+    }
+
+    public void saveAll(List&lt;Product&gt; list) throws IOException {
+        try (BufferedWriter bw = new BufferedWriter(
+                new FileWriter("products.csv", StandardCharsets.UTF_8))) {
+            for (Product p : list) {
+                bw.write(p.getId() + "," + p.getName() + ","
+                        + p.getPrice() + "," + p.getStock());
+                bw.newLine();
+            }
+        }
+    }
+
+    public Product findById(int id) throws IOException {
+        <span class="cm">// ここに、findAll() で全部読み、id が同じ商品を探して返す処理を書く</span>
+        <span class="cm">// 見つからなければ null を返す</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c54">コピーする</button><span class="copy-msg"></span></div>
+<p><code>FindMain.java</code>（このまま写す）</p>
+<pre class="code" id="c55">package quiz10;
+
+import java.io.IOException;
+
+public class FindMain {
+    public static void main(String[] args) {
+        CsvProductDao dao = new CsvProductDao();
+        int[] ids = {2, 9};
+
+        try {
+            for (int id : ids) {
+                Product p = dao.findById(id);
+                if (p == null) {
+                    System.out.println("ID " + id + " の商品はありません");
+                } else {
+                    p.show();
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("ファイルを読めません: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c55">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">2 / ノート / 220円 / 残り10個
+ID 9 の商品はありません</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>findById</code> の中で <code>findAll()</code> を呼ぶと、全部の商品が入った <code>List</code> が返ってきます。それを拡張for文で回します。</li><li>②　ID を比べるのは <code>p.getId() == id</code> です。見つかったら、その場で <code>return p;</code> します。</li><li>③　<code>for</code> を最後まで回って見つからなかったら、<code>return null;</code> です。<code>FindMain</code> が <code>null</code> かどうかを確かめています。問題集9-2 のように例外を投げる形でも書けます。この問題は、呼ぶ側が <code>null</code> を確かめる形で書いています。</li></ul>
+</div>
+</div>
+<div class="card" id="q11"><div class="card-title">第 11 回　MySQL・SQL・JDBC</div>
+<p>新しいプロジェクト <code>quiz11</code> を作って解きます（授業の <code>lesson11</code> にも <code>Product</code> があるため、分けます）。授業と同じく、プロジェクトを右クリック →［ビルド・パス］→［外部アーカイブの追加...］で <code>mysql-connector-j-8.4.0.jar</code> を追加してから始めます。どのファイルも1行目は <code>package quiz11;</code> です。データベースは授業で作った <code>stock</code> を使います。</p>
+<div class="step"><span class="step-id">11-1</span><h3>会員の表を読む</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>会員の表 <code>members</code> を作り、Java から読んで、ポイントの多い順に表示します。</p>
+<p>まず mysql で次の SQL を貼って、表を作ります。</p>
+<pre class="code" id="c56">USE stock;
+
+CREATE TABLE members (
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(50) NOT NULL,
+    point  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO members (name, point) VALUES
+    ('高橋', 120),
+    ('山田', 0),
+    ('佐藤', 45);</pre>
+<div class="btn-row"><button data-copy="c56">コピーする</button><span class="copy-msg"></span></div>
+<p>3つのファイルの全体です。<code>Member</code> と <code>MemberMain</code> はそのまま写し、<code>MemberDao</code> の <code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c57">package quiz11;
+
+public class Member {
+    private int id;
+    private String name;
+    private int point;
+
+    public Member(int id, String name, int point) {
+        this.id = id;
+        this.name = name;
+        this.point = point;
+    }
+
+    public void show() {
+        System.out.println(id + " : " + name + "（" + point + "ポイント）");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c57">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c58">package quiz11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MemberDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    public List&lt;Member&gt; findAll() throws SQLException {
+        List&lt;Member&gt; list = new ArrayList&lt;&gt;();
+        <span class="cm">// ここに、members の3つの列を、ポイントの多い順に取り出す SQL を書く</span>
+
+        <span class="cm">// ここに、つないで・実行して・1行ずつ Member に詰め替える処理を書く</span>
+
+        return list;
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c58">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c59">package quiz11;
+
+import java.sql.SQLException;
+
+public class MemberMain {
+    public static void main(String[] args) {
+        MemberDao dao = new MemberDao();
+
+        try {
+            for (Member m : dao.findAll()) {
+                m.show();
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c59">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">1 : 高橋（120ポイント）
+3 : 佐藤（45ポイント）
+2 : 山田（0ポイント）</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　授業の <code>ProductDao</code> の <code>findAll</code> と同じ手順です。変わるのは SQL と、詰め替える先のクラスだけです。</li><li>②　ポイントの多い順は <code>ORDER BY point DESC</code> です。</li><li>③　SQL は先に mysql で打って（最後に <code>;</code> を付けて）、3件が出ることを確かめてから Java に写します。</li></ul>
+</div>
+<div class="step"><span class="step-id">11-2</span><h3>件数を数える（返ってくる表が1行）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p><code>products</code> の件数を MySQL に数えてもらいます。SQL の <code>COUNT(*)</code> は「行の数」を返し、<code>AS cnt</code> はその列に <code>cnt</code> という名前を付けます。</p>
+<p>返ってくる表は、<strong>1行・1列だけ</strong>です。2つのファイルの全体です。<code>CountMain</code> はそのまま写します。</p>
+<pre class="code" id="c60">package quiz11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class CountDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    public int countAll() throws SQLException {
+        String sql = "SELECT COUNT(*) AS cnt FROM products";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            <span class="cm">// ここで1行目に進み、cnt の列を int で返す</span>
+        }
+        return 0;
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c60">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c61">package quiz11;
+
+import java.sql.SQLException;
+
+public class CountMain {
+    public static void main(String[] args) {
+        CountDao dao = new CountDao();
+
+        try {
+            System.out.println("商品は" + dao.countAll() + "件です");
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c61">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">商品は3件です</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　1行しか無いので、<code>while</code> ではなく <code>if (rs.next())</code> で1回だけ進みます。</li><li>②　<code>try</code> の中で <code>return rs.getInt("cnt");</code> と書けます。<code>return</code> で抜けるときも、丸括弧で作った3つは自動で閉じられます。</li><li>③　最後の <code>return 0;</code> は、<code>rs.next()</code> が <code>false</code> だったときのためのものです。</li></ul>
+</div>
+<div class="step"><span class="step-id">11-3</span><h3>? に値を入れて絞り込む（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>価格が指定した値以下の商品を、安い順に取り出します。上限はプログラムを動かすたびに変えたいので、SQL の中には数字を書かず、<code>?</code> を置いてあります。</p>
+<p>3つのファイルの全体です。<code>Product</code> は授業と同じ中身（パッケージだけ <code>quiz11</code>）です。<code>PriceDao</code> の <code>// ここで…</code> の所を1行書きます。</p>
+<pre class="code" id="c62">package quiz11;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c62">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c63">package quiz11;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class PriceDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    public List&lt;Product&gt; findCheaper(int max) throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products WHERE price &lt;= ? ORDER BY price";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            <span class="cm">// ここで、1つ目の ? に max を入れる</span>
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                         rs.getInt("price"), rs.getInt("stock")));
+                }
+            }
+        }
+        return list;
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c63">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c64">package quiz11;
+
+import java.sql.SQLException;
+
+public class PriceMain {
+    public static void main(String[] args) {
+        PriceDao dao = new PriceDao();
+
+        try {
+            for (Product p : dao.findCheaper(150)) {
+                p.show();
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c64">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">3 / 消しゴム / 100円 / 残り50個
+1 / ボールペン / 150円 / 残り30個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>?</code> に値を入れるのは <code>ps.setInt(何番目の?, 値);</code> です。<code>?</code> は1から数えます。</li><li>②　値を入れてから実行するので、<code>ResultSet</code> は <code>try</code> の中にもう1つ <code>try</code> を書いて作っています。</li></ul>
+</div>
+</div>
+<div class="card" id="q12"><div class="card-title">第 12 回　PreparedStatement で追加・更新・削除</div>
+<p>新しいプロジェクト <code>quiz12</code> を作って解きます（授業の <code>lesson12</code> にも <code>Product</code> や <code>ProductDao</code> があるため、分けます）。授業の②の手順④と同じく、<code>mysql-connector-j-8.4.0.jar</code> をビルド・パスに追加してください。どのファイルも1行目は <code>package quiz12;</code> です。<code>PASSWORD</code> は、授業で使うパスワードに合わせて変えてください。</p>
+<div class="step"><span class="step-id">12-1</span><h3>会員を追加し、ポイントを足す MemberDao</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>会員の表 <code>members</code> を使って、会員を追加する <code>insert</code> と、ポイントを足す <code>addPoint</code> を持つ <code>MemberDao</code> を作ります。授業の <code>ProductDao</code> と同じ形です。</p>
+<p>まず MySQL で次の SQL を実行して、会員の表を作ります。</p>
+<pre class="code" id="c65">USE stock;
+
+DROP TABLE IF EXISTS members;
+CREATE TABLE members (
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(100) NOT NULL,
+    point  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO members (name, point) VALUES ('高橋', 100), ('山田', 0);
+
+SELECT id, name, point FROM members ORDER BY id;</pre>
+<div class="btn-row"><button data-copy="c65">コピーする</button><span class="copy-msg"></span></div>
+<p>3つのファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c66">package quiz12;
+
+public class Member {
+    private int id;
+    private String name;
+    private int point;
+
+    public Member(int id, String name, int point) {
+        this.id = id;
+        this.name = name;
+        this.point = point;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPoint() { return point; }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + point + " ポイント");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c66">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c67">package quiz12;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class MemberDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の会員を読む</span>
+    public List&lt;Member&gt; findAll() throws SQLException {
+        List&lt;Member&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, point FROM members ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Member(rs.getInt("id"), rs.getString("name"), rs.getInt("point")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(Member m) throws SQLException {
+        <span class="cm">// ここに SQL を書く（id は書かない）</span>
+        <span class="cm">// ここに try-with-resources を書き、? に名前とポイントを入れて実行する</span>
+    }
+
+    <span class="cm">// id の会員に point を足す。変わった行数を返す</span>
+    public int addPoint(int id, int point) throws SQLException {
+        <span class="cm">// ここに SQL を書く（今のポイントに ? を足す。どの会員かは WHERE で決める）</span>
+        <span class="cm">// ここに try-with-resources を書き、? に値を入れて実行する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c67">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c68">package quiz12;
+
+import java.sql.SQLException;
+
+public class MemberMain {
+    public static void main(String[] args) {
+        MemberDao dao = new MemberDao();
+
+        try {
+            int n = dao.insert(new Member(0, "佐藤", 50));
+            System.out.println("追加: " + n + "件");
+
+            n = dao.addPoint(2, 30);
+            System.out.println("ID 2 に足した: " + n + "件");
+            n = dao.addPoint(9, 30);
+            System.out.println("ID 9 に足した: " + n + "件");
+
+            for (Member m : dao.findAll()) {
+                m.show();
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c68">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">追加: 1件
+ID 2 に足した: 1件
+ID 9 に足した: 0件
+1 / 高橋 / 100 ポイント
+2 / 山田 / 30 ポイント
+3 / 佐藤 / 50 ポイント</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>insert</code> は、授業の <code>insert</code> と同じ形です。<code>?</code> は名前とポイントの2つです。</li><li>②　<code>addPoint</code> の SQL は <code>UPDATE members SET point = point + ? WHERE id = ?</code> です。<code>point + ?</code> で「今のポイントに足す」になります。</li><li>③　<code>?</code> の番号は、SQL に出てくる順です。<code>addPoint</code> では、足すポイントが1つ目、<code>id</code> が2つ目です。</li></ul>
+</div>
+<div class="step"><span class="step-id">12-2</span><h3>在庫が足りるときだけ売る（条件を SQL に入れる）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p><code>ProductDao</code> に、在庫を減らす <code>sell(int id, int count)</code> を足します。<strong>在庫が <code>count</code> 個以上あるときだけ減らし、足りないときは何もしません。</strong>足りるかどうかは Java の <code>if</code> ではなく、SQL の WHERE で決めます。</p>
+<p>始める前に、授業の②の SQL を実行して、商品の表を最初の3件に戻します。</p>
+<p>3つのファイルの全体です。<code>Product</code> は授業と同じもの（1行目だけ <code>quiz12</code>）で、このまま写します。<code>ProductDao</code> は授業と同じもの（行の右の番号は外しています）で、最後に <code>sell</code> を足しています。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c69">package quiz12;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c69">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c70">package quiz12;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                     rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public Product findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Product(rs.getInt("id"), rs.getString("name"),
+                                       rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(Product p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(Product p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 在庫が count 個以上あるときだけ、count 個減らす。変わった行数を返す</span>
+    public int sell(int id, int count) throws SQLException {
+        <span class="cm">// ここに SQL を書く（在庫を count 減らす。条件は「id が一致」かつ「在庫が count 以上」）</span>
+        <span class="cm">// ここに try-with-resources を書き、? に値を入れて実行する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c70">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c71">package quiz12;
+
+import java.sql.SQLException;
+
+public class SellMain {
+    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+        int[][] orders = {{2, 3}, {2, 100}, {9, 1}};   <span class="cm">// {ID, 個数}</span>
+
+        try {
+            for (int[] o : orders) {
+                int n = dao.sell(o[0], o[1]);
+                if (n == 0) {
+                    System.out.println("ID " + o[0] + " を " + o[1] + "個: 売れませんでした");
+                } else {
+                    System.out.println("ID " + o[0] + " を " + o[1] + "個: 売れました");
+                }
+            }
+            dao.findById(2).show();
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c71">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ID 2 を 3個: 売れました
+ID 2 を 100個: 売れませんでした
+ID 9 を 1個: 売れませんでした
+2 / ノート / 220円 / 残り7個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　SQL は <code>UPDATE products SET stock = stock - ? WHERE id = ? AND stock &gt;= ?</code> です。<code>AND</code> は「かつ」です。</li><li>②　<code>?</code> は3つあります。1つ目と3つ目には、どちらも <code>count</code> を入れます。</li><li>③　在庫が足りないときは、WHERE に当てはまる行が無いので、<code>executeUpdate()</code> は <code>0</code> を返します。</li><li>④　<code>SellMain</code> の <code>for (int[] o : orders)</code> は、<code>{ID, 個数}</code> の組を1つずつ <code>o</code> に取り出します。<code>o[0]</code> が ID、<code>o[1]</code> が個数です。</li></ul>
+</div>
+<div class="step"><span class="step-id">12-3</span><h3>入力の検査を、Service に任せる（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>入力欄やキーボードから来る値は、いつも文字列です。これまでは、数字かどうかの検査を <code>main</code> の中に書いていました。次回は、検査を <code>ProductService</code> という別のクラスに受け持たせる形を学びます。</p>
+<p>今日はその準備として、文字列を受け取って検査する <code>ProductService</code> を作ります。<code>toProduct</code> は、入力欄から読んだ3つの文字列を受け取り、おかしければ <code>IllegalArgumentException</code> を投げ、正しければ <code>Product</code> を返します。</p>
+<p>3つのファイルの全体です。<code>Product</code> は 12-2 と同じものです。<code>// ここに…</code> の所を書きます。実行するのは <code>ServiceMain</code> です。</p>
+<pre class="code" id="c72">package quiz12;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c72">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c73">package quiz12;
+
+public class ProductService {
+    public Product toProduct(String name, String priceText, String stockText) {
+        <span class="cm">// ここに、name が空なら IllegalArgumentException を投げる処理を書く</span>
+        <span class="cm">// メッセージは「商品名を入力してください」</span>
+
+        <span class="cm">// ここに、priceText と stockText を数字に変える処理を書く</span>
+        <span class="cm">// 変えられなければ、メッセージ「価格と在庫は数字で入力してください」の IllegalArgumentException を投げる</span>
+
+        <span class="cm">// ここに、価格か在庫が負なら IllegalArgumentException を投げる処理を書く</span>
+        <span class="cm">// メッセージは「価格と在庫に負の値は入れられません」</span>
+
+        <span class="cm">// ここで、id を 0 にした Product を作って返す</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c73">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c74">package quiz12;
+
+public class ServiceMain {
+    public static void main(String[] args) {
+        ProductService service = new ProductService();
+        String[][] inputs = {
+            {"定規", "120", "20"},
+            {"", "100", "5"},
+            {"付箋", "abc", "5"},
+            {"のり", "-80", "5"}
+        };
+
+        for (String[] in : inputs) {
+            try {
+                Product p = service.toProduct(in[0], in[1], in[2]);
+                p.show();
+            } catch (IllegalArgumentException e) {
+                System.out.println("入力エラー: " + e.getMessage());
+            }
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c74">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">0 / 定規 / 120円 / 残り20個
+入力エラー: 商品名を入力してください
+入力エラー: 価格と在庫は数字で入力してください
+入力エラー: 価格と在庫に負の値は入れられません</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　空かどうかは <code>name.isBlank()</code> で調べます。空白だけのときも空とみなします。</li><li>②　数字に変えられないときは、<code>catch (NumberFormatException e)</code> の中で、新しく <code>throw new IllegalArgumentException("...")</code> を投げ直します。</li><li>③　<code>price</code> と <code>stock</code> は、<code>try</code> の前で <code>int price;</code> のように宣言しておきます。<code>try</code> の中で宣言すると、<code>try</code> の外で使えません（授業の③の1と同じスコープの話です）。</li><li>④　1件目の ID が <code>0</code> なのは、まだ MySQL に入れていないからです。</li></ul>
+</div>
+</div>
+<div class="card" id="q13"><div class="card-title">第 13 回　DTO・DAO・3層</div>
+<p>新しいプロジェクト <code>quiz13</code> を作って解きます（授業の <code>lesson13</code> にも同じ名前のクラスがあるため、分けます）。授業と同じく、プロジェクトを右クリック →［ビルド・パス］→［外部アーカイブの追加...］で <code>mysql-connector-j-8.4.0.jar</code> を追加します。クラスを作るときのパッケージ欄は <code>quiz13</code> のままにします。どのファイルも1行目は <code>package quiz13;</code> です。実行結果は、授業の「mysql に貼る SQL」で最初の3件に戻した直後のものです。</p>
+<div class="step"><span class="step-id">13-1</span><h3>値引きを Service に任せる</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>商品の価格を、指定した割合だけ下げる <code>PriceService</code> を作ります。値引き率が 1〜90 でないときと、商品が無いときは <code>IllegalArgumentException</code> を投げます。</p>
+<p><code>ProductDTO</code> と <code>ProductDAO</code> は授業と同じもの（1行目だけ <code>quiz13</code>）で、このまま写します。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c75">package quiz13;
+
+public class ProductDTO {
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public ProductDTO(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) { this.price = price; }
+    public void setStock(int stock) { this.stock = stock; }
+}</pre>
+<div class="btn-row"><button data-copy="c75">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c76">package quiz13;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDAO {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                        rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public ProductDTO findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                          rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(ProductDTO p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(ProductDTO p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c76">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c77">package quiz13;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class PriceService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void discount(int id, int percent) throws SQLException {
+        <span class="cm">// ここに、percent が 1〜90 でなければ「値引き率は1〜90にしてください」の例外を投げる処理を書く</span>
+        <span class="cm">// ここで findById を呼び、見つからなければ「ID 9 の商品はありません」の形の例外を投げる</span>
+        <span class="cm">// 見つかったら、価格を「価格 × (100 - percent) ÷ 100」に変えて update する</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c77">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c78">package quiz13;
+
+import java.sql.SQLException;
+
+public class PriceMain {
+    public static void main(String[] args) throws SQLException {
+        PriceService service = new PriceService();
+        int[] ids = {2, 1, 9};
+        int[] percents = {10, 95, 10};
+
+        for (int i = 0; i &lt; ids.length; i++) {
+            try {
+                service.discount(ids[i], percents[i]);
+                System.out.println("ID " + ids[i] + " を" + percents[i] + "%値引きしました");
+            } catch (IllegalArgumentException e) {
+                System.out.println("値引きできません: " + e.getMessage());
+            }
+        }
+
+        for (ProductDTO p : service.findAll()) {
+            System.out.println(p.getId() + " / " + p.getName() + " / " + p.getPrice()
+                    + "円 / 残り" + p.getStock() + "個");
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c78">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ID 2 を10%値引きしました
+値引きできません: 値引き率は1〜90にしてください
+値引きできません: ID 9 の商品はありません
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 198円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　値引き率の検査は、表を読む前に書きます。<code>percent &lt; 1 || percent &gt; 90</code> なら <code>throw</code> です。</li><li>②　商品があるかは、<code>dao.findById(id)</code> が <code>null</code> かどうかで分かります。</li><li>③　新しい価格は <code>p.getPrice() * (100 - percent) / 100</code> です。<code>p.setPrice(...)</code> で箱の中を変えてから、<code>dao.update(p);</code> で表に書き込みます。</li></ul>
+</div>
+<div class="step"><span class="step-id">13-2</span><h3>同じ名前の商品は登録させない</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>授業の <code>ProductService</code> の <code>check</code> は、中身だけを見て検査しました。今回は<strong>表の中身を見ないと決められない検査</strong>です。すでに同じ名前の商品があれば、登録させません。</p>
+<p>1問目と同じ <code>ProductDTO</code>・<code>ProductDAO</code> を使います。2つのファイルの全体です。<code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c79">package quiz13;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class EntryService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        <span class="cm">// ここに、同じ名前の商品がすでに表にあれば「ノートはすでに登録されています」の形の例外を投げる処理を書く</span>
+        dao.insert(p);
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c79">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c80">package quiz13;
+
+import java.sql.SQLException;
+
+public class EntryMain {
+    public static void main(String[] args) throws SQLException {
+        EntryService service = new EntryService();
+        ProductDTO[] inputs = {
+            new ProductDTO(0, "ノート", 300, 5),
+            new ProductDTO(0, "付箋", 200, 25)
+        };
+
+        for (ProductDTO p : inputs) {
+            try {
+                service.add(p);
+                System.out.println(p.getName() + "を登録しました");
+            } catch (IllegalArgumentException e) {
+                System.out.println("登録できません: " + e.getMessage());
+            }
+        }
+
+        for (ProductDTO p : service.findAll()) {
+            System.out.println(p.getId() + " / " + p.getName() + " / " + p.getPrice()
+                    + "円 / 残り" + p.getStock() + "個");
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c80">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">登録できません: ノートはすでに登録されています
+付箋を登録しました
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個
+4 / 付箋 / 200円 / 残り25個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　表にある商品は <code>dao.findAll()</code> で全部受け取れます。拡張for文で1つずつ名前を比べます。</li><li>②　文字列を比べるときは <code>==</code> ではなく <code>equals</code> です（第2回）。</li><li>③　見つかったら、その場で <code>throw</code> します。<code>dao.insert(p);</code> まで届かないので、登録されません。</li></ul>
+</div>
+<div class="step"><span class="step-id">13-3</span><h3>画面の表に並べる形を作る（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>次回は Swing で画面を作り、商品を表（<code>JTable</code>）に並べます。Swing の表は、1行を <code>Object</code> の配列で受け取ります。今日は、1つの商品を「ID・名前・価格・在庫」の順に並べた <code>Object[]</code> にする <code>toRow</code> を書き、コンソールに出して確かめます。</p>
+<p><code>ProductDTO</code> と <code>ProductDAO</code> は授業と同じもの（1行目だけ <code>quiz13</code>）を使います。始める前に、授業の②の SQL を実行して最初の3件に戻します。</p>
+<pre class="code" id="c81">package quiz13;
+
+import java.sql.SQLException;
+import java.util.Arrays;
+
+public class TableRows {
+    public static void main(String[] args) {
+        ProductDAO dao = new ProductDAO();
+
+        try {
+            for (ProductDTO p : dao.findAll()) {
+                Object[] row = toRow(p);
+                System.out.println(Arrays.toString(row));
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    static Object[] toRow(ProductDTO p) {
+        <span class="cm">// ここで、ID・名前・価格・在庫の順に並べた Object の配列を作って返す</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c81">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">[1, ボールペン, 150, 30]
+[2, ノート, 220, 10]
+[3, 消しゴム, 100, 50]</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　配列は <code>new Object[] {値, 値, ...}</code> の形で、作ると同時に中身を書けます。</li><li>②　<code>Object</code> の配列には、<code>int</code> も <code>String</code> も入ります。</li><li>③　<code>Arrays.toString</code> は、配列の中身を <code>[1, ボールペン, 150, 30]</code> の形の文字列にします。</li></ul>
+</div>
+</div>
+<div class="card" id="q14"><div class="card-title">第 14 回　Swing の画面とイベント</div>
+<p>新しいプロジェクト <code>quiz14</code> を作って解きます（授業の <code>lesson14</code> と分けます）。クラスを作るときのパッケージ欄は <code>quiz14</code> のままにします。どのファイルも1行目は <code>package quiz14;</code> です。3問とも MySQL は使わないので、Connector/J を足す手順は要りません。</p>
+<div class="step"><span class="step-id">14-1</span><h3>税込み価格を出す画面</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>価格を入れて［計算］を押すと、税込み価格（110 / 100 倍。1円未満は切り捨て）を横に出す画面です。数字でないものが入っていたら、小さな窓で知らせます。</p>
+<p>2つのファイルの全体です。<code>// ここに…</code> の所を書きます。実行するのは <code>TaxMain</code> です。</p>
+<pre class="code" id="c82">package quiz14;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+public class TaxFrame extends JFrame {
+    private JTextField priceField = new JTextField(8);
+    private JLabel resultLabel = new JLabel("税込み: ");
+
+    public TaxFrame() {
+        setTitle("税込み計算");
+        setSize(420, 110);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JButton calcButton = new JButton("計算");
+        JPanel panel = new JPanel();
+        panel.add(new JLabel("価格"));
+        panel.add(priceField);
+        panel.add(calcButton);
+        panel.add(resultLabel);
+        add(panel);
+
+        <span class="cm">// ここに、calcButton を押したら calc() を呼ぶ1行を書く</span>
+    }
+
+    private void calc() {
+        <span class="cm">// ここに、priceField の文字を数字に変え、110 / 100 倍した税込み価格を resultLabel に出す</span>
+        <span class="cm">// 数字でなければ「価格は数字で入力してください」と小さな窓で知らせる</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c82">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c83">package quiz14;
+
+public class TaxMain {
+    public static void main(String[] args) {
+        TaxFrame frame = new TaxFrame();
+        frame.setVisible(true);
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c83">コピーする</button><span class="copy-msg"></span></div>
+<p>「150」と入れて［計算］を押すと、次のようになります。</p>
+<p><img alt="価格150、税込み165円と出た画面" src="img/lesson14_quiz1.png" style="max-width:100%"/></p><h3>ヒント</h3>
+<ul class="plain num"><li>①　貼り紙は、授業の③の3（⑥の行）と同じ形です。</li><li>②　結果の表示は、<code>resultLabel.setText("税込み: " + total + "円");</code> のように <code>setText</code> で文字を書き換えます。</li><li>③　<code>calc()</code> は、授業の <code>addProduct()</code> の <code>try-catch</code> と同じ形です。<code>SQLException</code> は出ないので、<code>catch</code> は <code>NumberFormatException</code> の1つです。</li><li>④　<code>150 * 110 / 100</code> は <code>165</code> です。<code>int</code> どうしの割り算なので、小数は切り捨てられます。</li></ul>
+</div>
+<div class="step"><span class="step-id">14-2</span><h3>表の行を選んだら、入力欄に入れる</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>今度は、ボタンではなく<strong>表の行が選ばれたこと</strong>をイベントとして受け取ります。行をクリックすると、その商品名と価格が下の入力欄に入る画面です。</p>
+<p>2つのファイルの全体です。<code>// ここに…</code> の所を書きます。実行するのは <code>PickMain</code> です。</p>
+<pre class="code" id="c84">package quiz14;
+
+import java.awt.BorderLayout;
+
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+public class PickFrame extends JFrame {
+    private DefaultTableModel model =
+            new DefaultTableModel(new String[] {"ID", "商品名", "価格"}, 0);
+    private JTable table = new JTable(model);
+    private JTextField nameField = new JTextField(10);
+    private JTextField priceField = new JTextField(6);
+
+    public PickFrame() {
+        setTitle("商品を選ぶ");
+        setSize(400, 220);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        Object[] row1 = {1, "ボールペン", 150};
+        Object[] row2 = {2, "ノート", 220};
+        Object[] row3 = {3, "消しゴム", 100};
+        model.addRow(row1);
+        model.addRow(row2);
+        model.addRow(row3);
+
+        JPanel form = new JPanel();
+        form.add(new JLabel("商品名"));
+        form.add(nameField);
+        form.add(new JLabel("価格"));
+        form.add(priceField);
+
+        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(form, BorderLayout.SOUTH);
+
+        <span class="cm">// ここに、表の行が選ばれたら pick() を呼ぶ1行を書く</span>
+    }
+
+    private void pick() {
+        <span class="cm">// ここに、選ばれた行の番号を table.getSelectedRow() で受け取る処理を書く</span>
+        <span class="cm">// 何も選ばれていない（-1）なら、何もせずに終わる</span>
+        <span class="cm">// 選ばれていれば、その行の商品名と価格を nameField と priceField に入れる</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c84">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c85">package quiz14;
+
+public class PickMain {
+    public static void main(String[] args) {
+        PickFrame frame = new PickFrame();
+        frame.setVisible(true);
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c85">コピーする</button><span class="copy-msg"></span></div>
+<p>2行目（ノート）をクリックすると、次のようになります。</p>
+<p><img alt="ノートの行が選ばれ、下の入力欄にノートと220が入った画面" src="img/lesson14_quiz2.png" style="max-width:100%"/></p><h3>ヒント</h3>
+<ul class="plain num"><li>①　表の行が選ばれたときの貼り紙は、<code>table.getSelectionModel().addListSelectionListener(e -&gt; pick());</code> と書きます。ボタンの <code>addActionListener</code> と同じく、中身は「選ばれたら <code>pick()</code> を呼ぶ」です。</li><li>②　<code>table.getSelectedRow()</code> は、選ばれた行の番号を 0 から数えて返します。何も選ばれていないときは <code>-1</code> です。</li><li>③　<code>model.getValueAt(行, 列)</code> で表の中身を1つ取り出せます。列も 0 から数えるので、商品名は 1、価格は 2 です。</li><li>④　<code>getValueAt</code> が返すのは <code>Object</code> なので、<code>String.valueOf(...)</code> で文字列にしてから <code>setText</code> に渡します。</li></ul>
+</div>
+<div class="step"><span class="step-id">14-3</span><h3>担当者ができることを書き出す（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>次回は UML の<strong>ユースケース図</strong>を描きます。アプリを使う人（担当者）から見て「何ができるか」を並べる図です。</p>
+<p>授業の <code>ProductService</code> のメソッドを、担当者の言葉に言い換えて、表の【　】を埋めてください。そのあと、紙に図を描きます。</p>
+<table><tr><th>ProductService のメソッド</th><th>担当者ができること</th></tr><tr><td><code>findAll()</code></td><td>商品を一覧する</td></tr><tr><td><code>add(ProductDTO p)</code></td><td>【　　　　　　　】</td></tr><tr><td><code>update(ProductDTO p)</code></td><td>【　　　　　　　】</td></tr><tr><td><code>delete(int id)</code></td><td>【　　　　　　　】</td></tr></table>
+<p>図の描き方は3つだけです。左に棒人間を描いて下に「担当者」と書く。右に大きな四角を描いて上に「商品在庫管理アプリ」と書く。四角の中に、表の右の列を1つずつ楕円で囲んで並べ、棒人間から線でつなぐ。</p>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　「商品を一覧する」と同じ形で、「商品を」＋動詞で書きます。</li><li>②　図に <code>ProductService</code> や <code>ProductDAO</code> は出てきません。担当者から見えるのは、できることだけです。</li></ul>
+</div>
+</div>
+<div class="card" id="q15"><div class="card-title">第 15 回　UML とユースケース</div>
+<p>第15回の問題は、ノートに描いて解きます。Eclipse は使いません。答えの図と見比べて、<strong>記号の意味が合っていれば正解</strong>です。楕円の並べ方や棒人間の位置は違っていて構いません。</p>
+<div class="step"><span class="step-id">15-1</span><h3>図書館の貸出システムのユースケース図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>図書館の貸出システムのユースケース図を描きます。システム境界の名前は「図書館の貸出システム」です。</p>
+<table><tr><th>決まっていること</th><th>内容</th></tr><tr><td>利用者ができること</td><td>本を検索する・本を予約する</td></tr><tr><td>司書ができること</td><td>本を貸し出す・本の返却を受け付ける・本を登録する</td></tr><tr><td>必ず行う共通の手順</td><td>本を予約するときと、本を貸し出すときは、必ず「利用者カードを確認する」</td></tr></table>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　アクターは2人です。どちらも四角の外に描きます。</li><li>②　「必ず」行う共通の手順は、第15回の «include» と同じ関係で描きます。矢印は、呼ぶ側からくくり出した側へ向けます。</li><li>③　「利用者カードを確認する」は、予約や貸出の途中で通る手順です。アクターから直接は線を引きません。</li></ul>
+</div>
+<div class="step"><span class="step-id">15-2</span><h3>毎月末に、会計システムへ在庫を送る</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>第15回の商品在庫管理アプリに、次の要望が追加されました。描き足す部分のユースケース図を描いてください。今日の6つのユースケースは、省いて構いません。</p>
+<table><tr><th>要望</th><th>内容</th></tr><tr><td>①</td><td>締め日（毎月末）に、在庫の一覧を会計システムへ自動で送る</td></tr><tr><td>②</td><td>送信に失敗したときは、担当者にメールで知らせる</td></tr></table>
+<table><tr><th>図に置くもの</th><th>考えること</th></tr><tr><td>毎月末</td><td>人ではないが、処理を始めるきっかけ。どこに置くか</td></tr><tr><td>会計システム</td><td>自分たちの持ち物か、相手の持ち物か</td></tr><tr><td>送信に失敗したとき</td><td>必ず起きるか、ときどき起きるか</td></tr></table>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　アクターは人だけではありません。外のシステムや、時間もアクターになります。棒人間で描いて構いません。</li><li>②　失敗は毎回起きるわけではありません。第15回の «extend» と同じ関係です。</li><li>③　知らせを受け取るのは担当者なので、担当者と知らせるユースケースを線で結びます。</li></ul>
+</div>
+<div class="step"><span class="step-id">15-3</span><h3>記述から、クラスを見つける（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>ユースケース記述には、アプリに出てくる「もの」の名前が書いてあります。第15回で写した記述の基本フローから、名詞を拾います。</p>
+<pre class="code" id="c86">基本フロー（「商品を登録する」より）
+  1. 担当者は、商品名・価格・在庫数を入力する
+  2. 担当者は、「追加」ボタンを押す
+  3. システムは、入力内容を検査する
+  4. システムは、商品を登録する
+  5. システムは、一覧を再表示する</pre>
+<div class="btn-row"><button data-copy="c86">コピーする</button><span class="copy-msg"></span></div>
+<p>拾った名詞を、次の5つのどれかに分けて、<code>【　】</code> を埋めてください。選ぶもの：クラスにする ／ 属性にする ／ アクター（クラスにしない） ／ 重複なので消す ／ 画面の部品（クラス図には描かない）</p>
+<table><tr><th>名詞</th><th>分け方</th></tr><tr><td>商品</td><td>【　①　】</td></tr><tr><td>商品名・価格・在庫数</td><td>【　②　】</td></tr><tr><td>担当者</td><td>【　③　】</td></tr><tr><td>入力内容</td><td>【　④　】</td></tr><tr><td>「追加」ボタン</td><td>【　⑤　】</td></tr></table>
+<p>そのあと、「商品」のクラスを3段の箱で描いてください。クラス名は、第13回で付けた <code>ProductDTO</code> です。真ん中の段に属性を4つ、下の段に getter を4つ書きます。</p>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　UML では、属性を <code>名前 : 型</code> の順で書きます。Java の <code>int id;</code> とは逆で、<code>id : int</code> です。</li><li>②　<code>-</code> は <code>private</code>、<code>+</code> は <code>public</code> を表します。第5回で「フィールドは private、メソッドは public」にしたのが、そのまま図に出ます。</li><li>③　「入力内容」は、何を指しているかを考えてください。担当者が入力するのは、商品の名前・価格・在庫数です。</li></ul>
+</div>
+</div>
+<div class="card" id="q16"><div class="card-title">第 16 回　クラス図とオブジェクト図</div>
+<p>新しいプロジェクト <code>quiz16</code> を作って解きます（授業の <code>lesson16</code> とクラス名を分けるためです）。クラスを作るときのパッケージ欄は <code>quiz16</code> のままにします。どのファイルも1行目は <code>package quiz16;</code> です。1問目と3問目はノートに図を描く問題、2問目は図を見てコードを書く問題です。</p>
+<div class="step"><span class="step-id">16-1</span><h3>Book のクラス図とオブジェクト図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>本を表す <code>Book</code> と、2冊を作る <code>BookMain</code> です。<code>quiz16</code> に作って実行してから、次の2つをノートに描いてください。</p>
+<p>① <code>Book</code> のクラス図（3段の箱。可視性・型・<code>static</code> の下線も書く）　② <code>BookMain</code> で2冊を作った直後のオブジェクト図</p>
+<pre class="code" id="c87">package quiz16;
+
+public class Book {
+    private static int count = 0;
+
+    private String title;
+    private String author;
+    private int price;
+
+    public Book(String title, String author, int price) {
+        this.title = title;
+        this.author = author;
+        this.price = price;
+        count++;
+    }
+
+    public String getTitle() { return title; }
+    public int getPrice() { return price; }
+
+    public void show() {
+        System.out.println("『" + title + "』" + author + " / " + price + "円");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c87">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c88">package quiz16;
+
+public class BookMain {
+    public static void main(String[] args) {
+        Book b1 = new Book("こころ", "夏目漱石", 600);
+        Book b2 = new Book("走れメロス", "太宰治", 500);
+
+        b1.show();
+        b2.show();
+        System.out.println("登録した本: " + Book.getCount() + "冊");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c88">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">『こころ』夏目漱石 / 600円
+『走れメロス』太宰治 / 500円
+登録した本: 2冊</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　コンストラクタは戻り値を書きません。<code>+ Book(title : String, ...)</code> の形です。</li><li>②　<code>count</code> と <code>getCount()</code> には <code>static</code> が付いています。クラス図では下線を引きます。</li><li>③　オブジェクト図の名前は、変数名を使って <code>b1 : Book</code> とすると分かりやすくなります。</li></ul>
+</div>
+<div class="step"><span class="step-id">16-2</span><h3>図を見てコードを書く</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>次のクラス図のとおりに、<code>Category</code>（分類）クラスを書いてください。<code>Product</code> は第5回と同じものです。</p>
+<svg class="fig" role="img" viewbox="0 0 720 170" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar20" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<defs><marker id="q16m2OP" markerheight="12" markerunits="userSpaceOnUse" markerwidth="12" orient="auto" refx="11" refy="6" viewbox="0 0 12 12"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"></path></marker><marker id="q16m2SOL" markerheight="12" markerunits="userSpaceOnUse" markerwidth="12" orient="auto" refx="11" refy="6" viewbox="0 0 12 12"><path d="M1,1 L11,6 L1,11 z" fill="#334155"></path></marker></defs>
+<rect fill="#fff" height="130" width="250" x="40" y="20"></rect>
+<rect fill="#e0f2fe" height="30" width="250" x="40" y="20"></rect>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="middle" x="165" y="41">Category</text>
+<line stroke="#334155" stroke-width="1.5" x1="40" x2="290" y1="50" y2="50"></line>
+<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="70">- name : String</text>
+<line stroke="#334155" stroke-width="1.5" x1="40" x2="290" y1="82" y2="82"></line>
+<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="102">+ Category(name : String)</text>
+<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="120">+ add(p : Product) : void</text>
+<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="138">+ show() : void</text>
+<rect fill="none" height="130" stroke="#334155" stroke-width="1.5" width="250" x="40" y="20"></rect>
+<rect fill="#fff" height="30" width="220" x="460" y="20"></rect>
+<rect fill="#e0f2fe" height="30" width="220" x="460" y="20"></rect>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="middle" x="570" y="41">Product</text>
+<rect fill="none" height="30" stroke="#334155" stroke-width="1.5" width="220" x="460" y="20"></rect>
+<text fill="#64748b" font-size="12" text-anchor="middle" x="570" y="72">（第5回と同じ。中身は省略）</text>
+<polyline fill="none" marker-end="url(#q16m2OP)" points="290,35 460,35" stroke="#334155" stroke-width="1.6"></polyline>
+<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="end" x="450" xml:space="preserve" y="27">- products</text>
+<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="end" x="450" xml:space="preserve" y="55">0..*</text>
+<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="300" xml:space="preserve" y="55">1</text>
+</svg><p class="figcap">Category（分類）のクラス図</p><p>3つのファイルの全体です。<code>Product</code> と <code>CategoryMain</code> はこのまま写し、<code>Category</code> の <code>// ここに…</code> の所を書きます。</p>
+<pre class="code" id="c89">package quiz16;
+
+public class Product {
+    private static int count = 0;
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<div class="btn-row"><button data-copy="c89">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c90">package quiz16;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Category {
+    <span class="cm">// ここに、図の2段目の name と、線の端の products の2つのフィールドを書く</span>
+
+    <span class="cm">// ここにコンストラクタを書く</span>
+
+    <span class="cm">// ここに add を書く</span>
+
+    <span class="cm">// ここに show を書く（「分類名（件数件）」と表示し、1件ずつ show() を呼ぶ）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c90">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c91">package quiz16;
+
+public class CategoryMain {
+    public static void main(String[] args) {
+        Category c = new Category("文房具");
+        c.add(new Product(1, "ボールペン", 150, 30));
+        c.add(new Product(2, "ノート", 220, 10));
+
+        c.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c91">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">文房具（2件）
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　線の端の <code>- products</code> も、フィールドです。<code>private</code> で書きます。</li><li>②　<code>0..*</code> は「いくつでも」なので、型は <code>List&lt;Product&gt;</code> です。空の <code>ArrayList</code> を入れておきます。</li><li>③　<code>+ add(p : Product) : void</code> は、Java では <code>public void add(Product p)</code> です。型を前に戻します。</li></ul>
+</div>
+<div class="step"><span class="step-id">16-3</span><h3>findAll() が呼ばれる順番（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>授業の <code>ProductMain</code> を実行すると、一覧が表示されるまでに、どのクラスのどのメソッドが、どの順番で呼ばれるでしょうか。</p>
+<p>授業の②のクラス図とコードを見ながら、呼ばれる順に「誰が → 誰の → 何を呼ぶ」の形でノートに書き出してください。返ってくるものも書き添えます。</p>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　最初は <code>ProductMain</code> の <code>main</code> です。そこから <code>service.findAll()</code> を呼びます。</li><li>②　<code>ProductService</code> の <code>findAll()</code> の中身は1行です。何を呼んでいるかを見ます。</li><li>③　クラス図には「呼ぶ順番」は描けません。それを描くのが次回の図です。</li></ul>
+</div>
+</div>
+<div class="card" id="q17"><div class="card-title">第 17 回　シーケンス図と複合フラグメント</div>
+<p>今回は紙（ノート）に描いて解きます。1問目と3問目は図を描く問題、2問目は図を読んでコードを書く問題です。2問目は、新しいプロジェクト <code>quiz17</code> を作って解きます。授業と同じく、プロジェクトを右クリック →［ビルド・パス］→［外部アーカイブの追加...］で <code>mysql-connector-j-8.4.0.jar</code> を追加します。どのファイルも1行目は <code>package quiz17;</code> です。<code>ProductDAO</code> の <code>PASSWORD</code> は、授業で使う MySQL のパスワードに合わせます。</p>
+<div class="step"><span class="step-id">17-1</span><h3>商品を更新する</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>授業の②の全体像のコードで、［更新］ボタンを押したときの流れをシーケンス図に描いてください。読むのは <code>ProductFrame</code> の <code>updateProduct</code> と、<code>ProductService</code> の <code>update</code> です。</p>
+<p>登場するのは <code>担当者</code>、<code>:ProductFrame</code>、<code>:ProductService</code>、<code>:ProductDAO</code> の4つです。<code>check(p)</code> は自己メッセージだけを描き、検査で例外になる道は省きます。<strong><code>ProductDAO</code> の <code>update(p)</code> の戻り値で分かれる所</strong>を <code>alt</code> で描いてください。</p>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　<code>if (dao.update(p) == 0)</code> が分かれ目です。<code>ProductDAO</code> の <code>update(p)</code> は分かれる前に呼ぶので、<code>alt</code> の枠の上に描きます。</li><li>②　<code>ProductDAO</code> の <code>update</code> が返す行数が 0 になるのは、入力した ID の商品が無いときです。</li><li>③　<code>ProductService</code> の <code>update</code> は何も返さない（<code>void</code>）ので、うまくいった段に画面への戻りの矢印はありません。画面は続けて <code>showList()</code> を呼びます。</li></ul>
+</div>
+<div class="step"><span class="step-id">17-2</span><h3>図からコードを書く</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>次のシーケンス図は、<code>ProductService</code> の <code>sell</code> メソッドを描いたものです。この図のとおりに <code>sell</code> を書いてください。</p>
+<svg class="fig" role="img" viewbox="0 0 770 400" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar36" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="none" height="380" stroke="#334155" stroke-width="1.5" width="750" x="10" y="10"></rect>
+<path d="M10,10 h109 v12 l-7,8 h-102 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"></path>
+<text fill="#1f2933" font-size="13" font-weight="bold" x="16" y="25">sd 商品を売る</text>
+<rect fill="#e0f2fe" height="30" rx="4" stroke="#334155" stroke-width="1.5" width="135" x="98" y="50"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="165" y="70">:ProductFrame</text>
+<rect fill="#e0f2fe" height="30" rx="4" stroke="#334155" stroke-width="1.5" width="152" x="254" y="50"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="330" y="70">:ProductService</text>
+<rect fill="#e0f2fe" height="30" rx="4" stroke="#334155" stroke-width="1.5" width="118" x="461" y="50"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="520" y="70">:ProductDAO</text>
+<line stroke="#64748b" stroke-dasharray="6 4" stroke-width="1.3" x1="165" x2="165" y1="80" y2="394"></line>
+<line stroke="#64748b" stroke-dasharray="6 4" stroke-width="1.3" x1="330" x2="330" y1="80" y2="394"></line>
+<line stroke="#64748b" stroke-dasharray="6 4" stroke-width="1.3" x1="520" x2="520" y1="80" y2="394"></line>
+<rect fill="#fff" height="240" stroke="#334155" stroke-width="1.5" width="12" x="159" y="126"></rect>
+<rect fill="#fff" height="234" stroke="#334155" stroke-width="1.5" width="12" x="324" y="126"></rect>
+<line stroke="#334155" stroke-width="1.5" x1="171" x2="324" y1="126" y2="126"></line>
+<polygon fill="#334155" points="324,126 313,121 313,131"></polygon>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="247" y="120">sell(1, 3)</text>
+<rect fill="#fff" height="26" stroke="#334155" stroke-width="1.5" width="12" x="514" y="152"></rect>
+<line stroke="#334155" stroke-width="1.5" x1="336" x2="514" y1="152" y2="152"></line>
+<polygon fill="#334155" points="514,152 503,147 503,157"></polygon>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="146">findById(1)</text>
+<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="514" x2="336" y1="178" y2="178"></line>
+<polyline fill="none" points="347,172 336,178 347,184" stroke="#334155" stroke-width="1.5"></polyline>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="172">p</text>
+<rect fill="none" height="180" stroke="#334155" stroke-width="1.5" width="726" x="22" y="194"></rect>
+<path d="M22,194 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"></path>
+<text fill="#1f2933" font-size="13" font-weight="bold" x="28" y="209">alt</text>
+<text fill="#1d4ed8" font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="4" x="75" y="209">[p が null]</text>
+<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="324" x2="171" y1="234" y2="234"></line>
+<polyline fill="none" points="182,228 171,234 182,240" stroke="#334155" stroke-width="1.5"></polyline>
+<text fill="#1f2933" font-size="11" text-anchor="middle" x="247" y="228">IllegalArgumentException</text>
+<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.3" x1="22" x2="748" y1="250" y2="250"></line>
+<text fill="#1d4ed8" font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="4" x="30" y="266">[在庫が足りない]</text>
+<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="324" x2="171" y1="292" y2="292"></line>
+<polyline fill="none" points="182,286 171,292 182,298" stroke="#334155" stroke-width="1.5"></polyline>
+<text fill="#1f2933" font-size="11" text-anchor="middle" x="247" y="286">IllegalArgumentException</text>
+<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.3" x1="22" x2="748" y1="308" y2="308"></line>
+<text fill="#1d4ed8" font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="4" x="30" y="324">[else]</text>
+<rect fill="#fff" height="24" stroke="#334155" stroke-width="1.5" width="12" x="514" y="336"></rect>
+<line stroke="#334155" stroke-width="1.5" x1="336" x2="514" y1="336" y2="336"></line>
+<polygon fill="#334155" points="514,336 503,331 503,341"></polygon>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="330">update(p)</text>
+<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="514" x2="336" y1="360" y2="360"></line>
+<polyline fill="none" points="347,354 336,360 347,366" stroke="#334155" stroke-width="1.5"></polyline>
+<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="354">1</text>
+</svg><p class="figcap">商品を売る（ProductService の sell）</p><p>例外の理由の文は、見つからないときが「ID 9 の商品はありません」、在庫が足りないときが「在庫が足りません（残り10個）」の形です。図には描いていませんが、<code>update</code> を呼ぶ前に、在庫を売った個数だけ減らす1行が要ります（setter は図に描かない決まりのため）。</p>
+<p>4つのファイルの全体です。<code>ProductDTO</code> と <code>ProductDAO</code> は第13回と同じもの（1行目だけ <code>quiz17</code>）で、このまま写します。<code>ProductService</code> は第13回のものに <code>sell</code> の枠を足しています。確かめるのは <code>SellMain</code> です。始める前に、第13回の②の手順⑨の SQL で表を最初の3件に戻してください。</p>
+<pre class="code" id="c92">package quiz17;
+
+public class ProductDTO {
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public ProductDTO(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) { this.price = price; }
+    public void setStock(int stock) { this.stock = stock; }
+}</pre>
+<div class="btn-row"><button data-copy="c92">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c93">package quiz17;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDAO {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                        rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public ProductDTO findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                          rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(ProductDTO p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(ProductDTO p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c93">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c94">package quiz17;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    public void sell(int id, int quantity) throws SQLException {
+        <span class="cm">// ここに、図のとおりの順番で処理を書く</span>
+    }
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c94">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c95">package quiz17;
+
+import java.sql.SQLException;
+
+public class SellMain {
+    public static void main(String[] args) throws SQLException {
+        ProductService service = new ProductService();
+        service.sell(1, 3);
+        try {
+            service.sell(9, 1);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+        try {
+            service.sell(2, 99);
+        } catch (IllegalArgumentException e) {
+            System.out.println(e.getMessage());
+        }
+        ProductDTO p = new ProductDAO().findById(1);
+        System.out.println(p.getName() + " / 残り" + p.getStock() + "個");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c95">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ID 9 の商品はありません
+在庫が足りません（残り10個）
+ボールペン / 残り27個</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　図の上から順に、実線の矢印1本がメソッド呼び出し1つ、<code>alt</code> の段1つが <code>if</code> 1つです。</li><li>②　<code>alt</code> の1段目と2段目は、例外を投げて終わる道です。<code>throw new IllegalArgumentException(...)</code> を書けば、そこで終わります。</li><li>③　在庫を減らす1行は <code>p.setStock(p.getStock() - quantity);</code> です。</li></ul>
+</div>
+<div class="step"><span class="step-id">17-3</span><h3>コミュニケーション図に描き直す（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>授業の図1「商品を一覧する」と同じやりとりを、<strong>コミュニケーション図</strong>という別の図で描いてください。次回の主役の1つです。</p>
+<table><tr><th>決まり</th><th>描き方</th></tr><tr><td>登場するもの</td><td>シーケンス図のヘッダーと同じ四角。ライフラインは描かない。置く場所は自由</td></tr><tr><td>つながり</td><td>呼び合う四角どうしを実線で結ぶ</td></tr><tr><td>メッセージ</td><td>線に沿って短い矢印を描き、「番号: メソッド名」を書く</td></tr><tr><td>順番</td><td>縦の位置ではなく番号で表す。1 の中で起きた呼び出しは 1.1、1.1 の中で起きたものは 1.1.1</td></tr></table>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　登場するのは <code>:ProductFrame</code>、<code>:ProductService</code>、<code>:ProductDAO</code>、<code>:MySQL</code> の4つです。</li><li>②　戻り（<code>List</code> や「3行」）は描かなくて構いません。</li></ul>
+</div>
+</div>
+<div class="card" id="q18"><div class="card-title">第 18 回　ステートマシン図・アクティビティ図・コミュニケーション図と総まとめ</div>
+<p>図を描く問題です。ノートに描いてから、解答の図と見比べます。3問目だけはコードも書くので、新しいプロジェクト <code>quiz18</code> を作ります（授業の <code>lesson18</code> と分けます）。クラスを作るときのパッケージ欄は <code>quiz18</code> のままにします。どのファイルも1行目は <code>package quiz18;</code> です。</p>
+<div class="step"><span class="step-id">18-1</span><h3>「注文」のステートマシン図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>ネットショップの「注文」1件が、どの状態を行き来するかを、ステートマシン図で描いてください。状態は「受付済み」「発送準備中」「発送済み」「受取済み」「キャンセル済み」の5つです。</p>
+<table><tr><th>きっかけ（イベント）</th><th>どこから</th><th>どこへ</th></tr><tr><td>注文する</td><td>始まり</td><td>受付済み</td></tr><tr><td>準備を始める</td><td>受付済み</td><td>発送準備中</td></tr><tr><td>発送する</td><td>発送準備中</td><td>発送済み</td></tr><tr><td>受け取る</td><td>発送済み</td><td>受取済み</td></tr><tr><td>キャンセルする</td><td>受付済み／発送準備中</td><td>キャンセル済み</td></tr></table>
+<p>キャンセルできるのは「受付済み」と「発送準備中」のときだけです。「受取済み」か「キャンセル済み」になったら、その注文は終わりです。</p>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　開始の黒丸は1つ、終了の二重丸は2つ描きます。</li><li>②　「キャンセルする」の矢印は2本です。</li><li>③　四角の中は「〜済み」「〜中」、矢印の上は「〜する」です。</li></ul>
+</div>
+<div class="step"><span class="step-id">18-2</span><h3>月末の在庫締めのアクティビティ図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>次の業務を、アクティビティ図で描いてください。スイムレーンは「担当者」「システム」の2本です。</p>
+<div class="note">月末に在庫を締める。担当者が棚卸しをして実数を数える。同時に、システムが帳簿上の在庫を集計する。両方そろったら、システムが差があるかを確かめる。差があれば、担当者が原因を調べて修正する。修正したら、または差がなければ、システムが在庫を締める。</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　「同時に」と「両方そろったら」は、ひし形ではありません。</li><li>②　「差があれば」「差がなければ」はひし形です。［差がある］［差がない］の2本を出します。</li><li>③　どちらの道も最後は「在庫を締める」へ進むので、2本を1本に戻す記号を置きます。</li></ul>
+</div>
+<div class="step"><span class="step-id">18-3</span><h3>「発注」を図から作る（講座のあとの先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
+<p>講座のあとに商品在庫管理アプリへ足す機能の練習です。仕入れ先に商品を発注し、届いた数を記録する「発注」を考えます。発注1件は、次のように状態が変わります。「合計」は、これまでに届いた数に、今回届いた数を足したものです。</p>
+<table><tr><th>きっかけ（イベント）</th><th>条件</th><th>どこから</th><th>どこへ</th></tr><tr><td>発注する</td><td></td><td>始まり</td><td>発注済み</td></tr><tr><td>入荷する</td><td>合計が発注数より少ない</td><td>発注済み／一部入荷</td><td>一部入荷</td></tr><tr><td>入荷する</td><td>合計が発注数以上</td><td>発注済み／一部入荷</td><td>入荷済み</td></tr><tr><td>取り消す</td><td></td><td>発注済み</td><td>取消済み</td></tr></table>
+<p>「入荷済み」か「取消済み」になったら終わりです。1個でも届いたら、取り消せません。</p>
+<p>①　この決まりを、ステートマシン図に描いてください。</p>
+<p>②　描いた図をもとに、<code>Order</code> の <code>// ここに…</code> を書いてください。図に無い移り方を頼まれたら、断るメッセージを出して、状態を変えずに終わります。<code>OrderMain</code> はこのまま写します。</p>
+<pre class="code" id="c96">package quiz18;
+
+public class Order {
+    private String name;                 <span class="cm">// 商品名</span>
+    private int ordered;                 <span class="cm">// 発注数</span>
+    private int received = 0;            <span class="cm">// 届いた数の合計</span>
+    private String state = "発注済み";
+
+    public Order(String name, int ordered) {
+        this.name = name;
+        this.ordered = ordered;
+    }
+
+    public void receive(int count) {
+        <span class="cm">// ここに、発注済み・一部入荷のどちらでもなければ「商品名 : 状態なので入荷できません」と表示して終わる処理を書く</span>
+        <span class="cm">// ここに、合計（これまでの数＋今回の数）が発注数以上なら入荷済み、そうでなければ一部入荷にし、届いた数を足す処理を書く</span>
+    }
+
+    public void cancel() {
+        <span class="cm">// ここに、発注済みでなければ「商品名 : 状態なので取り消せません」と表示して終わる処理を書く</span>
+        <span class="cm">// ここに、取消済みにする処理を書く</span>
+    }
+
+    public void show() {
+        System.out.println(name + " : " + state + "（" + received + " / " + ordered + "個）");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c96">コピーする</button><span class="copy-msg"></span></div>
+<pre class="code" id="c97">package quiz18;
+
+public class OrderMain {
+    public static void main(String[] args) {
+        Order a = new Order("ノート", 20);
+        a.receive(5);
+        a.show();
+        a.cancel();
+        a.receive(15);
+        a.show();
+        a.receive(3);
+
+        Order b = new Order("消しゴム", 10);
+        b.cancel();
+        b.show();
+        b.receive(10);
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c97">コピーする</button><span class="copy-msg"></span></div>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ノート : 一部入荷（5 / 20個）
+ノート : 一部入荷なので取り消せません
+ノート : 入荷済み（20 / 20個）
+ノート : 入荷済みなので入荷できません
+消しゴム : 取消済み（0 / 10個）
+消しゴム : 取消済みなので入荷できません</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　一部入荷から一部入荷へ戻る矢印は、自己遷移です。</li><li>②　「図に無い矢印」は、メソッドの最初の <code>if</code> で断って <code>return</code> します。授業の②で写した <code>SellMain</code> の1つ目の <code>if</code> と同じ形です。</li><li>③　文字列が同じかどうかは <code>equals</code> で比べます（第2回）。</li></ul>
+</div>
+</div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 問題集</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
