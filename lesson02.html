@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson03.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson03.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 2 回 ／ 全 18 回</span><h1>変数と演算子・条件分岐・配列と繰り返し</h1><p>第2〜6章　変数と型 ／ 演算子と文字列 ／ 条件分岐 ／ 繰り返し ／ 配列</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">変数と型</span>　<span class="term">演算子と文字列</span>　<span class="term">条件分岐</span>　<span class="term">配列</span>　<span class="term">繰り返し</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>5分野（変数と型・演算子と文字列・条件分岐・繰り返し・配列）のうち、自分が忘れている所を言える</li><li>配列の中身を、<code>for</code> と拡張for文で1つずつ取り出せる</li><li>5分野を1本のプログラム（成績の集計）の中で組み合わせて使える</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/enhanced-for.html">拡張for文と通常for文の使い分けを詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>変数と型</td><td><strong>変数</strong>は、値を入れておく名前付きの入れ物です。<strong>型</strong>は、その入れ物に入れられる値の種類で、<code>int</code>（整数）・<code>double</code>（小数）・<code>String</code>（文字列）・<code>boolean</code>（<code>true</code> か <code>false</code>）などがあります。変数を作るときに型を書きます。<code class="ex">int count = 3;
