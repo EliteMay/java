@@ -1,0 +1,101 @@
+/* 元教材の白＋オレンジは維持し、見やすさだけ上げる。 */
+/* 左のマーカーライン：色と太さ、背景の明度差を明確にする */
+.card h2,
+.sol h2 {
+  border-left: 6px solid #c95400;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #fff0db, #fffaf4 74%, transparent);
+  padding: .36rem .7rem .36rem .85rem;
+  margin-top: 1.6rem;
+  line-height: 1.55;
+}
+.card h2:first-of-type { margin-top: .65rem; }
+.note, .trap, .calm {
+  border-left-width: 6px;
+  padding-left: 1.05rem;
+}
+.note { border-left-color: #d78c00; background: #fffae8; }
+.trap { border-left-color: #ce3240; }
+.calm { border-left-color: #2a65ce; }
+.card-title { color: #ad4900; font-size: .79rem; }
+.step { border-top: 2px solid #d9e0ea; }
+a:focus-visible, button:focus-visible, summary:focus-visible {
+  outline: 3px solid #c95400;
+  outline-offset: 3px;
+}
+/* 読みやすいコード：元の濃いコード欄は変更しない */
+pre.code {
+  position: relative;
+  isolation: isolate;
+  color: #e4eaf7;
+  font-family: 'CodeAscii', 'Cascadia Code', Consolas, 'BIZ UDGothic', 'MS Gothic', monospace;
+  font-size: 15px;
+  line-height: 1.78;
+  tab-size: 4;
+  font-variant-ligatures: none;
+  border: 1px solid #3f475e;
+  border-radius: 10px;
+  padding: 1.05rem 1.2rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  background-image: linear-gradient(rgba(255,180,83,.20), rgba(255,180,83,.20));
+  background-position: 0 var(--reader-line-top, -9999px);
+  background-size: 100% var(--reader-line-height, 27px);
+  background-repeat: no-repeat;
+}
+pre.code.reader-active::before {
+  content: '';
+  position: absolute;
+  pointer-events: none;
+  width: 5px;
+  height: var(--reader-line-height, 27px);
+  background: #ffb454;
+  left: 0;
+  top: var(--reader-line-top, -9999px);
+  border-radius: 2px;
+}
+pre.code:focus-visible { outline: 3px solid #e78a28; outline-offset: 2px; }
+pre.code .cm { color: #bcc7da; font-style: italic; }
+pre.code .cn { color: #ffd28b; font-style: normal; font-weight: 700; }
+pre.code .syn-keyword, code.ex .syn-keyword { color: #c8b7ff; font-weight: 650; }
+pre.code .syn-type, code.ex .syn-type { color: #93e3f0; }
+pre.code .syn-number, code.ex .syn-number { color: #ffca93; }
+pre.code .syn-string, code.ex .syn-string { color: #b6e3a1; }
+pre.code .syn-annotation, code.ex .syn-annotation { color: #ffc9e8; }
+pre.code .syn-sql, code.ex .syn-sql { color: #c8b7ff; font-weight: 650; }
+pre.code ::selection, pre.code::selection { background: #6875a9; color: #fff; }
+code.ex {
+  font-family: 'CodeAscii', 'Cascadia Code', Consolas, 'BIZ UDGothic', monospace;
+  font-size: .93rem;
+  line-height: 1.75;
+  tab-size: 4;
+  border: 1px solid #dde6f0;
+  border-radius: 7px;
+  background: #f3f6fc;
+}
+.expected {
+  font-size: 14.5px;
+  line-height: 1.72;
+  border: 1px solid #334155;
+}
+.fname { font-size: .96rem; }
+@media (max-width: 640px) {
+  pre.code { font-size: 14px; padding: .9rem .85rem; }
+  code.ex { font-size: .85rem; }
+  .card h2, .sol h2 { padding: .3rem .55rem .3rem .7rem; }
+}
+@media print {
+  pre.code {
+    background: white !important;
+    color: #111 !important;
+    background-image: none !important;
+    border: 1px solid #cbd5e1;
+    font-size: 9pt;
+    white-space: pre-wrap;
+    box-shadow: none;
+  }
+  pre.code.reader-active::before { display: none; }
+  pre.code .syn-keyword, pre.code .syn-type, pre.code .syn-number,
+  pre.code .syn-string, pre.code .syn-annotation, pre.code .syn-sql,
+  pre.code .cm, pre.code .cn { color: #111 !important; }
+  .card h2, .sol h2 { background: transparent; border-left-color: #555; }
+}
