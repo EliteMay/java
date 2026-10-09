@@ -1,0 +1,18 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>nullと例外処理 | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>nullと例外処理</strong></nav><span class="eyebrow">第9回の補足</span><h1>nullと例外処理</h1><p class="subtitle">null、try、catch、throwsの役割を混ぜない。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong><code>null</code> は参照先がないこと。例外は実行中の失敗を表す仕組み。<code>try-catch</code> は失敗時の処理を決めるものだが、元の問題が自動で直るわけではない。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>まず実際にどう動くかを見て、その理由を下で整理する。</p><div class="codehead"><span>Main.java（nullが原因の例外を捕まえる）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>public class Main {
+    public static void main(String[] args) {
+        String name = null;
+
+        try {
+            System.out.println(name.length());
+        } catch (NullPointerException e) {
+            System.out.println(&quot;名前がありません&quot;);
+        }
+        System.out.println(&quot;次の処理&quot;);
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果</div><pre class="output">名前がありません
+次の処理</pre><h3>1行ずつ考えると</h3><ol class="steps"><li><code>name</code> には文字列の参照先がない。</li><li><code>name.length()</code> を呼ぶと <code>NullPointerException</code> が起きる。</li><li>対応するcatchへ移動し、メッセージを表示したあと、後続の処理へ進む。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong><code>String name="";</code> は空文字で、nullとは違う。空文字なら<code>name.length()</code>は0。<code>catch (Exception e)</code>で何でも捕まえると原因に気付きにくいことがある。</div><h3>そもそも例外を起こさない書き方</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>String name = null;
+if (name != null) {
+    System.out.println(name.length());
+} else {
+    System.out.println(&quot;名前を入力してください&quot;);
+}</code></pre><p>値がないことが普通に起こる場合は、例外を待つより先に条件で分ける。<code>throw</code> は例外を投げる命令、<code>throws</code> は呼び出し元に扱いを任せる宣言。</p></section><section class="card"><h2>30秒で理解チェック</h2><p><code>String text = "";</code> の <code>text.length()</code> は例外になる？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>ならない。結果は0。</strong> 空文字は長さ0の文字列オブジェクト。nullはオブジェクトを指していない。</p></details></section><div class="links"><a href="../lesson09.html">← 第9回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義を補助するための解説です。比較用のコードは必要部分のみの抜粋です。実際のJava実行はEclipseなどで行ってください。</footer></main></body></html>
