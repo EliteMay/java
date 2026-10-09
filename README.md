@@ -2,6 +2,18 @@
 
 **公開サイト：** https://elitemay.github.io/java/
 
+
+## どこから始める？
+
+| 目的 | 入口 |
+| --- | --- |
+| 第2回〜第11回の授業内容を順に学ぶ | [講義一覧](index.html) |
+| `this`、`static`、拡張for文など、分からない概念を復習する | [つまずき解説](concepts/index.html) |
+| 自分でコードを書いて理解度を確かめる | [問題集](problems.html) |
+
+**利用者向け:** HTML教材は上の公開サイトからそのまま開けます。**開発者向け:** GitHubの`main`を正本とし、共通の制作ルールは[web-project-guide](https://github.com/EliteMay/web-project-guide)を参照します。
+
+
 ## 方針
 元の授業教材を基本に、必要な定義・考え方・図解・コード・Eclipseの操作手順・演習・解答を残しながら、重複する説明を整理した復習サイトです。元の白背景・オレンジの見出し・濃いコード欄を維持します。
 
@@ -24,6 +36,10 @@
 講義は元教材の説明を維持しながら簡潔に保ち、拡張for文、値渡し、this、static、継承、interface、HashMap、null、ファイル操作、JDBCの補足は独立したページにまとめています。各講義の冒頭から対応する補足へ直接移動できます。元の課題や解答は削除していません。
 
 ## 開発・検証
-ビルド不要のHTML/CSS/JavaScriptです。`node tests/validate-content.mjs` で講義ごとの必須構造を検証します。`.github/workflows/deploy.yml` はテストを通過した更新をGitHub Pagesへ自動公開します。
+ビルド不要のHTML/CSS/JavaScriptです。`.github/workflows/deploy.yml` はGitHub Pagesへの公開前に、次の検証を実行します。
 
-コードの実際のコンパイルと問題集の全問検証は未実施です。
+- `node tests/validate-content.mjs` — 講義・補足解説の構造と参照先
+- `node tests/validate-ux.mjs` — ナビゲーション、コード表示、モバイル向けの静的チェック
+- `node tests/validate-examples.mjs` — JDK 17で補足解説の独立したJavaサンプル9件をコンパイル・実行し、出力を検証
+
+※ これらは**全講義・全問題のJavaコードを実行しているわけではありません**。問題集の全問検証と、利用者による実ブラウザ操作の確認は別途必要です。
