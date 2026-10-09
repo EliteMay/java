@@ -18,8 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
       - name: Verify lessons and practice content
         run: node tests/validate-content.mjs
+      - name: Compile and run Java concept examples
+        run: node tests/validate-examples.mjs
       - uses: actions/configure-pages@v5
         with:
           enablement: true
