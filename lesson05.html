@@ -131,7 +131,6 @@
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">カプセル化</span>　<span class="term">private</span>　<span class="term">static</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>フィールドを <code>private</code> にして、getter と setter を通して読み書きできる</li><li>setter に検査を入れて、おかしな値をはじける</li><li><code>static</code> が「クラスに1つ」、付けないと「実物1つにつき1つ」だと説明できる</li></ul></div>
 </div>
-<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　カプセル化・<code>private</code>・<code>static</code> を、お店の棚とカウンターで</li><li>② 写して動かす　<code>Product</code> と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑧の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>Account</code> と <code>Ticket</code> を作る</li><li>⑤ まとめ・次回</li></ul></div>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>カプセル化</td><td>フィールドを <code>private</code> で隠し、値の出し入れを <code>public</code> のメソッド（getter・setter）だけに限ることです。<code class="ex">private int price;
@@ -225,11 +224,8 @@ Product.getCount()</code></td></tr></table>
 <text fill="#1f2933" font-size="14" x="510" y="150">private int stock;</text>
 </svg><p class="figcap">カプセル化は、鍵のかかった棚と受付をひとまとめにして、受付だけを開けておく仕組み</p><p>鍵のかかった棚と受付を組み合わせて、中身は受付を通さないとさわれないようにする。この仕組み全体を<strong>カプセル化</strong>と言います。</p>
 </div></div>
-<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>鍵のかかった棚</td><td><code>private int price;</code></td></tr><tr><td>受付（ここだけ開いている）</td><td><code>public void setPrice(int price)</code></td></tr><tr><td>受付の人の確認</td><td><code>if (price &lt; 0) { ... return; }</code></td></tr><tr><td>棚の中を見せてもらう</td><td><code>public int getPrice()</code>（getter）</td></tr><tr><td>お店に1つのカウンター</td><td><code>private static int count</code></td></tr><tr><td>カウンターの数を聞く</td><td><code>Product.getCount()</code>　クラス名で聞く</td></tr><tr><td>棚に鍵をかけ、受付だけを開けておく仕組み</td><td>カプセル化　<code>private</code> のフィールド＋getter・setter</td></tr></table>
 <h2>なぜ必要か</h2>
 <table class="define"><tr><td>カプセル化</td><td>値を変える道を1か所にまとめ、そこで正しい値かどうかを確かめられるようにするためです。</td></tr><tr><td>private</td><td>外から直接おかしな値（マイナスの価格など）を入れられないようにするためです。</td></tr><tr><td>static</td><td>インスタンスごとではなく、全体で1つだけ持ちたい値や処理があるからです。</td></tr></table>
-<h2>使う場面</h2>
-<table class="define"><tr><td>カプセル化</td><td>価格にマイナスを入れさせたくないときのように、値に決まりがあるフィールドを持つクラスを作るとき。</td></tr><tr><td>private</td><td>フィールドには基本的に付け、値の出し入れは getter・setter を通します。</td></tr><tr><td>static</td><td>作った商品の数を数えるカウンター。インスタンスを作る前に動く <code>main</code> メソッド。</td></tr></table>
 <p>今日は、この形の <code>Product</code> と、それを使う <code>Main</code> の全体を写します。</p>
 </div>
 <div class="card"><div class="card-title">② 写して動かす</div>
@@ -529,6 +525,7 @@ public class Main {
 </svg><p class="figcap">クラス名で呼べるのは、クラスに1つしかないもの（static）だけ</p><p>名前は商品ごとに違うので、クラス名で聞いても「どの商品の名前か」が決まりません。<code>p1.getName()</code> のように実物を指します。<code>static</code> の付いたメソッドの中からも、<code>static</code> の付かない欄やメソッドは、名前だけでは呼べません。<code>main</code> の中の <code>p1.setPrice(180)</code> のように、実物を指せば呼べます。</p>
 <p><strong>なぜ main に static が付いているのか。</strong>Java は <code>Main</code> の実物を作らずに、クラスに対して <code>main</code> を呼ぶからです。<code>main</code> が動き出した時点では、<code>Main</code> の実物は1つもありません。そのため <code>main</code> から名前だけで呼べるのは、<code>static</code> の付いたメソッドだけです。</p>
 </div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>staticを見分ける</h2><p>商品を3個newしたら、<code>static int count</code> は商品ごとに3個できる？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>できない。staticはクラスに属する共有の値。通常のフィールドはインスタンスごとに別の値になる。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
 <p>ここからは自力です。2問あります。<strong>①で残高が表示できたら、今日の目的は達成です。</strong></p>
 <h2>課題</h2>
@@ -739,9 +736,9 @@ public class TicketMain {
 <div class="card"><div class="card-title">⑤ まとめ</div>
 <h2>確認チェック</h2><div class="check"><ul><li><code>p1.price = -100;</code> が、今日の <code>Product</code> ではなぜ書けないのか説明できる</li><li>getter と setter の名前の決まりを、見ずに書ける</li><li>フィールドに <code>static</code> を付けるかどうかを、「1つ1つで中身が違うか」で決められる</li></ul></div>
 <h2>次回</h2><p><strong>次回は、継承・オーバーライド・super です。</strong>普通の会員とゴールド会員は、名前の持ち方・金額の計算・表示が同じで、違うのは割引率だけです。種類ごとにクラスを丸ごと書き写すと、同じ行が何度も並びます。次回は、<strong>元のクラスを引き継いで、違う所だけを書く方法</strong>を扱います。</p></div>
-<div class="card"><div class="card-title">用語の説明</div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
-<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>カプセル化</td><td>かぷせるか</td><td>フィールドを外から直接さわれないようにし、決めた入口（メソッド）だけを開けておくこと</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>「そのクラスの中だけ」で使える、という印。フィールドに付けます</td></tr><tr><td>public</td><td>ぱぶりっく</td><td>「どこからでも」使える、という印。コンストラクタやメソッドに付けます</td></tr><tr><td>アクセス修飾子</td><td>あくせすしゅうしょくし</td><td><code>private</code> <code>public</code> など、どこから使えるかを決める言葉</td></tr><tr><td>不可視</td><td>ふかし</td><td>見えない、という意味。<code>private</code> の欄を外から使うと「フィールド … は不可視です」と出ます</td></tr><tr><td>getter</td><td>げったー</td><td>フィールドの値を返すメソッド。<code>getPrice()</code> のように <code>get</code> ＋ フィールド名</td></tr><tr><td>setter</td><td>せったー</td><td>フィールドに値を入れるメソッド。<code>setPrice(int price)</code> のように <code>set</code> ＋ フィールド名。中で検査できます</td></tr><tr><td>static</td><td>すたてぃっく</td><td>「クラスに1つ」という印。付けないと「実物1つにつき1つ」になります</td></tr><tr><td>static フィールド</td><td>―</td><td><code>static</code> を付けたフィールド。全部の実物で1つを共有します。クラス変数ともいいます</td></tr><tr><td>static メソッド</td><td>―</td><td><code>static</code> を付けたメソッド。<code>Product.getCount()</code> のようにクラス名で呼びます。クラスメソッドともいいます</td></tr><tr><td>インスタンスメソッド</td><td>―</td><td><code>static</code> の付かないメソッド。<code>p1.getName()</code> のように、実物に対して呼びます（第4回）</td></tr><tr><td>return;</td><td>りたーん</td><td>メソッドをそこで終わらせる文。<code>void</code> のメソッドでも、途中で抜けるのに使えます</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。今日はここで <code>count</code> を数えています</td></tr><tr><td>this</td><td>でぃす</td><td>「いま動いているこのインスタンスの」という意味。<code>this.price</code> はフィールド（第4回）</td></tr></table></div>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>カプセル化</td><td>かぷせるか</td><td>フィールドを外から直接さわれないようにし、決めた入口（メソッド）だけを開けておくこと</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>「そのクラスの中だけ」で使える、という印。フィールドに付けます</td></tr><tr><td>public</td><td>ぱぶりっく</td><td>「どこからでも」使える、という印。コンストラクタやメソッドに付けます</td></tr><tr><td>アクセス修飾子</td><td>あくせすしゅうしょくし</td><td><code>private</code> <code>public</code> など、どこから使えるかを決める言葉</td></tr><tr><td>不可視</td><td>ふかし</td><td>見えない、という意味。<code>private</code> の欄を外から使うと「フィールド … は不可視です」と出ます</td></tr><tr><td>getter</td><td>げったー</td><td>フィールドの値を返すメソッド。<code>getPrice()</code> のように <code>get</code> ＋ フィールド名</td></tr><tr><td>setter</td><td>せったー</td><td>フィールドに値を入れるメソッド。<code>setPrice(int price)</code> のように <code>set</code> ＋ フィールド名。中で検査できます</td></tr><tr><td>static</td><td>すたてぃっく</td><td>「クラスに1つ」という印。付けないと「実物1つにつき1つ」になります</td></tr><tr><td>static フィールド</td><td>―</td><td><code>static</code> を付けたフィールド。全部の実物で1つを共有します。クラス変数ともいいます</td></tr><tr><td>static メソッド</td><td>―</td><td><code>static</code> を付けたメソッド。<code>Product.getCount()</code> のようにクラス名で呼びます。クラスメソッドともいいます</td></tr><tr><td>インスタンスメソッド</td><td>―</td><td><code>static</code> の付かないメソッド。<code>p1.getName()</code> のように、実物に対して呼びます（第4回）</td></tr><tr><td>return;</td><td>りたーん</td><td>メソッドをそこで終わらせる文。<code>void</code> のメソッドでも、途中で抜けるのに使えます</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。今日はここで <code>count</code> を数えています</td></tr><tr><td>this</td><td>でぃす</td><td>「いま動いているこのインスタンスの」という意味。<code>this.price</code> はフィールド（第4回）</td></tr></table></details>
 <footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 5 回 ／ 全 18 回</footer>
 </div>
 <script>
