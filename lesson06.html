@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson05.html">前の講義</a><a href="lesson07.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson05.html">前の講義</a><a href="lesson07.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 6 回 ／ 全 18 回</span><h1>継承・オーバーライド・super</h1><p>第10章 10-1　継承とオーバーライド ／ super ／ protected</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">継承</span>　<span class="term">オーバーライド</span>　<span class="term">super</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li><code>extends</code> で、親のクラスを書き写さずに子クラスを作れる</li><li>親のメソッドを子で書き直し（オーバーライド）、<code>@Override</code> を付けられる</li><li>子のコンストラクタに <code>super(...)</code> を書く理由を説明できる</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/override-super.html">継承・オーバーライド・superを詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>継承</td><td>あるクラス（親クラス）のフィールドとメソッドを引き継いで、新しいクラス（子クラス）を作る仕組み。子クラスには、追加や変更する所だけを書きます。親にできるクラスは1つだけです。<code class="ex">public class GoldMember extends Member { ... }</code></td></tr><tr><td>オーバーライド</td><td>親クラスにあるメソッドを、子クラスで同じ名前・同じ引数のまま書き直すこと。<code class="ex">@Override
