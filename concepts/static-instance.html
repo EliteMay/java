@@ -1,0 +1,30 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>static・private・インスタンス | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>static・private・インスタンス</strong></nav><span class="eyebrow">第5回の補足</span><h1>static・private・インスタンス</h1><p class="subtitle">みんなで共有する値と、1個ずつ持つ値を見分ける。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong><code>static</code> はクラス側の共有メンバー。普通のフィールドは <code>new</code> したインスタンスごと。<code>private</code> は外部から直接変更させないための制限。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>まず実際にどう動くかを見て、その理由を下で整理する。</p><div class="codehead"><span>Main.java（共有の数と個別の名前）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>public class Main {
+    static class Product {
+        static int total = 0;
+        private String name;
+
+        Product(String name) {
+            this.name = name;
+            total++;
+        }
+
+        String getName() { return name; }
+    }
+
+    public static void main(String[] args) {
+        Product a = new Product(&quot;A&quot;);
+        Product b = new Product(&quot;B&quot;);
+        System.out.println(Product.total);
+        System.out.println(a.getName());
+        System.out.println(b.getName());
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果</div><pre class="output">2
+A
+B</pre><h3>1行ずつ考えると</h3><ol class="steps"><li><code>Product.total</code> はクラス全体で1つ。<code>new</code> を2回するとコンストラクタが2回増やす。</li><li><code>name</code> はそれぞれの実物が持つので、aはA、bはB。</li><li><code>private name</code> は外から直接書き換えられない。ここでは <code>getName()</code> で読むことだけ許可している。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong><code>static</code> は「どこからでも自由に触れる」という意味ではない。<code>static private</code> も可能。またstaticメソッドでは、インスタンスを指定せずに <code>this.name</code> に直接アクセスできない。</div><h3>「共有」だけしたいのか「守りたい」のかを分ける</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>// クラスに1個だけある値
+static int count;
+
+// インスタンスごとに違う値
+private int stock;
+
+// 中身を守りつつ読み取りだけ許可
+int getStock() { return stock; }</code></pre><p><code>static</code> は所属を決め、<code>private</code> はアクセスを制限する。別の役割のキーワードなので同時にも使える。</p></section><section class="card"><h2>30秒で理解チェック</h2><p><code>Product p1 = new Product("A");</code> と <code>p2</code> の2つを作った。<code>static int total</code> の保存先は何個？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>1個。</strong> staticはクラスに属し、インスタンスの数だけ増えるわけではない。値はコンストラクタの処理で増やしている。</p></details></section><div class="links"><a href="../lesson05.html">← 第5回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義を補助するための解説です。比較用のコードは必要部分のみの抜粋です。実際のJava実行はEclipseなどで行ってください。</footer></main></body></html>
