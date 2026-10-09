@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson04.html">前の講義</a><a href="lesson06.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson04.html">前の講義</a><a href="lesson06.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 5 回 ／ 全 18 回</span><h1>カプセル化と static</h1><p>第9章　カプセル化 ／ static の意味 ／ static とインスタンスの使い分け</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">カプセル化</span>　<span class="term">private</span>　<span class="term">static</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>フィールドを <code>private</code> にして、getter と setter を通して読み書きできる</li><li>setter に検査を入れて、おかしな値をはじける</li><li><code>static</code> が「クラスに1つ」、付けないと「実物1つにつき1つ」だと説明できる</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/static-instance.html">static・private・インスタンスの違いを詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>カプセル化</td><td>フィールドを <code>private</code> で隠し、値の出し入れを <code>public</code> のメソッド（getter・setter）だけに限ることです。<code class="ex">private int price;
