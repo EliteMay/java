@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson10.html">前の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson10.html">前の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 11 回 ／ 全 18 回</span><h1>MySQL・SQL・JDBC</h1><p>第14章 と 第17章 17-1・17-2　MySQL の準備 ／ SQL の最低限 ／ JDBC で接続して SELECT ／ JDBC の7つの手順</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">データベース（MySQL）</span>　<span class="term">SQL</span>　<span class="term">JDBC</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>mysql で、データベースと表を作り、商品を入れて取り出せる</li><li>Java から MySQL につないで、表の中身を <code>List&lt;Product&gt;</code> に読み込める</li><li>つながらないときに、メッセージから見る所を言える</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/jdbc.html">SQL・JDBC・PreparedStatementを詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>データベース（MySQL）</td><td>データを表（テーブル）の形でまとめて保存し、検索・追加・更新・削除を受け持つソフトです。この講座では MySQL を使います。<code class="ex">CREATE DATABASE stock;</code></td></tr><tr><td>SQL</td><td>データベースに、データの検索・追加・更新・削除や、表の作成を命令するための言語。MySQL をはじめ、ほとんどのデータベースで共通に使えます。<code class="ex">SELECT id, name, price, stock FROM products ORDER BY id;</code></td></tr><tr><td>JDBC</td><td>Java Database Connectivity。Java のプログラムからデータベースに接続し、SQL を送って結果を受け取るための標準の仕組み（<code>java.sql</code>）。データベースごとのドライバ（MySQL なら Connector/J）と組み合わせて使います。<code class="ex">Connection con = DriverManager.getConnection(URL, USER, PASSWORD);</code></td></tr></table>
