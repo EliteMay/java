@@ -99,3 +99,53 @@ code.ex {
   pre.code .cm, pre.code .cn { color: #111 !important; }
   .card h2, .sol h2 { background: transparent; border-left-color: #555; }
 }
+
+/* Optional reference stays easy to find, rather than duplicating the lesson text. */
+details.glossary-fold {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+.glossary-fold > summary {
+  cursor: pointer;
+  padding: 1rem 1.35rem;
+  color: #92500b;
+  background: #fff9f0;
+  font-weight: 700;
+  list-style-position: inside;
+}
+.glossary-fold > summary:hover { background: #ffefd9; }
+.glossary-fold > summary:focus-visible,
+.quick-answer > summary:focus-visible {
+  outline: 3px solid #c95400;
+  outline-offset: -3px;
+}
+.glossary-fold[open] > :not(summary) { margin: .9rem 1.35rem; }
+.glossary-fold[open] table { width: calc(100% - 2.7rem); }
+.quick-check {
+  border: 1px solid #cbdff8;
+  border-left: 6px solid #3574bf;
+  background: #fbfdff;
+}
+.quick-check h2 { border-left-color: #3574bf; background: #eef6ff; }
+.quick-check p { line-height: 1.8; }
+.quick-answer {
+  margin-top: .85rem;
+  border-radius: 9px;
+  border: 1px solid #d3e2f4;
+  background: #f1f7ff;
+  overflow: hidden;
+}
+.quick-answer > summary {
+  cursor: pointer;
+  font-weight: 700;
+  color: #164d88;
+  padding: .6rem .8rem;
+}
+.quick-answer > summary:hover { background: #e3f0ff; }
+.quick-answer > p { margin: 0; padding: .75rem .9rem; border-top: 1px solid #d3e2f4; }
+@media print {
+  .glossary-fold { break-inside: auto; }
+  .quick-answer > summary { color: #111; }
+}
