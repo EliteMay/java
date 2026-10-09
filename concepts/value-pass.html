@@ -1,0 +1,25 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>引数・戻り値と値渡し | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>引数・戻り値と値渡し</strong></nav><span class="eyebrow">第3回の補足</span><h1>引数・戻り値と値渡し</h1><p class="subtitle">なぜintの変更は元に戻らず、配列の変更は見えるのか。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong>Javaではメソッドに<strong>値のコピー</strong>を渡す。<code>int</code> は数字がコピーされ、配列は「配列を指す参照の値」がコピーされる。どちらも値渡し。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>まず実際にどう動くかを見て、その理由を下で整理する。</p><div class="codehead"><span>Main.java（値を渡す場合と配列を渡す場合）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>public class Main {
+    static void changeNumber(int n) {
+        n = 99;
+    }
+
+    static void changeArray(int[] values) {
+        values[0] = 99;
+    }
+
+    public static void main(String[] args) {
+        int number = 10;
+        int[] list = {10, 20};
+        changeNumber(number);
+        changeArray(list);
+        System.out.println(number);
+        System.out.println(list[0]);
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果</div><pre class="output">10
+99</pre><h3>1行ずつ考えると</h3><ol class="steps"><li><code>changeNumber(number)</code> は数字10をコピーして渡す。<code>n=99</code> でも外の <code>number</code> は10。</li><li><code>changeArray(list)</code> は配列を指す値をコピーする。呼び出し側とメソッド側は同じ配列を指す。</li><li><code>values[0]=99</code> はその配列の0番を書き換えるため、外側から見ても99になる。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong><code>values = new int[]{1, 2};</code> とメソッドの中で代入しても、呼び出し元の <code>list</code> が新しい配列に切り替わるわけではない。「配列の中身を変更」と「変数の参照先を変更」は別。</div><h3>元のintを更新したいなら戻り値を使う</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>static int doubleIt(int n) {
+    return n * 2;
+}
+// main内
+int number = 10;
+number = doubleIt(number);
+System.out.println(number); // 20</code></pre><p><code>return</code> が結果を返し、呼び出し元で代入し直す。<code>return</code>した時点でそのメソッドの処理は終わる。</p></section><section class="card"><h2>30秒で理解チェック</h2><p><code>int a=5;</code> をメソッドへ渡し、メソッド内で引数に10を代入。呼び出し元の <code>a</code> は？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>5。</strong> 引数はコピー。更新した結果がほしいなら<code>return</code>で受け取り直す。</p></details></section><div class="links"><a href="../lesson03.html">← 第3回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義を補助するための解説です。比較用のコードは必要部分のみの抜粋です。実際のJava実行はEclipseなどで行ってください。</footer></main></body></html>
