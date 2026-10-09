@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第10回｜ストリームと検査例外、ファイル入出力と CSV</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson09.html">前の講義</a><a href="lesson11.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 10 回 ／ 全 18 回</span><h1>ストリームと検査例外、ファイル入出力と CSV</h1><p>第12章 と 第13章　検査例外と throws ／ テキストファイルを読む ／ ファイルに書き込む ／ CSV を Product に変換する</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">ストリーム</span>　<span class="term">CSV</span>　<span class="term">検査例外と throws</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>文字コードを指定して、ファイルを読むストリームと書くストリームを開ける</li><li>CSV の1行を <code>split</code> で分けて、<code>Product</code> にできる</li><li><code>try ( ... )</code> で開いて、ストリームを必ず閉じられる</li><li>ファイルの読み書きで起きる検査例外を、<code>throws</code> で呼んだ側に任せられる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　ストリーム・CSV を水道管とそこを流れる中身で、検査例外と throws を第9回のボールで</li><li>② 写して動かす　<code>products.csv</code> と3つのクラスの全体を写して実行する</li><li>③ 解説　写したコードを①〜⑧の順に。よくある間違いも一緒に</li><li>④ 自力で書く　在庫の少ない商品を書き出す／壊れた行を見つける</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>ストリーム</td><td>データを先頭から順に読み書きするための、入出力の仕組み。読み込み用と書き込み用は別で、使い終わったら閉じ（<code>close</code>）ます。<code class="ex">try (BufferedReader br = new BufferedReader(
+        new FileReader("products.csv", StandardCharsets.UTF_8))) {
+    // 1行ずつ読む
+}</code></td></tr><tr><td>CSV</td><td>項目をカンマで区切って並べた、文字だけのファイルです。1行が1件分のデータです。<code class="ex">1,ボールペン,150,30
+2,ノート,220,10</code></td></tr><tr><td>検査例外と throws</td><td><strong>検査例外</strong>は、備え（<code>catch</code> か <code>throws</code>）を書かないとコンパイルが通らない例外です（<code>IOException</code> など）。<strong>throws</strong> は、メソッドの中で起きた例外を呼んだ側に任せる、という宣言です。<code class="ex">public List&lt;Product&gt; findAll() throws IOException { ... }</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>ストリームは、ファイルとプログラムをつなぐ「水道管」</h3><p class="lead">水は管の中を一方向に流れます。使い終わったら栓を閉めます。</p><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 290" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#0369a1" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="22">読むストリーム（ファイル → プログラム）</text>
+<rect fill="#fff" height="96" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="34"></rect>
+<rect fill="#f0fdf4" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="34"></rect>
+<rect fill="#f0fdf4" height="8" width="178" x="21" y="53"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="110" y="52">products.csv</text>
+<text fill="#1f2933" font-size="13" x="30" y="80">1,ボールペン,150,30</text>
+<text fill="#1f2933" font-size="13" x="30" y="100">2,ノート,220,10</text>
+<text fill="#1f2933" font-size="13" x="30" y="120">3,消しゴム,100,50</text>
+<rect fill="#e0f2fe" height="36" rx="18" stroke="#0284c7" stroke-width="1.5" width="300" x="206" y="64"></rect>
+<text fill="#0c4a6e" font-size="13" text-anchor="middle" x="356" y="87">1,ボールペン,150,30 ↵ 2,ノート,…</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="506" x2="528" y1="82" y2="82"></line>
+<rect fill="#fff" height="96" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="34"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="34"></rect>
+<rect fill="#e0f2fe" height="8" width="168" x="531" y="53"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="615" y="52">Java のプログラム</text>
+<text fill="#1f2933" font-size="13" x="540" y="80">readLine() で</text>
+<text fill="#1f2933" font-size="13" x="540" y="100">1行ずつ受け取る</text>
+<text fill="#b45309" font-size="14" font-weight="bold" text-anchor="middle" x="360" y="162">書くストリーム（プログラム → ファイル）</text>
+<rect fill="#fff" height="96" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="174"></rect>
+<rect fill="#f0fdf4" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="20" y="174"></rect>
+<rect fill="#f0fdf4" height="8" width="178" x="21" y="193"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="110" y="192">products.csv</text>
+<text fill="#1f2933" font-size="13" x="30" y="220">書いた行が</text>
+<text fill="#1f2933" font-size="13" x="30" y="240">ファイルに残る</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="228" x2="204" y1="222" y2="222"></line>
+<rect fill="#fff7ed" height="36" rx="18" stroke="#ea580c" stroke-width="1.5" width="300" x="230" y="204"></rect>
+<text fill="#7c2d12" font-size="13" text-anchor="middle" x="380" y="227">1,ボールペン,150,30 ↵ 2,ノート,…</text>
+<rect fill="#fff" height="96" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="174"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="174"></rect>
+<rect fill="#e0f2fe" height="8" width="168" x="531" y="193"></rect>
+<text fill="#1f2933" font-size="13" font-weight="bold" text-anchor="middle" x="615" y="192">Java のプログラム</text>
+<text fill="#1f2933" font-size="13" x="540" y="220">write() で</text>
+<text fill="#1f2933" font-size="13" x="540" y="240">1行ずつ渡す</text>
+</svg><p class="figcap">ストリームは一方通行の管。読む管と書く管を別々に開き、使い終わったら閉める</p><p>これまで <code>List</code> に入れた商品は、プログラムを閉じると消えていました。第8回・第9回で、毎回 <code>add</code> し直していたのはそのためです。<strong>ファイルに書いておけば、閉じても残ります。</strong></p>
+<p>プログラムから、ファイルの中身を直接は触れません。ファイルとプログラムを<strong>管でつなぎ</strong>、中身を先頭から順に流して受け取ります。この管が<strong>ストリーム</strong>です。</p>
+<p>管は<strong>一方通行</strong>です。読むときは「ファイルからプログラムへ」、書くときは「プログラムからファイルへ」の管を、別々に開きます。<strong>使い終わったら栓を閉めます。</strong>閉め忘れると、書いたはずの中身がファイルに届きません（③の4）。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 222" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#0369a1" font-size="14" font-weight="bold" text-anchor="start" x="20" y="26">管で運ぶ中身は、1行が1件</text>
+<rect fill="#e0f2fe" height="48" rx="24" stroke="#0284c7" stroke-width="1.5" width="680" x="20" y="38"></rect>
+<rect fill="#fff" height="28" rx="6" stroke="#c2410c" stroke-width="1.5" width="200" x="44" y="48"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="13" x="58" xml:space="preserve" y="67">1,ボールペン,150,30</text>
+<rect fill="#fff" height="28" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="260" y="48"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="13" x="274" xml:space="preserve" y="67">2,ノート,220,10</text>
+<rect fill="#fff" height="28" rx="6" stroke="#334155" stroke-width="1.5" width="200" x="476" y="48"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="13" x="490" xml:space="preserve" y="67">3,消しゴム,100,50</text>
+<line stroke="#c2410c" stroke-dasharray="4 3" stroke-width="1.2" x1="44" x2="20" y1="78" y2="134"></line>
+<line stroke="#c2410c" stroke-dasharray="4 3" stroke-width="1.2" x1="244" x2="498" y1="78" y2="134"></line>
+<rect fill="#fff3e6" height="36" rx="6" stroke="#334155" stroke-width="1.5" width="70" x="20" y="136"></rect>
+<rect fill="#fff3e6" height="36" rx="6" stroke="#334155" stroke-width="1.5" width="150" x="116" y="136"></rect>
+<rect fill="#fff3e6" height="36" rx="6" stroke="#334155" stroke-width="1.5" width="90" x="292" y="136"></rect>
+<rect fill="#fff3e6" height="36" rx="6" stroke="#334155" stroke-width="1.5" width="90" x="408" y="136"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="55" y="160">1</text>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="191" y="160">ボールペン</text>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="337" y="160">150</text>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="453" y="160">30</text>
+<text fill="#b91c1c" font-size="28" font-weight="bold" text-anchor="middle" x="103" y="164">,</text>
+<text fill="#b91c1c" font-size="28" font-weight="bold" text-anchor="middle" x="279" y="164">,</text>
+<text fill="#b91c1c" font-size="28" font-weight="bold" text-anchor="middle" x="395" y="164">,</text>
+<text fill="#64748b" font-family="Consolas,monospace" font-size="12" x="25" xml:space="preserve" y="194">parts[0]</text>
+<text fill="#64748b" font-family="Consolas,monospace" font-size="12" x="161" xml:space="preserve" y="194">parts[1]</text>
+<text fill="#64748b" font-family="Consolas,monospace" font-size="12" x="307" xml:space="preserve" y="194">parts[2]</text>
+<text fill="#64748b" font-family="Consolas,monospace" font-size="12" x="423" xml:space="preserve" y="194">parts[3]</text>
+<text fill="#b45309" font-size="14" font-weight="bold" text-anchor="start" x="530" y="146">1行の中は、項目を</text>
+<text fill="#b45309" font-size="14" font-weight="bold" text-anchor="start" x="530" y="166">カンマで区切る</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="14" x="530" xml:space="preserve" y="194">line.split(",")</text>
+</svg><p class="figcap">CSV は1行が1件。項目をカンマで区切って並べた、文字だけのファイル</p><p>管で運ぶ中身にも、決まった形があります。1行が1件で、項目をカンマで区切って並べた文字のファイルが <strong>CSV</strong> です。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 140" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="180" y="26">たとえ（第9回のボールとグローブ）</text>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="540" y="26">Java</text>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="20" y="38"></rect>
+<rect fill="#fff3e6" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="20" y="38"></rect>
+<rect fill="#fff3e6" height="8" width="318" x="21" y="57"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="180" y="56">後ろの人に任せる</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="34" y="86">飛んでくると分かっているボール</text>
+<text fill="#1f2933" font-size="13" text-anchor="start" x="34" y="106">「後ろの人に任せます」と先に言う</text>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="342" x2="378" y1="77" y2="77"></line>
+<rect fill="#fff" height="78" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="380" y="38"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="320" x="380" y="38"></rect>
+<rect fill="#e0f2fe" height="8" width="318" x="381" y="57"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="540" y="56">検査例外と throws</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="394" xml:space="preserve" y="86">public List&lt;Product&gt; findAll()</text>
+<text fill="#1d4ed8" font-family="Consolas,monospace" font-size="14" x="394" xml:space="preserve" y="106">        throws IOException { ... }</text>
+</svg><p class="figcap">「ファイルが無い」は、飛んでくると分かっているボール。throws で呼んだ側に任せる</p><p>ファイルを開くと、「ファイルが無い」「読めない」というボール（<code>IOException</code>）が飛んでくることが、前もって分かっています。こうした種類の例外が<strong>検査例外</strong>です。Java は、自分で受け止める（<code>try-catch</code>）か、「後ろの人に任せます」と先に言っておくかの、どちらかを書かないとコンパイルを通しません。先に言っておくのが <strong><code>throws</code></strong> です。後ろの人とは、そのメソッドを呼んだ側（ここでは <code>Main</code>）のことです。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>水道管</td><td>ストリーム</td></tr><tr><td>ファイルから入ってくる管</td><td><code>FileReader</code>（読むストリーム）</td></tr><tr><td>プログラムから出ていく管</td><td><code>FileWriter</code>（書くストリーム）</td></tr><tr><td>管の先で、1行ずつ汲むバケツ</td><td><code>BufferedReader</code> の <code>readLine()</code></td></tr><tr><td>栓を閉める</td><td><code>close()</code>。<code>try ( ... )</code> の中で開くと、自動で閉まる</td></tr><tr><td>1行1件、カンマで区切った形</td><td>CSV　<code>1,ボールペン,150,30</code></td></tr><tr><td>後ろの人に任せると先に言っておく</td><td><code>throws IOException</code>。検査例外に付ける</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>ストリーム</td><td>プログラムを閉じても消えないように、データをファイルへ書いたり、ファイルから読んだりするためです。</td></tr><tr><td>CSV</td><td>表の形のデータを決まった形の文字で保存でき、Excel などほかのソフトとも受け渡しできるからです。</td></tr><tr><td>検査例外と throws</td><td>ファイルや通信のように、失敗するかもしれないと分かっている処理への備えを、書き忘れさせないためです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>ストリーム</td><td>商品の一覧を CSV ファイルに保存し、次に起動したときに読み込むとき。</td></tr><tr><td>CSV</td><td>商品の一覧をファイルに保存するとき。Excel で作った表を、プログラムで読み込むとき。</td></tr><tr><td>検査例外と throws</td><td>ファイルやデータベースを読み書きするメソッドを書くとき。</td></tr></table>
+<p>今日のゴールは、この2本の管をコードで開いて、商品を読み書きできるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は新しいプロジェクト <code>lesson10</code> に、データのファイル <code>products.csv</code> を1つと、クラスを3つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson10</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson10</code>（<code>src</code> ではなく、プロジェクトそのもの）を右クリック →［新規］→［ファイル］</td></tr><tr><td>⑤</td><td>名前に <code>products.csv</code> と入力して［完了］</td></tr><tr><td>⑥</td><td>左のツリーの <code>products.csv</code> を右クリック →［次で開く］→［テキスト・エディター］。下の <code>products.csv</code> の3行を貼り、<code>Ctrl</code> + <code>S</code> で保存する</td></tr><tr><td>⑦</td><td><code>products.csv</code> を右クリック →［プロパティー］→［リソース］で、テキスト・ファイル・エンコードが <code>UTF-8</code> になっていることを確かめる</td></tr><tr><td>⑧</td><td><code>lesson10</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑨</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson10</code> と入っていることを確かめて［完了］（空なら <code>lesson10</code> と入力する）</td></tr><tr><td>⑩</td><td>⑧⑨をもう一度行い、名前 <code>CsvProductDao</code> と <code>Main</code> のクラスを作る</td></tr><tr><td>⑪</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑫</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<p>⑤の［完了］のあとに Excel などの別のソフトが開いたら、保存せずに閉じてから⑥へ進みます。</p>
+<p>⑦で <code>UTF-8</code> になっていなければ、［その他］を選んで <code>UTF-8</code> にします。ここが違うと、日本語が化けます。</p>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の4つのファイルです。<code>products.csv</code> だけは Java ではなく<strong>データのファイル</strong>で、<code>src</code> の外（プロジェクトの直下）に置きます。</p>
+<p><strong>CSV</strong> は、項目をカンマで区切って並べただけの文字のファイルです。ここでは1行が1商品で、「ID,名前,価格,在庫」の順に並べています。</p>
+<p><code>CsvProductDao</code> は、<code>products.csv</code> の読み書きだけを受け持つ係のクラスです。名前の <strong>Dao</strong> は Data Access Object（データの出し入れをする物）の略で、こうした係のクラスに付ける名前です。なぜ係を分けるのかは③解説の5で、DAO そのものは第13回で詳しく扱います。</p>
+<p><code>Product</code> のコードは第5回と同じです（1行目は <code>package lesson10;</code> にし、行末の番号のメモは外しています）。今日は1行も変えません。</p>
+<p>下の4つが、それぞれのファイルの中身の全部です。行の右にある ①〜⑧ は、③解説の番号です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 270" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson10</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="236"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson10（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="196"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="136" y2="136"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="166" y2="166"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="196" y2="196"></line>
+<rect fill="#e0f2fe" height="28" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="140" y="122"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="141">Product.java</text>
+<rect fill="#e0f2fe" height="28" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="140" y="152"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="171">CsvProductDao.java</text>
+<rect fill="#fff3e6" height="28" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="140" y="182"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="201">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="336" y="141">商品。第5回と同じ中身</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="336" y="171">products.csv を読み書きする係</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="336" y="201">使う側。main があり、ここから実行する</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="236" y2="236"></line>
+<rect fill="#f0fdf4" height="28" rx="6" stroke="#047857" stroke-width="1.5" width="150" x="70" y="222"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="82" y="241">products.csv</text>
+<text fill="#047857" font-size="13" font-weight="bold" text-anchor="start" x="236" y="241">データのファイル。src の外、プロジェクトの直下に置く</text>
+</svg><p class="figcap">プロジェクトの中身。products.csv だけは src の外に置きます</p><p class="fname">products.csv　データ（src の外に置く）</p>
+<pre class="code" id="c1">1,ボールペン,150,30
+2,ノート,220,10
+3,消しゴム,100,50</pre>
+<p class="fname">Product.java　商品（第5回と同じ）</p>
+<pre class="code" id="c2">package lesson10;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="fname">CsvProductDao.java　products.csv を読み書きする係</p>
+<pre class="code" id="c3">package lesson10;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CsvProductDao {
+
+    public List&lt;Product&gt; findAll() throws IOException {           <span class="cm">// <span class="cn">①</span> throws</span>
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        try (BufferedReader br = new BufferedReader(              <span class="cm">// <span class="cn">②</span> 読むストリーム</span>
+                new FileReader("products.csv", StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {              <span class="cm">// <span class="cn">③</span> 1行ずつ読む</span>
+                String[] parts = line.split(",");                 <span class="cm">// <span class="cn">④</span> カンマで分ける</span>
+                int id = Integer.parseInt(parts[0]);              <span class="cm">// <span class="cn">⑤</span> 数字にする</span>
+                String name = parts[1];
+                int price = Integer.parseInt(parts[2]);
+                int stock = Integer.parseInt(parts[3]);
+                list.add(new Product(id, name, price, stock));    <span class="cm">// <span class="cn">⑤</span> 商品にする</span>
+            }
+        }
+        return list;
+    }
+
+    public void saveAll(List&lt;Product&gt; list) throws IOException {  <span class="cm">// <span class="cn">①</span> throws</span>
+        try (BufferedWriter bw = new BufferedWriter(              <span class="cm">// <span class="cn">⑥</span> 書くストリーム</span>
+                new FileWriter("products.csv", StandardCharsets.UTF_8))) {
+            for (Product p : list) {
+                bw.write(p.getId() + "," + p.getName() + ","      <span class="cm">// <span class="cn">⑦</span> 1行書く</span>
+                        + p.getPrice() + "," + p.getStock());
+                bw.newLine();                                     <span class="cm">// <span class="cn">⑦</span> 改行する</span>
+            }
+        }
+    }
+}</pre>
+<p class="fname">Main.java　使うほう</p>
+<pre class="code" id="c4">package lesson10;
+
+import java.io.IOException;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) {
+        CsvProductDao dao = new CsvProductDao();
+
+        try {
+            List&lt;Product&gt; list = dao.findAll();                   <span class="cm">// <span class="cn">⑧</span> 読む</span>
+            for (Product p : list) {
+                p.show();
+            }
+
+            for (Product p : list) {
+                if (p.getId() == 2) {                             <span class="cm">// ID 2 の「ノート」を</span>
+                    p.setStock(p.getStock() - 3);                 <span class="cm">// 3個売った</span>
+                }
+            }
+            dao.saveAll(list);                                    <span class="cm">// <span class="cn">⑧</span> 書き戻す</span>
+            System.out.println("保存しました");
+        } catch (IOException e) {                                 <span class="cm">// <span class="cn">⑧</span> 受け止める</span>
+            System.out.println("ファイルを読み書きできません: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個
+保存しました</div>
+<p>実行したら、左のツリーで <code>lesson10</code> を右クリック →［リフレッシュ］してから、<code>products.csv</code> を開きます。2行目が <code>2,ノート,220,7</code> に変わっています。プログラムが書き戻した結果です。</p>
+<p>リフレッシュしないと、Eclipse の画面には前の中身が残って見えることがあります。<strong>書いたあとは、リフレッシュして中身を自分の目で見ます。</strong></p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　例外を呼んだ側に任せる（①）</h2>
+<p class="fname">CsvProductDao.java（抜き出し）</p>
+<pre class="code" id="c5">public List&lt;Product&gt; findAll() throws IOException {           <span class="cm">// <span class="cn">①</span> throws</span>
+    <span class="cm">// （中略）</span>
+}
+
+public void saveAll(List&lt;Product&gt; list) throws IOException {  <span class="cm">// <span class="cn">①</span> throws</span>
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><code>throws IOException</code> は、このメソッドの中で起きた <code>IOException</code> は呼んだ側に任せる、という宣言です。<code>IOException</code> は、ファイルが無い・読めない・書けないときの例外です。</p>
+<p><strong>なぜ呼んだ側に任せるのか。</strong>ファイルが無い・書き込めない、は外の事情で起きる検査例外です。そのとき画面に何と出すかは、呼んだ側の <code>Main</code> が決めます。<code>CsvProductDao</code> の中で表示して終わると、<code>Main</code> は失敗に気づけません。</p>
+<p>任された例外は、呼んだ側の <code>Main</code> の <code>try-catch</code>（⑧）で受け止めます。</p>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c6">public static void main(String[] args) {
+    CsvProductDao dao = new CsvProductDao();
+
+    try {
+        List&lt;Product&gt; list = dao.findAll();                   <span class="cm">// <span class="cn">⑧</span> 読む</span>
+        <span class="cm">// （中略）</span>
+        dao.saveAll(list);                                    <span class="cm">// <span class="cn">⑧</span> 書き戻す</span>
+        System.out.println("保存しました");
+    } catch (IOException e) {                                 <span class="cm">// <span class="cn">⑧</span> 受け止める</span>
+        System.out.println("ファイルを読み書きできません: " + e.getMessage());
+    }
+}</pre>
+<p>試しに <code>products.csv</code> の名前を変えて（たとえば <code>products_old.csv</code>）、<code>Main</code> を実行します。<code>findAll</code> の中でファイルを開けずに <code>IOException</code> が起き、①の宣言どおり <code>Main</code> へ渡ります。<code>Main</code> の <code>catch</code> が受け止めて、次の1行を出します。<code>e.getMessage()</code> が、開けなかった理由です。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">ファイルを読み書きできません: products.csv (指定されたファイルが見つかりません。)</div>
+<p>赤い文字は出ず、プログラムは最後まで動きました。何と知らせるかを <code>Main</code> が決めています。試したら、名前を <code>products.csv</code> に戻します。</p>
+<p><strong>よくある間違い：throws を書き忘れる。</strong><code>findAll</code> の定義行から <code>throws IOException</code> を消した形です。<code>Product</code> と <code>Main</code> は写経のままです。</p>
+<p class="fname">CsvProductDao.java（間違いあり）</p>
+<pre class="code" id="c7">package lesson10;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CsvProductDao {
+
+    public List&lt;Product&gt; findAll() {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("products.csv", StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                int id = Integer.parseInt(parts[0]);
+                String name = parts[1];
+                int price = Integer.parseInt(parts[2]);
+                int stock = Integer.parseInt(parts[3]);
+                list.add(new Product(id, name, price, stock));
+            }
+        }
+        return list;
+    }
+
+    public void saveAll(List&lt;Product&gt; list) throws IOException {
+        try (BufferedWriter bw = new BufferedWriter(
+                new FileWriter("products.csv", StandardCharsets.UTF_8))) {
+            for (Product p : list) {
+                bw.write(p.getId() + "," + p.getName() + ","
+                        + p.getPrice() + "," + p.getStock());
+                bw.newLine();
+            }
+        }
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">処理されない例外の型 IOException
+（Unhandled exception type IOException）
+
+Unhandled exception type IOException thrown by automatic close() invocation on br</div>
+<p>まだ1行も実行していないのに、赤い印が出て実行できません。ファイルを開く・読む処理は、ファイルが無いことがあるので、Java が<strong>備えを書いたかを、コンパイルのときに確かめます。</strong>2つ目の英語の文は、<code>try ( )</code> が自動で閉じるときの分で、Eclipse でも英語のまま出ます。こうして確かめられる例外を<strong>検査例外</strong>と言います。第9回の <code>NumberFormatException</code> は、備えを書かなくてもコンパイルが通りました。</p>
+<table><tr><th></th><th>検査例外</th><th>非検査例外</th></tr><tr><td>例</td><td><code>IOException</code>（ファイル）　<code>SQLException</code>（データベース、第11回）</td><td><code>NullPointerException</code>　<code>NumberFormatException</code>　<code>IllegalArgumentException</code></td></tr><tr><td>原因</td><td>ファイルが無いなど、外の事情</td><td>書き方や入力の中身</td></tr><tr><td>備えを書かないと</td><td>コンパイルエラー</td><td>コンパイルは通る</td></tr><tr><td>備え方</td><td><code>try-catch</code> か <code>throws</code></td><td>起きないように書く。入力の間違いは <code>catch</code></td></tr></table>
+<div class="words"><b>ここで出た言葉</b><span><b>検査例外</b>　備え（<code>try-catch</code> か <code>throws</code>）を書かないとコンパイルエラーになる例外</span></div>
+<div class="note">Eclipse で赤い印にマウスを乗せると、直し方の候補が出ます。<code>throws</code> を足す候補と、<code>try</code> で囲む候補の2つで、検査例外の2つの備え方と同じです。</div>
+<h2>2　読むストリームを開く（②）</h2>
+<p class="fname">CsvProductDao.java（抜き出し）</p>
+<pre class="code" id="c8">public List&lt;Product&gt; findAll() throws IOException {           <span class="cm">// <span class="cn">①</span> throws</span>
+    List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+    try (BufferedReader br = new BufferedReader(              <span class="cm">// <span class="cn">②</span> 読むストリーム</span>
+            new FileReader("products.csv", StandardCharsets.UTF_8))) {
+        <span class="cm">// （中略）</span>
+    }
+    return list;
+}</pre>
+<p><code>products.csv</code> から読むストリームを開きます。<code>FileReader</code> がファイルにつなぐ管、<code>BufferedReader</code> が1行ずつ汲むバケツです。</p>
+<p><strong>どこから来るのか。</strong><code>FileReader</code> と <code>BufferedReader</code> は、メソッドではなく、Java に最初から入っている<strong>クラス</strong>です。<code>java.io</code> というパッケージに入っていて、<code>CsvProductDao.java</code> の上の <code>import java.io.FileReader;</code> と <code>import java.io.BufferedReader;</code> で使えるようにしています。<code>new FileReader(…)</code> で、そのクラスの実物（インスタンス）を作ります（第4回の <code>new</code> と同じです）。</p>
+<p><code>new BufferedReader(new FileReader(…))</code> は入れ子で、内側で作った <code>FileReader</code> を、外側の <code>BufferedReader</code> のコンストラクタに渡しています。<code>FileReader</code> には1行ずつ読むメソッドが無いので、1行ずつ読める <code>BufferedReader</code> にかぶせて使います。</p>
+<p><code>FileReader</code> の丸括弧の2つ目の <code>StandardCharsets.UTF_8</code> は、<strong>文字コード</strong>の指定です。文字コードは、文字をファイルに保存するときの番号の付け方で、<code>UTF-8</code> はその決まりの1つです。<code>StandardCharsets</code> も Java に最初から入っているクラス（<code>java.nio.charset</code> パッケージ）で、<code>UTF_8</code> はそこに用意された「UTF-8」を表す値です。</p>
+<div class="words"><b>ここで出た言葉</b><span><b><code>FileReader</code></b>　ファイルを開いて、文字を読むクラス（<code>java.io</code>）</span><span><b><code>BufferedReader</code></b>　ほかの読む道具にかぶせて、1行ずつ読めるようにするクラス（<code>java.io</code>）。<code>readLine()</code> で1行読みます</span><span><b>文字コード</b>　文字をファイルに保存するときの番号の付け方。<code>UTF-8</code> など。読むときと書くときでそろえます</span></div>
+<p><strong>なぜ文字コードを書くのか。</strong>読むときと書くときで、文字コードをそろえるためです。Java 17 以前の環境では、書かないとそのパソコンの標準の文字コードで読むので、日本語が化けることがあります。別の文字コードで保存されたファイルを読むときも化けます。</p>
+<p><code>try</code> の丸括弧の中で開いたものは、<code>{ }</code> を抜けるときに自動で閉じます。途中で例外が起きても必ず閉じます。閉じないと、ファイルをつかんだままになります。</p>
+<div class="words"><b>ここで出た言葉</b><span><b><code>try ( ... )</code></b>　try-with-resources（とらい・うぃず・りそーしず）と呼ぶ書き方。丸括弧の中で開いたストリームを、<code>{ }</code> を抜けるときに自動で閉じます</span></div>
+<h2>3　1行ずつ読み、分けて、商品にする（③④⑤）</h2>
+<p class="fname">CsvProductDao.java（抜き出し）</p>
+<pre class="code" id="c9">public List&lt;Product&gt; findAll() throws IOException {           <span class="cm">// <span class="cn">①</span> throws</span>
+    <span class="cm">// （中略）</span>
+        String line;
+        while ((line = br.readLine()) != null) {              <span class="cm">// <span class="cn">③</span> 1行ずつ読む</span>
+            String[] parts = line.split(",");                 <span class="cm">// <span class="cn">④</span> カンマで分ける</span>
+            int id = Integer.parseInt(parts[0]);              <span class="cm">// <span class="cn">⑤</span> 数字にする</span>
+            String name = parts[1];
+            int price = Integer.parseInt(parts[2]);
+            int stock = Integer.parseInt(parts[3]);
+            list.add(new Product(id, name, price, stock));    <span class="cm">// <span class="cn">⑤</span> 商品にする</span>
+        }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><code>readLine()</code> は1行読んで、文字列で返します。読む行が無くなると <code>null</code> を返します。<code>while</code> の丸括弧の中は、<code>br.readLine()</code> で1行読む → その行を <code>line</code> に入れる → <code>line</code> を <code>null</code> と比べる、の順に動きます。ファイルが何行あるかは読む前には分からないので、<code>null</code> を「もう行が無い」の合図にしています。</p>
+<p><code>split(",")</code> は、文字列をカンマの所で切り、配列にします。<code>"1,ボールペン,150,30"</code> は、<code>[0]</code> が <code>"1"</code>、<code>[1]</code> が <code>"ボールペン"</code>、<code>[2]</code> が <code>"150"</code>、<code>[3]</code> が <code>"30"</code> になります。</p>
+<p><code>Integer.parseInt</code> で、文字列の <code>"150"</code> を数字の <code>150</code> にします（第9回）。<strong>なぜ数字にするのか。</strong>ファイルから来るものは、数字に見えても全部文字列だからです。<code>Product</code> のコンストラクタは、ID・価格・在庫を <code>int</code> で受け取ります。</p>
+<p><code>products.csv</code> の最後に <code>4,定規,180,20</code> を足せば、Java のコードを1行も変えずに商品が増えます。</p>
+<p><strong>よくある間違い：項目の足りない行が混ざる。</strong><code>products.csv</code> の2行目の在庫を消して保存し、<code>Main</code> を実行した形です。</p>
+<p class="fname">products.csv（間違いあり）</p>
+<pre class="code" id="c10">1,ボールペン,150,30
+2,ノート,220
+3,消しゴム,100,50</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">Exception in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3
+	at lesson10.CsvProductDao.findAll(CsvProductDao.java:24)
+	at lesson10.Main.main(Main.java:11)</div>
+<p><code>"2,ノート,220"</code> は項目が3つなので、分けた配列にも要素が3つしかありません。24行目の <code>parts[3]</code> を取り出そうとして止まりました。1行目は読めていたのに、表示される前に止まり、3行目も読まれません。この例外は <code>IOException</code> ではないので、<code>Main</code> の <code>catch</code> では受け止められません。</p>
+<div class="words"><b>ここで出た言葉</b><span><b><code>ArrayIndexOutOfBoundsException</code></b>　配列に無い番号を使ったときの例外。<code>Index 3 out of bounds for length 3</code> は「長さ3の配列で、3番を使おうとした」という意味です（第2回の配列）</span></div>
+<p>直し方は、分けたあとに項目が4つあるかを確かめ、足りない行は知らせて飛ばすことです。④の自力で書く②で、この書き方を練習します。最後に空の行があるときも止まります。空の文字列は数字にできないので、<code>NumberFormatException</code> になります。</p>
+<h2>4　書くストリームで書き戻す（⑥⑦）</h2>
+<p class="fname">CsvProductDao.java（抜き出し）</p>
+<pre class="code" id="c11">public void saveAll(List&lt;Product&gt; list) throws IOException {  <span class="cm">// <span class="cn">①</span> throws</span>
+    try (BufferedWriter bw = new BufferedWriter(              <span class="cm">// <span class="cn">⑥</span> 書くストリーム</span>
+            new FileWriter("products.csv", StandardCharsets.UTF_8))) {
+        for (Product p : list) {
+            bw.write(p.getId() + "," + p.getName() + ","      <span class="cm">// <span class="cn">⑦</span> 1行書く</span>
+                    + p.getPrice() + "," + p.getStock());
+            bw.newLine();                                     <span class="cm">// <span class="cn">⑦</span> 改行する</span>
+        }
+    }
+}</pre>
+<p><code>products.csv</code> へ書くストリームを開きます。<strong>開いた時点でファイルの中身は空になり</strong>、先頭から書き直します（上書き）。<code>list</code> の中身を全部書き直すので、ファイルと <code>list</code> がずれません。文字コードは読むときと同じ <code>UTF-8</code> にします。</p>
+<p><code>write</code> で、商品の4つの値をカンマでつないだ1行を書き、<code>newLine()</code> で改行を書きます。<strong>なぜ newLine() が要るのか。</strong><code>write</code> は改行を書かないからです。無いと <code>1,ボールペン,150,302,ノート,…</code> のように全部が1行につながり、次に読んだときは在庫302個のボールペン1つになります。エラーは出ません。</p>
+<p><strong>よくある間違い：閉じ忘れる。</strong><code>saveAll</code> から <code>try ( )</code> を外し、<code>close()</code> も書かなかった形です。<code>Product</code> と <code>Main</code> は写経のままです。<code>products.csv</code> を②の3行に戻してから試します。</p>
+<p class="fname">CsvProductDao.java（間違いあり）</p>
+<pre class="code" id="c12">package lesson10;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+public class CsvProductDao {
+
+    public List&lt;Product&gt; findAll() throws IOException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("products.csv", StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",");
+                int id = Integer.parseInt(parts[0]);
+                String name = parts[1];
+                int price = Integer.parseInt(parts[2]);
+                int stock = Integer.parseInt(parts[3]);
+                list.add(new Product(id, name, price, stock));
+            }
+        }
+        return list;
+    }
+
+    public void saveAll(List&lt;Product&gt; list) throws IOException {
+        BufferedWriter bw = new BufferedWriter(                   <span class="cm">// try ( ) を外した</span>
+                new FileWriter("products.csv", StandardCharsets.UTF_8));
+        for (Product p : list) {
+            bw.write(p.getId() + "," + p.getName() + ","
+                    + p.getPrice() + "," + p.getStock());
+            bw.newLine();
+        }
+    }                                                             <span class="cm">// close() していない</span>
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個
+保存しました</div>
+<p>「保存しました」と出ています。ところが、リフレッシュして <code>products.csv</code> を開くと、<strong>中身が空</strong>になっています。</p>
+<svg class="fig" role="img" viewbox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="20" y="26">try ( ) で開いたとき</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="160" x="20" y="38"></rect>
+<text fill="#1f2933" font-size="14" x="30" y="58">bw.write(…)</text>
+<text fill="#1f2933" font-size="14" x="30" y="78">bw.newLine()</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="180" x2="238" y1="68" y2="68"></line>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="210" x="240" y="38"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="210" x="240" y="38"></rect>
+<rect fill="#e0f2fe" height="8" width="208" x="241" y="57"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="345" y="56">BufferedWriter</text>
+<text fill="#1f2933" font-size="14" x="250" y="84">書いた行を溜めておく</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="450" x2="528" y1="68" y2="68"></line>
+<text fill="#334155" font-size="13" text-anchor="middle" x="489" y="60">閉じる</text>
+<rect fill="#f0fdf4" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="38"></rect>
+<rect fill="#dcfce7" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="170" x="530" y="38"></rect>
+<rect fill="#dcfce7" height="8" width="168" x="531" y="57"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="615" y="56">products.csv</text>
+<text fill="#1f2933" font-size="14" x="540" y="84">3行 書かれる</text>
+<text fill="#b91c1c" font-size="15" font-weight="bold" text-anchor="start" x="20" y="136">閉じなかったとき</text>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="160" x="20" y="148"></rect>
+<text fill="#1f2933" font-size="14" x="30" y="168">bw.write(…)</text>
+<text fill="#1f2933" font-size="14" x="30" y="188">bw.newLine()</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="180" x2="238" y1="178" y2="178"></line>
+<rect fill="#fff" height="60" rx="6" stroke="#334155" stroke-width="1.5" width="210" x="240" y="148"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="210" x="240" y="148"></rect>
+<rect fill="#e0f2fe" height="8" width="208" x="241" y="167"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="345" y="166">BufferedWriter</text>
+<text fill="#1f2933" font-size="14" x="250" y="194">溜めたまま終わる</text>
+<line marker-end="url(#ar3)" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.8" x1="450" x2="528" y1="178" y2="178"></line>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="489" y="170">流れない</text>
+<rect fill="#fef2f2" height="60" rx="6" stroke="#b91c1c" stroke-width="1.5" width="170" x="530" y="148"></rect>
+<rect fill="#fee2e2" height="26" rx="6" stroke="#b91c1c" stroke-width="1.5" width="170" x="530" y="148"></rect>
+<rect fill="#fee2e2" height="8" width="168" x="531" y="167"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="615" y="166">products.csv</text>
+<text fill="#1f2933" font-size="14" x="540" y="194">空のまま</text>
+<text fill="#b91c1c" font-size="13" text-anchor="middle" x="360" y="240">FileWriter を開いた時点で、元の中身は消えている</text>
+</svg><p class="figcap">BufferedWriter は溜めておき、いっぱいになったときや閉じるときにファイルへ流す</p><p><code>BufferedWriter</code> は、<code>write</code> のたびにファイルへ書くのではなく、書いた行をいったん溜めておき、<strong>いっぱいになったときや閉じるときに流します。</strong>閉じないままプログラムが終わると、溜めた分は捨てられます。しかも <code>FileWriter</code> を開いた時点で、元の中身は空にしてあります。写経のコードのとおり <code>try ( ... )</code> の中で開けば、<code>{ }</code> を抜けるときに自動で閉じます。</p>
+<div class="trap">Eclipse では、<code>bw</code> の行に黄色い警告「リソース・リーク: 'bw' が閉じられることはありません」（Resource leak: 'bw' is never closed）が出ます。閉じていない、という意味です。赤ではないので実行できてしまいます。</div>
+<p><strong>よくある間違い：1件足すつもりで、書くストリームを開く。</strong>定規を1件足すつもりで、新しいクラス <code>AddMain</code> を作った形です。<code>products.csv</code> を②の3行に戻してから試します。</p>
+<p class="fname">AddMain.java（間違いあり）</p>
+<pre class="code" id="c13">package lesson10;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+public class AddMain {
+    public static void main(String[] args) throws IOException {
+        try (BufferedWriter bw = new BufferedWriter(
+                new FileWriter("products.csv", StandardCharsets.UTF_8))) {
+            bw.write("4,定規,180,20");                            <span class="cm">// 1件足すつもり</span>
+            bw.newLine();
+        }
+        System.out.println("定規を足しました");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">定規を足しました</div>
+<p class="fname">products.csv（実行したあと）</p>
+<pre class="code" id="c14">4,定規,180,20</pre>
+<p><code>new FileWriter(...)</code> は、開いた瞬間にファイルの中身を空にします。エラーは出ず、元の3件は戻りません。写経の <code>Main</code> と同じく、<code>CsvProductDao</code> で<strong>全部読んで、足して、全部書き戻します。</strong></p>
+<div class="note">記録のように、続きに足していくだけのファイルなら、<code>new FileWriter("log.txt", StandardCharsets.UTF_8, true)</code> と3つ目に <code>true</code> を渡します。<strong>追記</strong>になり、元の中身は消えません。問題集の10-2で使います。</div>
+<h2>5　Main から読み書きを頼む（⑧）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c15">public static void main(String[] args) {
+    CsvProductDao dao = new CsvProductDao();
+
+    try {
+        List&lt;Product&gt; list = dao.findAll();                   <span class="cm">// <span class="cn">⑧</span> 読む</span>
+        <span class="cm">// （中略）</span>
+        dao.saveAll(list);                                    <span class="cm">// <span class="cn">⑧</span> 書き戻す</span>
+        System.out.println("保存しました");
+    } catch (IOException e) {                                 <span class="cm">// <span class="cn">⑧</span> 受け止める</span>
+        System.out.println("ファイルを読み書きできません: " + e.getMessage());
+    }
+}</pre>
+<p>読むのと書き戻すのを、<code>CsvProductDao</code> に頼みます。<code>IOException</code> が来たら、理由を表示します。①で任された例外は、ここで受け止めます。</p>
+<p><strong>なぜ係を分けるのか。</strong>ファイルの扱いを <code>CsvProductDao</code> の1か所にまとめると、<code>Main</code> は「どう読むか」を知らずに済みます。</p>
+<p><code>products.csv</code> を②の3行に戻して2回続けて実行すると、2回目はノートが <code>7</code> 個から始まります。1回目に書き戻した値を、ファイルから読んだからです。<strong>プログラムを閉じても、ファイルに書いたものは残ります。</strong></p>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①で <code>low_stock.csv</code> ができて、中身が見られたら、今日の目的は達成です。</strong></p>
+<p>実行結果は、<code>products.csv</code> が②の3行のときのものです。</p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>LowStockMain</code> で、<code>CsvProductDao</code> を使って商品を読み、在庫が20個未満の商品だけを <code>low_stock.csv</code> に書き出す。1行は「ID,名前,在庫」の形にし、最後に何件書いたかを表示する。</li><li>②　<code>check.csv</code> を作り、下の4行を書いて保存する。<code>CsvCheck</code> で1行ずつ読み、項目の数が4つでない行と、数字にできない行を、何行目かと一緒に表示する。最後に、読めた行の数と全部の行の数を表示する。</li></ul>
+<h2>骨組み</h2>
+<p>データのファイルと、2つのクラスの全体です。<code>// ここに…</code> の所を書きます。<code>check.csv</code> は、<code>products.csv</code> と同じく <code>lesson10</code> の直下に作ります。</p>
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c16">package lesson10;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        CsvProductDao dao = new CsvProductDao();
+
+        try {
+            List&lt;Product&gt; list = dao.findAll();
+            int count = 0;
+
+            <span class="cm">// ここに、low_stock.csv に書くストリームを try ( ) で開く処理を書く</span>
+            <span class="cm">//   在庫が20個未満の商品だけ「ID,名前,在庫」の1行を書き、count を1増やす</span>
+
+            System.out.println("low_stock.csv に" + count + "件書き出しました");
+        } catch (IOException e) {
+            System.out.println("ファイルを読み書きできません: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c16">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">check.csv（lesson10 の直下）</p>
+<pre class="code" id="c17">1,ボールペン,150,30
+2,ノート,二百二十,10
+3,消しゴム,100
+4,定規,180,20</pre>
+<div class="btn-row"><button data-copy="c17">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">CsvCheck.java</p>
+<pre class="code" id="c18">package lesson10;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+public class CsvCheck {
+    public static void main(String[] args) {
+        int lineNo = 0;                     <span class="cm">// 何行目か</span>
+        int ok = 0;                         <span class="cm">// 読めた行の数</span>
+
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("check.csv", StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineNo++;
+                <span class="cm">// ここに、項目が4つでなければ「◯行目: 項目の数が違います → 行」と表示して、次の行へ進む処理を書く</span>
+                <span class="cm">// ここに try-catch を書き、1つ目・3つ目・4つ目を Integer.parseInt で数字にする</span>
+                <span class="cm">//   できたら ok を1増やし、できなければ「◯行目: 数字にできません → 行」と表示する</span>
+            }
+        } catch (IOException e) {
+            System.out.println("check.csv を読めません: " + e.getMessage());
+        }
+        System.out.println("読めた行: " + ok + " / 全部で" + lineNo + "行");
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c18">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">low_stock.csv に1件書き出しました
+
+2行目: 数字にできません → 2,ノート,二百二十,10
+3行目: 項目の数が違います → 3,消しゴム,100
+読めた行: 2 / 全部で4行</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①は <code>saveAll</code> と同じ形です。開くファイル名を <code>low_stock.csv</code> にし、<code>for</code> の中に <code>if (p.getStock() &lt; 20)</code> を足します。実行したらリフレッシュして、<code>2,ノート,10</code> の1行を確かめます。</li><li>②　②の項目の数は <code>parts.length</code> です。「次の行へ進む」は <code>continue;</code>（ループの残りを飛ばして、次の回へ進む命令）です。</li><li>③　②の「数字にできない」は、<code>Integer.parseInt</code> が投げる <code>NumberFormatException</code> を <code>catch</code> します（第9回）。<code>try</code> は <code>while</code> の中に書きます。変えた数字は使わず、数字にできるかを確かめるためだけに呼びます。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第10回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　在庫の少ない商品を書き出す</summary><div class="sol">
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c19">package lesson10;
+
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        CsvProductDao dao = new CsvProductDao();
+
+        try {
+            List&lt;Product&gt; list = dao.findAll();
+            int count = 0;
+
+            <span class="cm">// ここに、low_stock.csv に書くストリームを try ( ) で開く処理を書く</span>
+            try (BufferedWriter bw = new BufferedWriter(
+                    new FileWriter("low_stock.csv", StandardCharsets.UTF_8))) {
+                for (Product p : list) {
+                    if (p.getStock() &lt; 20) {
+                        bw.write(p.getId() + "," + p.getName() + "," + p.getStock());
+                        bw.newLine();
+                        count++;
+                    }
+                }
+            }
+
+            System.out.println("low_stock.csv に" + count + "件書き出しました");
+        } catch (IOException e) {
+            System.out.println("ファイルを読み書きできません: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">low_stock.csv に1件書き出しました</div>
+<p class="fname">low_stock.csv（実行したあと）</p>
+<pre class="code" id="c20">2,ノート,10</pre>
+<div class="note"><code>try</code> が2重になっています。外側は <code>findAll()</code> と書き込みの <code>IOException</code> を受け止める <code>try</code>、内側は書くストリームを閉じるための <code>try ( ... )</code> です。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　壊れた行を見つける</summary><div class="sol">
+<p class="fname">CsvCheck.java</p>
+<pre class="code" id="c21">package lesson10;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+
+public class CsvCheck {
+    public static void main(String[] args) {
+        int lineNo = 0;                     <span class="cm">// 何行目か</span>
+        int ok = 0;                         <span class="cm">// 読めた行の数</span>
+
+        try (BufferedReader br = new BufferedReader(
+                new FileReader("check.csv", StandardCharsets.UTF_8))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                lineNo++;
+                <span class="cm">// ここに、項目が4つでなければ「◯行目: 項目の数が違います → 行」と表示して、次の行へ進む処理を書く</span>
+                String[] parts = line.split(",");
+                if (parts.length != 4) {
+                    System.out.println(lineNo + "行目: 項目の数が違います → " + line);
+                    continue;
+                }
+
+                <span class="cm">// ここに try-catch を書き、1つ目・3つ目・4つ目を Integer.parseInt で数字にする</span>
+                try {
+                    Integer.parseInt(parts[0]);
+                    Integer.parseInt(parts[2]);
+                    Integer.parseInt(parts[3]);
+                    ok++;
+                } catch (NumberFormatException e) {
+                    System.out.println(lineNo + "行目: 数字にできません → " + line);
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("check.csv を読めません: " + e.getMessage());
+        }
+        System.out.println("読めた行: " + ok + " / 全部で" + lineNo + "行");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">2行目: 数字にできません → 2,ノート,二百二十,10
+3行目: 項目の数が違います → 3,消しゴム,100
+読めた行: 2 / 全部で4行</div>
+<div class="note">項目の数を先に確かめるのは、<code>parts[3]</code> を使う前に止まらないようにするためです。順番を逆にすると、3行目で <code>ArrayIndexOutOfBoundsException</code> が出ます。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>ストリームは一方通行で、読む管と書く管を別々に開くことを説明できる</li><li><code>try ( ... )</code> で開くと、何が自動で行われるかを説明できる</li><li><code>FileWriter</code> で開いた時点で、元の中身が消えることを説明できる</li><li>検査例外は、<code>try-catch</code> か <code>throws</code> を書かないとコンパイルが通らないと説明できる</li><li>CSV の1行を <code>split</code> で分け、<code>Integer.parseInt</code> で数字にして <code>Product</code> を作れる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、MySQL・SQL・JDBC です。</strong>今日の CSV は、1件変えるだけでも全部読んで全部書き戻しました。件数が増えると遅くなり、2人が同時に書くと片方の変更が消えます。次回はデータを<strong>データベース</strong>に置き、今日と同じ <code>findAll()</code> という名前のメソッドで <code>List&lt;Product&gt;</code> を受け取ります。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>ストリーム</td><td>すとりーむ</td><td>ファイルとプログラムをつなぐ管。中身が先頭から順に、一方向に流れます</td></tr><tr><td>ファイル入出力</td><td>ふぁいる にゅうしゅつりょく</td><td>ファイルから読むこと（入力）と、ファイルへ書くこと（出力）</td></tr><tr><td>CSV</td><td>しーえすぶい</td><td>項目をカンマで区切って並べた、文字だけのファイル。<code>1,ボールペン,150,30</code></td></tr><tr><td>文字コード</td><td>もじこーど</td><td>文字を数字に置き換えて保存するときの決まり。書いたときと違う決まりで読むと、文字が化けます</td></tr><tr><td>UTF-8</td><td>ゆーてぃーえふ えいと</td><td>いまいちばん使われている文字コード。<code>StandardCharsets.UTF_8</code> と書いて指定します</td></tr><tr><td>FileReader</td><td>ふぁいるりーだー</td><td>ファイルから読むストリーム。<code>new FileReader("products.csv", StandardCharsets.UTF_8)</code></td></tr><tr><td>BufferedReader</td><td>ばっふぁーど りーだー</td><td>読むストリームにかぶせて、1行ずつ読めるようにするもの</td></tr><tr><td>readLine()</td><td>りーど らいん</td><td>1行読んで文字列で返すメソッド。行が無くなると <code>null</code> を返します</td></tr><tr><td>FileWriter</td><td>ふぁいるらいたー</td><td>ファイルへ書くストリーム。開いた時点で中身が空になります（上書き）。3つ目に <code>true</code> を渡すと追記</td></tr><tr><td>BufferedWriter</td><td>ばっふぁーど らいたー</td><td>書くストリームにかぶせて、書いた行を溜めておき、いっぱいになったときや閉じるときに流すもの</td></tr><tr><td>write</td><td>らいと</td><td>文字列を書くメソッド。改行は書きません</td></tr><tr><td>newLine()</td><td>にゅー らいん</td><td>改行を書くメソッド</td></tr><tr><td>close()</td><td>くろーず</td><td>ストリームを閉じるメソッド。<code>try ( ... )</code> で開けば、自分で書かなくても呼ばれます</td></tr><tr><td>try-with-resources</td><td>とらい うぃず りそーしず</td><td><code>try ( ... )</code> の丸括弧の中で開く書き方。<code>{ }</code> を抜けるとき、例外が起きても必ず閉じます</td></tr><tr><td>上書き</td><td>うわがき</td><td>ファイルの中身を消して、先頭から書き直すこと。<code>FileWriter</code> の既定</td></tr><tr><td>追記</td><td>ついき</td><td>ファイルの中身を残したまま、最後に書き足すこと</td></tr><tr><td>split</td><td>すぷりっと</td><td>文字列を、決めた区切りの所で切って配列にするメソッド。<code>line.split(",")</code></td></tr><tr><td>Integer.parseInt</td><td>いんてじゃー ぱーすいんと</td><td>文字列を <code>int</code> に変えるメソッド。変えられないときは <code>NumberFormatException</code> を投げます（第9回）</td></tr><tr><td>throws</td><td>すろーず</td><td>メソッドの定義行に書く宣言。「この例外は、呼んだ側に任せる」という意味。<code>throw</code>（第9回）とは1文字違いの別物です</td></tr><tr><td>検査例外</td><td>けんされいがい</td><td>備え（<code>try-catch</code> か <code>throws</code>）を書かないとコンパイルエラーになる例外。<code>IOException</code> など</td></tr><tr><td>非検査例外</td><td>ひけんされいがい</td><td>備えを書かなくてもコンパイルが通る例外。<code>NullPointerException</code> <code>NumberFormatException</code> など。起きないように書くのが基本です</td></tr><tr><td>IOException</td><td>あいおー えくせぷしょん</td><td>ファイルの読み書きでうまくいかなかったときの例外。検査例外なので、<code>try-catch</code> か <code>throws</code> が要ります（③の1）</td></tr><tr><td>ArrayIndexOutOfBoundsException</td><td>―</td><td>配列に無い番号を使ったときの例外</td></tr><tr><td>continue</td><td>こんてぃにゅー</td><td>ループの残りを飛ばして、次の回へ進む命令</td></tr><tr><td>DAO</td><td>だお</td><td>Data Access Object の略。データの出し入れを受け持つクラス。<code>CsvProductDao</code> がこれです。第13回で詳しく扱います</td></tr><tr><td>リフレッシュ</td><td>りふれっしゅ</td><td>Eclipse の画面を、実際のファイルに合わせて読み直す操作。プロジェクトを右クリック →［リフレッシュ］か <code>F5</code></td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 10 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
