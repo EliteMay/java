@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson03.html">前の講義</a><a href="lesson05.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson03.html">前の講義</a><a href="lesson05.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 4 回 ／ 全 18 回</span><h1>クラスとインスタンス、コンストラクタ</h1><p>第8章　設計図と実体 ／ フィールド ／ コンストラクタと this</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">クラス</span>　<span class="term">インスタンス</span>　<span class="term">フィールド</span>　<span class="term">コンストラクタと this</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>クラスから <code>new</code> でインスタンスを作れる</li><li>同じクラスから作った2つのインスタンスが、別物だと説明できる</li><li>コンストラクタで、作ると同時に値を入れられる</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/this-constructor.html">thisとコンストラクタの関係を詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>クラス</td><td>オブジェクトの設計図。そのオブジェクトが持つ値（フィールド）と、できる処理（メソッド）をまとめて定義したものです。<code class="ex">public class Product { ... }</code></td></tr><tr><td>インスタンス</td><td>クラスをもとに <code>new</code> で作った実体。インスタンスごとに、別々のフィールドの値を持ちます。<code class="ex">Product p1 = new Product("ボールペン", 150);</code></td></tr><tr><td>フィールド</td><td>クラスの中、メソッドの外に書く変数です。インスタンスごとに、別々の値を持ちます。<code class="ex">String name;
