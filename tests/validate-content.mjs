@@ -37,3 +37,36 @@ for (const name of ['problems.html', 'reader.css', 'reader.js']) {
 assert.ok(home.includes('problems.html'), 'Problem set link missing');
 checks++;
 console.log('Java study site: ' + checks + ' structural checks passed');
+
+
+const topics = [
+  'enhanced-for', 'value-pass', 'this-constructor', 'static-instance',
+  'override-super', 'interface', 'hashmap', 'null-exception', 'file-io', 'jdbc'
+];
+const conceptHome = read('concepts/index.html');
+assert.ok(home.includes('concepts/index.html'), 'Homepage missing concept guide link');
+checks++;
+for (const [index, topic] of topics.entries()) {
+  const path = 'concepts/' + topic + '.html';
+  const html = read(path);
+  const lesson = read('lesson' + String(index + 2).padStart(2, '0') + '.html');
+  assert.ok(conceptHome.includes(topic + '.html'), 'Concept index missing ' + topic);
+  assert.ok(lesson.includes('concepts/' + topic + '.html'), 'Lesson missing concept link: ' + topic);
+  assert.ok(html.includes('../lesson' + String(index + 2).padStart(2, '0') + '.html'), 'Concept lacks backlink');
+  for (const resource of ['style.css', '../reader.css', '../reader.js', 'script.js']) {
+    assert.ok(html.includes(resource), 'Concept lacks resource ' + resource + ': ' + topic);
+  }
+  for (const marker of ['まず結論', 'コードと結果で確認', '1行ずつ考えると', 'よくある勘違い', '答えと理由を開く']) {
+    assert.ok(html.includes(marker), 'Concept lacks section ' + marker + ': ' + topic);
+  }
+  assert.ok(html.includes('<pre class="code" id="main-code">'), 'Concept missing main code block ' + topic);
+  assert.ok(html.includes('<pre class="code" id="compare-code">'), 'Concept missing contrast code block ' + topic);
+  assert.ok(html.includes('data-copy-code="main-code"'), 'Concept missing copy control ' + topic);
+  assert.ok(html.endsWith('</html>'), 'Concept HTML incomplete: ' + topic);
+  checks += 15;
+}
+for (const asset of ['concepts/style.css', 'concepts/script.js']) {
+  assert.ok(existsSync(new URL('../' + asset, import.meta.url)), 'Concept shared resource missing ' + asset);
+  checks++;
+}
+console.log('Dedicated Java concepts: all 10 paths and lesson links verified');
