@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第7回｜インタフェース・抽象クラスとポリモーフィズム</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style></head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson06.html">前の講義</a><a href="lesson08.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<header><span class="badge">第 7 回 ／ 全 18 回</span><h1>インタフェース・抽象クラスとポリモーフィズム</h1><p>第10章　インタフェース ／ ポリモーフィズム ／ 抽象クラス</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">インタフェース</span>　<span class="term">ポリモーフィズム</span>　<span class="term">抽象クラス</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>インタフェースを書き、<code>implements</code> でその約束を守るクラスを作れる</li><li>親の型の変数・配列・引数に、種類の違うインスタンスを入れられる</li><li>種類を足しても、使う側のコードを変えずに済むことを説明できる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　インタフェース・ポリモーフィズム・抽象クラスを、レジと割引券、券の台紙で</li><li>② 写して動かす　<code>Coupon</code> と2種類の券と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑥の順に。よくある間違いと、抽象クラスも一緒に</li><li>④ 自力で書く　送料の計算を作る</li><li>⑤ まとめ・次回</li></ul></div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>インタフェース</td><td>クラスが持つべきメソッドの名前・引数・戻り値の型だけを決めたもの。中身は書きません。<code>implements</code> したクラスは、そのメソッドを全部書かなければなりません。<code class="ex">public interface Coupon {
+    int apply(int price);
+}</code></td></tr><tr><td>ポリモーフィズム</td><td>多態性。親の型（インタフェースや親クラス）の変数で同じメソッドを呼んでも、中に入っているインスタンスのクラスによって、違う処理が動くことです。<code class="ex">Coupon c = new YenCoupon(300);
+c.apply(1280)</code></td></tr><tr><td>抽象クラス</td><td><code>abstract</code> を付けた、<code>new</code> できないクラスです。中身の無いメソッド（抽象メソッド）と、中身のあるメソッドを両方持てます。<code class="ex">public abstract class Sale {
+    public abstract int apply(int price);
+}</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>レジは、券の種類を知らなくてよい</h3><p class="lead">決まった形の券なら、どれも同じ手順で通せます。値引きのしかたは券が知っています。</p><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 262" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="244" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="196" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="110" y="30">レジ（使う側）</text>
+<rect fill="#fff" height="96" rx="6" stroke="#334155" stroke-width="1.5" width="168" x="26" y="44"></rect>
+<rect fill="#f0fdf4" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="168" x="26" y="44"></rect>
+<rect fill="#f0fdf4" height="8" width="166" x="27" y="63"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="110" y="62">register</text>
+<text fill="#1f2933" font-size="14" x="36" y="90">Coupon で受け取り</text>
+<text fill="#1f2933" font-size="14" x="36" y="110">c.apply(1280)</text>
+<text fill="#1f2933" font-size="14" x="36" y="130">と呼ぶだけ</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="110" y="180">券の種類は知らない</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="110" y="200">通す手順は1つだけ</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="208" x2="246" y1="100" y2="100"></line>
+<rect fill="#fff" height="86" rx="6" stroke="#334155" stroke-width="1.5" width="172" x="248" y="58"></rect>
+<rect fill="#e0f2fe" height="26" rx="6" stroke="#334155" stroke-width="1.5" width="172" x="248" y="58"></rect>
+<rect fill="#e0f2fe" height="8" width="170" x="249" y="77"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="334" y="76">Coupon（決まり）</text>
+<text fill="#1f2933" font-size="14" x="258" y="104">getName()</text>
+<text fill="#1f2933" font-size="14" x="258" y="124">apply(price)</text>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="middle" x="334" y="172">インタフェース</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="334" y="192">約束だけで、中身は無い</text>
+<rect fill="#f8fafc" height="244" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="244" x="466" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="588" y="30">券（中身）</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="220" x="478" y="38"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="588" y="65">10%オフ券 → 1152円</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="220" x="478" y="94"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="588" y="121">300円引き券 → 980円</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="220" x="478" y="150"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="588" y="177">50%オフ券 → 640円</text>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="476" x2="422" y1="60" y2="92"></line>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="476" x2="422" y1="116" y2="104"></line>
+<line marker-end="url(#ar1)" stroke="#334155" stroke-width="1.8" x1="476" x2="422" y1="172" y2="116"></line>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="588" y="226">どれも implements Coupon</text>
+</svg><p class="figcap">レジは「Coupon」としか見ていない。値引きのしかたは券が知っている</p><p>お店のレジには、割引券を通す手順が1つだけあります。10%オフ券も300円引き券も、<strong>通し方は同じ</strong>です。いくら引くかは、券の側に書いてあります。</p>
+<p>Java では、「レジに通せる券なら、名前と値引き後の金額が言える」という決まりを<strong>インタフェース</strong>として書きます。今日は <code>Coupon</code> です。中身は書かず、約束だけを並べます。</p>
+<p>レジ（使う側）は <code>Coupon</code> 型で受け取って <code>c.apply(1280)</code> と呼ぶだけです。中に入っているのが10%オフ券なら10%、300円引き券なら300円引かれます。<strong>親の型で受けると、中身（子）の動きが出る。</strong>これが<strong>ポリモーフィズム</strong>です。</p>
+<p>新しい種類の券が増えても、レジの手順は1行も変わりません。</p>
+</div><div class="tatoe-step"><svg class="fig" role="img" viewbox="0 0 720 262" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<rect fill="#f8fafc" height="244" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="300" x="12" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="162" y="30">券の台紙（たとえ）</text>
+<rect fill="#fff3e6" height="150" rx="6" stroke="#334155" stroke-width="1.5" width="264" x="30" y="40"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="46" y="70">店名</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="280" y="70">印刷済み</text>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="46" y="106">有効期限</text>
+<text fill="#64748b" font-size="13" text-anchor="end" x="280" y="106">印刷済み</text>
+<rect fill="#fff" height="50" rx="4" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.5" width="240" x="42" y="124"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="54" y="154">値引き</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="end" x="270" y="154">（空欄）</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="middle" x="162" y="216">台紙のままでは券として使えない</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="162" y="238">値引きの欄を書けば、券ができる</text>
+<rect fill="#f8fafc" height="244" rx="10" stroke="#cbd5e1" stroke-dasharray="5 4" stroke-width="1.2" width="360" x="348" y="8"></rect>
+<text fill="#64748b" font-size="14" font-weight="bold" text-anchor="middle" x="528" y="30">抽象クラス（Java）</text>
+<rect fill="#e0f2fe" height="150" rx="6" stroke="#334155" stroke-width="1.5" width="336" x="360" y="40"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="13" x="372" xml:space="preserve" y="66">public abstract class Sale {</text>
+<text fill="#047857" font-family="Consolas,monospace" font-size="13" x="372" xml:space="preserve" y="100">  public void show(int price) {…}</text>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="13" x="372" xml:space="preserve" y="154">  public abstract int apply(int price);</text>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="13" x="372" xml:space="preserve" y="178">}</text>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="290" x2="358" y1="88" y2="95"></line>
+<line marker-end="url(#ar5)" stroke="#334155" stroke-width="1.8" x1="284" x2="358" y1="149" y2="149"></line>
+<text fill="#b91c1c" font-family="Consolas,monospace" font-size="13" x="372" xml:space="preserve" y="216">new Sale("特売")</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="start" x="500" y="216">→ エラー（new できない）</text>
+<text fill="#64748b" font-size="13" text-anchor="middle" x="528" y="238">子（TimeSale など）が apply を書けば使える</text>
+</svg><p class="figcap">印刷済みの欄は中身のあるメソッド、空いた値引きの欄は abstract のメソッド。台紙のままでは new できない</p><p>券の台紙には、店名や有効期限の欄は印刷済みで、値引きの欄だけが空いているものもあります。種類ごとに値引きの欄を書けば、券ができあがります。この台紙に当たるのが<strong>抽象クラス</strong>です。台紙のままでは券として使えないように、抽象クラスは <code>new</code> できません。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>レジに通せる券の決まり</td><td>インタフェース　<code>public interface Coupon { ... }</code></td></tr><tr><td>10%オフ券・300円引き券</td><td>決まりを守るクラス　<code>PercentCoupon</code> <code>YenCoupon</code></td></tr><tr><td>「この決まりの券です」と名乗る</td><td><code>implements Coupon</code></td></tr><tr><td>レジ</td><td><code>Coupon</code> 型で受け取るメソッド　<code>register</code></td></tr><tr><td>同じ通し方で、券ごとに値引きが変わる</td><td>ポリモーフィズム</td></tr><tr><td>値引きの欄だけが空いた、券の台紙</td><td>抽象クラス　<code>public abstract class Sale</code></td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>インタフェース</td><td>使う側が中身の種類を知らなくても、同じ呼び方で使えるようにするためです。</td></tr><tr><td>ポリモーフィズム</td><td>種類が増えても、使う側のコードを書き換えずに済むからです。</td></tr><tr><td>抽象クラス</td><td>子クラスに共通の処理は親に書いておき、種類ごとに違う所だけを子に書かせたいからです。</td></tr></table>
+<h2>使う場面</h2>
+<table class="define"><tr><td>インタフェース</td><td>割引券・支払い方法のように、種類があとから増えていくもの。</td></tr><tr><td>ポリモーフィズム</td><td>レジが、券の種類を問わず同じ1行で値引きを頼むとき。</td></tr><tr><td>抽象クラス</td><td>セールの種類ごとに値引きの計算だけが違い、ほかは共通のとき。</td></tr></table>
+<p>第6回では <code>extends</code> で親子のクラスを作りました。今日の <code>Coupon</code> も「親の型」の一種で、中身を持たず約束だけを書いたものです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各行の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は1つのプロジェクト <code>lesson07</code> に、インタフェースを1つとクラスを3つ作ります。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson07</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson07</code> を開き、<code>src</code> を右クリック →［新規］→［インターフェース］（Eclipse では「インターフェース」と表示されます。この資料の「インタフェース」と同じものです）</td></tr><tr><td>⑤</td><td>名前に <code>Coupon</code> と入力する。パッケージ欄に <code>lesson07</code> と入っていることを確かめて［完了］（空なら <code>lesson07</code> と入力する）</td></tr><tr><td>⑥</td><td><code>src</code> を右クリック →［新規］→［クラス］で、同じように <code>PercentCoupon</code>・<code>YenCoupon</code>・<code>Main</code> の3つを作る</td></tr><tr><td>⑦</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑧</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<p><code>Coupon</code> を［クラス］で作ってしまっても、中身を全部消して下のコードを貼れば、インタフェースになります。</p>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の4つのファイルだけです。どれも1行目は <code>package lesson07;</code> です。</p>
+<p>下の4つが、それぞれのファイルの中身の全部です。行の右にある ①〜⑥ は、③解説の番号です。</p>
+<svg class="fig" role="img" viewbox="0 0 720 272" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="40" y="34">lesson07</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="48" y1="42" y2="70"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="48" x2="66" y1="70" y2="70"></line>
+<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="start" x="72" y="75">src</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="80" y1="82" y2="108"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="80" x2="98" y1="108" y2="108"></line>
+<text fill="#1f2933" font-size="14" text-anchor="start" x="104" y="113">lesson07（パッケージ）</text>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="118" y1="120" y2="252"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="144" y2="144"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="180" y2="180"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="216" y2="216"></line>
+<line stroke="#94a3b8" stroke-width="1.5" x1="118" x2="136" y1="252" y2="252"></line>
+<rect fill="#e0f2fe" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="140" y="128"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="149">Coupon.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="140" y="164"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="185">PercentCoupon.java</text>
+<rect fill="#fff3e6" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="140" y="200"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="221">YenCoupon.java</text>
+<rect fill="#f0fdf4" height="32" rx="6" stroke="#334155" stroke-width="1.5" width="180" x="140" y="236"></rect>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="152" y="257">Main.java</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="336" y="149">決まり（インタフェース）。約束を2つ並べるだけ</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="336" y="185">10%オフのように、割合で引く券</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="336" y="221">300円引きのように、金額で引く券</text>
+<text fill="#475569" font-size="13" text-anchor="start" x="336" y="257">レジ役。main があり、ここから実行する</text>
+</svg><p class="figcap">プロジェクトの中身。この4つのファイルで全部です</p><p class="fname">Coupon.java　決まり（インタフェース）</p>
+<pre class="code" id="c1">package lesson07;
+
+public interface Coupon {                 <span class="cm">// <span class="cn">①</span> インタフェース</span>
+    String getName();                     <span class="cm">// <span class="cn">②</span> 約束（中身は書かない）</span>
+    int apply(int price);                 <span class="cm">// <span class="cn">②</span> 約束（中身は書かない）</span>
+}</pre>
+<p class="fname">PercentCoupon.java　割合で引く券</p>
+<pre class="code" id="c2">package lesson07;
+
+public class PercentCoupon implements Coupon {    <span class="cm">// <span class="cn">③</span> implements</span>
+    private int rate;
+
+    public PercentCoupon(int rate) {
+        this.rate = rate;
+    }
+
+    @Override                                     <span class="cm">// <span class="cn">④</span> 約束の中身を書く</span>
+    public String getName() {
+        return rate + "%オフ";
+    }
+
+    @Override                                     <span class="cm">// <span class="cn">④</span> 約束の中身を書く</span>
+    public int apply(int price) {
+        return price * (100 - rate) / 100;
+    }
+}</pre>
+<p class="fname">YenCoupon.java　金額で引く券</p>
+<pre class="code" id="c3">package lesson07;
+
+public class YenCoupon implements Coupon {        <span class="cm">// <span class="cn">③</span> implements</span>
+    private int yen;
+
+    public YenCoupon(int yen) {
+        this.yen = yen;
+    }
+
+    @Override                                     <span class="cm">// <span class="cn">④</span> 約束の中身を書く</span>
+    public String getName() {
+        return yen + "円引き";
+    }
+
+    @Override                                     <span class="cm">// <span class="cn">④</span> 約束の中身を書く</span>
+    public int apply(int price) {
+        return price - yen;
+    }
+}</pre>
+<p class="fname">Main.java　レジ</p>
+<pre class="code" id="c4">package lesson07;
+
+public class Main {
+    public static void main(String[] args) {
+        Coupon[] coupons = {                           <span class="cm">// <span class="cn">⑤</span> Coupon 型で受ける</span>
+            new PercentCoupon(10),
+            new YenCoupon(300),
+            new PercentCoupon(50)
+        };
+
+        for (Coupon c : coupons) {
+            register(c, 1280);
+        }
+    }
+
+    static void register(Coupon c, int price) {        <span class="cm">// <span class="cn">⑥</span> レジ</span>
+        System.out.println(c.getName() + " : " + price + "円 → " + c.apply(price) + "円");
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">10%オフ : 1280円 → 1152円
+300円引き : 1280円 → 980円
+50%オフ : 1280円 → 640円</div>
+<p>実行するのは <code>Main</code> のほうです。<code>register</code> の中は1行だけなのに、券ごとに違う金額が出ています。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　インタフェースに約束を書く（①②）</h2>
+<p><code>Coupon.java</code> から抜き出しています。</p>
+<pre class="code" id="c5">public interface Coupon {                 <span class="cm">// <span class="cn">①</span> インタフェース</span>
+    String getName();                     <span class="cm">// <span class="cn">②</span> 約束（中身は書かない）</span>
+    int apply(int price);                 <span class="cm">// <span class="cn">②</span> 約束（中身は書かない）</span>
+}</pre>
+<p><code>class</code> の代わりに <code>interface</code> と書いたものが<strong>インタフェース</strong>です。「<code>Coupon</code> を名乗るなら、このメソッドを持つこと」という約束だけを書く場所です。このコードでは、レジ（<code>Main</code>）は <code>Coupon</code> という約束だけを見ていて、券が何の種類かは知りません。レジが頼りにするのは「<code>Coupon</code> なら <code>getName</code> と <code>apply</code> がある」という約束だけです。</p>
+<p>2行とも、中身の <code>{ }</code> が無く、<code>;</code> で終わるメソッドです。名前・引数・戻り値の型だけを決めています。<strong>なぜ中身を書かないのか。</strong>値引きの計算は券ごとに違うので、ここでは決められないからです。中身を決めるのは、約束を守る側の各クラスです。<code>public</code> を書かなくても、<code>public</code> として扱われます。</p>
+<h2>2　約束を守るクラスを作る（③④）</h2>
+<p><code>PercentCoupon.java</code> から抜き出しています。</p>
+<pre class="code" id="c6">public class PercentCoupon implements Coupon {    <span class="cm">// <span class="cn">③</span> implements</span>
+    <span class="cm">// （中略）</span>
+    @Override                                     <span class="cm">// <span class="cn">④</span> 約束の中身を書く</span>
+    public String getName() {
+        return rate + "%オフ";
+    }
+
+    @Override                                     <span class="cm">// <span class="cn">④</span> 約束の中身を書く</span>
+    public int apply(int price) {
+        return price * (100 - rate) / 100;
+    }
+}</pre>
+<p><strong>implements Coupon</strong> は「<code>Coupon</code> の約束を守ります」という宣言です。<code>extends</code> と同じく、クラス名のあとに書きます。<strong>なぜ要るのか。</strong>これを書いたクラスだけが、<code>Coupon</code> 型の変数に入れられるからです。同じ名前のメソッドを持っていても、<code>implements</code> が無ければレジには通せません。</p>
+<p><code>@Override</code> を付けて、約束したメソッドの中身を書きます。<code>@Override</code> は「約束（親）のメソッドを書いています」という印で、名前の打ち間違いをエラーで知らせてくれます。<code>YenCoupon</code> も同じ形で、<code>apply</code> の中身だけが違います。</p>
+<p><strong>よくある間違い：約束のメソッドを書き忘れる。</strong><code>YenCoupon</code> から <code>apply</code> を消した形です。ほかの3つは写したままです。</p>
+<p class="fname">YenCoupon.java（間違いあり）</p>
+<pre class="code" id="c7">package lesson07;
+
+public class YenCoupon implements Coupon {
+    private int yen;
+
+    public YenCoupon(int yen) {
+        this.yen = yen;
+    }
+
+    @Override
+    public String getName() {
+        return yen + "円引き";
+    }
+
+    <span class="cm">// apply を書き忘れた</span>
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">型 YenCoupon は継承された抽象メソッド Coupon.apply(int) を実装する必要があります
+（The type YenCoupon must implement the inherited abstract method Coupon.apply(int)）</div>
+<p><code>implements Coupon</code> と書いた時点で、「<code>getName</code> と <code>apply</code> を持っています」と名乗ったことになります。1つでも欠けていると、レジが <code>c.apply(...)</code> と呼んだときに動かすものがありません。そこで Java は、<strong>実行する前に</strong>エラーで止めます。</p>
+<div class="words"><b>ここで出た言葉</b><span><b>抽象メソッド</b>　中身の <code>{ }</code> が無いメソッド。インタフェースに書いた約束は、すべてこれです。エラー文の「抽象メソッド」はこれを指しています</span><span><b>実装する</b>　約束（抽象メソッド）に、中身を書くこと</span></div>
+<div class="note">Eclipse では、クラス名の行に赤い波線が出ます。波線にマウスを乗せて「実装されていないメソッドの追加」を選ぶと、足りないメソッドの枠を自動で書いてくれます。</div>
+<p><strong>よくある間違い：public を付け忘れる。</strong><code>YenCoupon</code> の <code>apply</code> から <code>public</code> を消した形です。ほかの3つは写したままです。</p>
+<p class="fname">YenCoupon.java（間違いあり）</p>
+<pre class="code" id="c8">package lesson07;
+
+public class YenCoupon implements Coupon {
+    private int yen;
+
+    public YenCoupon(int yen) {
+        this.yen = yen;
+    }
+
+    @Override
+    public String getName() {
+        return yen + "円引き";
+    }
+
+    @Override
+    int apply(int price) {                        <span class="cm">// ここが問題</span>
+        return price - yen;
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">Coupon から継承されたメソッドの可視性を下げることはできません
+（Cannot reduce the visibility of the inherited method from Coupon）</div>
+<p>インタフェースに書いたメソッドは、<code>public</code> を書かなくても <code>public</code>（どこからでも呼べる）です。守る側で <code>public</code> を外すと、「同じパッケージからしか呼べない」に狭まってしまいます。約束より狭くすることはできないので、エラーになります。</p>
+<div class="words"><b>ここで出た言葉</b><span><b>可視性</b>　そのメソッドを、どこから呼べるかの範囲。<code>public</code> や <code>private</code> で決まります</span></div>
+<div class="trap">インタフェース側では <code>public</code> を省いて書き、守る側では必ず付けます。書く場所によって扱いが違うので、いちばん迷いやすい所です。</div>
+<h2>3　親の型で受ける（⑤⑥）</h2>
+<p><code>Main.java</code> から抜き出しています。</p>
+<pre class="code" id="c9">public static void main(String[] args) {
+    Coupon[] coupons = {                           <span class="cm">// <span class="cn">⑤</span> Coupon 型で受ける</span>
+        new PercentCoupon(10),
+        new YenCoupon(300),
+        new PercentCoupon(50)
+    };
+
+    for (Coupon c : coupons) {
+        register(c, 1280);
+    }
+}
+
+static void register(Coupon c, int price) {        <span class="cm">// <span class="cn">⑥</span> レジ</span>
+    System.out.println(c.getName() + " : " + price + "円 → " + c.apply(price) + "円");
+}</pre>
+<p><code>Coupon</code> 型の配列に、種類の違う券を混ぜて入れています。<strong>なぜ Coupon 型にするのか。</strong>親の型で受ければ、<code>implements Coupon</code> したクラスなら何でも入るからです。<code>PercentCoupon[]</code> にすると <code>YenCoupon</code> は入りません。</p>
+<p><code>register</code> はレジ役のメソッドです。<code>Coupon</code> 型で受け取り、<code>c.apply(price)</code> と呼びます。<strong>ここが今日の主役です。</strong><code>c</code> の中身が <code>PercentCoupon</code> なら <code>PercentCoupon</code> の <code>apply</code> が、<code>YenCoupon</code> なら <code>YenCoupon</code> の <code>apply</code> が動きます。変数1つでも同じで、<code>Coupon c = new PercentCoupon(10);</code> の中身を <code>new YenCoupon(300)</code> に入れ替えれば、同じ <code>c.apply(1280)</code> で結果が変わります。</p>
+<p>券の種類を足すときは、<code>implements Coupon</code> したクラスを作り、配列に1行足すだけです。<code>register</code> と <code>for</code> は1文字も変えません。</p>
+<p><strong>よくある間違い：受け取る型を子にする。</strong>レジの引数を、<code>Coupon</code> ではなく <code>PercentCoupon</code> にした形です。<code>Main</code> だけ変えています。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c10">package lesson07;
+
+public class Main {
+    public static void main(String[] args) {
+        register(new PercentCoupon(10), 1280);
+        register(new YenCoupon(300), 1280);             <span class="cm">// エラー</span>
+    }
+
+    static void register(PercentCoupon c, int price) {  <span class="cm">// ここが問題</span>
+        System.out.println(c.getName() + " : " + price + "円 → " + c.apply(price) + "円");
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">型 Main のメソッド register(PercentCoupon, int) は引数 (YenCoupon, int) に適用できません
+（The method register(PercentCoupon, int) in the type Main is not applicable for the arguments (YenCoupon, int)）</div>
+<svg class="fig" role="img" viewbox="0 0 720 250" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="30" y="30">受け取る型が PercentCoupon のとき</text>
+<rect fill="#fef2f2" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="30" y="42"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="44" xml:space="preserve" y="70">register(PercentCoupon c, …)</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="130" x="420" y="42"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="485" y="69">10%オフ券</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="130" x="570" y="42"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="635" y="69">300円引き券</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="418" x2="334" y1="64" y2="64"></line>
+<text fill="#15803d" font-size="13" font-weight="bold" text-anchor="middle" x="485" y="108">入る</text>
+<text fill="#b91c1c" font-size="13" font-weight="bold" text-anchor="middle" x="635" y="108">入らない（エラー）</text>
+<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="start" x="30" y="150">受け取る型が Coupon のとき</text>
+<rect fill="#f0fdf4" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="300" x="30" y="162"></rect>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="14" x="44" xml:space="preserve" y="190">register(Coupon c, …)</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="130" x="420" y="162"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="485" y="189">10%オフ券</text>
+<rect fill="#fff3e6" height="44" rx="6" stroke="#334155" stroke-width="1.5" width="130" x="570" y="162"></rect>
+<text fill="#1f2933" font-size="14" text-anchor="middle" x="635" y="189">300円引き券</text>
+<line marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8" x1="418" x2="334" y1="184" y2="184"></line>
+<path d="M635,160 L635,146 L300,146 L300,158" fill="none" marker-end="url(#ar3)" stroke="#334155" stroke-width="1.8"></path>
+<text fill="#15803d" font-size="13" font-weight="bold" text-anchor="middle" x="485" y="228">入る</text>
+<text fill="#15803d" font-size="13" font-weight="bold" text-anchor="middle" x="635" y="228">入る</text>
+</svg><p class="figcap">受け取る型を子にすると、ほかの種類の券が通らない</p><p>引数を <code>PercentCoupon</code> にすると、このレジは「10%オフ券専用」になります。<code>YenCoupon</code> は <code>PercentCoupon</code> の仲間ではないので、渡せません。写したコードのとおり、受け取る型を<strong>親の型</strong> <code>Coupon</code> にすれば、<code>implements Coupon</code> したクラスは全部渡せます。変数・配列・引数の型は、<strong>できるだけ親の型で書く</strong>。これが、今日の主役を使うときの基本の形です。</p>
+<p><strong>よくある間違い：親の型の変数から、約束に無いメソッドを呼ぶ。</strong><code>PercentCoupon</code> に、割引率を返す <code>getRate()</code> を足しました。それを <code>Coupon</code> 型の変数から呼んだ形です。</p>
+<p class="fname">PercentCoupon.java（getRate を足したもの）</p>
+<pre class="code" id="c11">package lesson07;
+
+public class PercentCoupon implements Coupon {
+    private int rate;
+
+    public PercentCoupon(int rate) {
+        this.rate = rate;
+    }
+
+    public int getRate() {                        <span class="cm">// 足した行</span>
+        return rate;                              <span class="cm">// 足した行</span>
+    }                                             <span class="cm">// 足した行</span>
+
+    @Override
+    public String getName() {
+        return rate + "%オフ";
+    }
+
+    @Override
+    public int apply(int price) {
+        return price * (100 - rate) / 100;
+    }
+}</pre>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c12">package lesson07;
+
+public class Main {
+    public static void main(String[] args) {
+        Coupon c = new PercentCoupon(10);
+
+        System.out.println(c.getName());
+        System.out.println(c.getRate());               <span class="cm">// エラー</span>
+    }
+}</pre>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">メソッド getRate() は型 Coupon で未定義です
+（The method getRate() is undefined for the type Coupon）</div>
+<svg class="fig" role="img" viewbox="0 0 720 180" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
+<text fill="#1f2933" font-family="Consolas,monospace" font-size="20" x="40" xml:space="preserve" y="50">Coupon c = new PercentCoupon(10);</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="72" x2="72" y1="100" y2="62"></line>
+<text fill="#1d4ed8" font-size="14" font-weight="bold" text-anchor="start" x="40" y="122">変数の型</text>
+<text fill="#1d4ed8" font-size="13" text-anchor="start" x="40" y="144">何が呼べるかを決める</text>
+<text fill="#1d4ed8" font-size="13" text-anchor="start" x="40" y="166">Coupon の約束（getName と apply）だけ</text>
+<line marker-end="url(#ar4)" stroke="#334155" stroke-width="1.8" x1="400" x2="290" y1="100" y2="62"></line>
+<text fill="#b91c1c" font-size="14" font-weight="bold" text-anchor="start" x="400" y="122">中身</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="400" y="144">どう動くかを決める</text>
+<text fill="#b91c1c" font-size="13" text-anchor="start" x="400" y="166">PercentCoupon の apply が動く</text>
+</svg><p class="figcap">呼べるかどうかは変数の型、どう動くかは中身で決まる</p><p>中身は確かに <code>PercentCoupon</code> です。それでも Java は、<strong>呼べるかどうかを変数の型（<code>Coupon</code>）で決めます。</strong><code>Coupon</code> の約束には <code>getRate</code> がありません。300円引き券が入っているかもしれない変数なので、呼べないのです。</p>
+<p>割引率を聞きたいのが10%オフ券だけなら、<code>PercentCoupon p = new PercentCoupon(10);</code> のように子の型の変数で受けます。すべての券に聞きたいことなら、<code>Coupon</code> の約束に1行足します。そうすれば、どの券も書く義務を負い、<code>Coupon</code> 型のまま呼べます。</p>
+<h2>4　new できない親クラス　抽象クラス</h2>
+<p>インタフェースに近いものに、<strong>抽象クラス</strong>があります。親クラスに <code>abstract</code> を付け、中身を書かないメソッドを混ぜたものです。「値引きのしかたは子に任せ、表示の手順は親に1回だけ書く」という例です。今日は見て違いを知るだけで、④では使いません。</p>
+<p class="fname">Sale.java　親（抽象クラス）</p>
+<pre class="code" id="c13">package lesson07;
+
+public abstract class Sale {                      <span class="cm">// abstract を付ける</span>
+    private String label;
+
+    public Sale(String label) {
+        this.label = label;
+    }
+
+    public abstract int apply(int price);         <span class="cm">// 中身を書かない（子が書く）</span>
+
+    public void show(int price) {                 <span class="cm">// 中身のあるメソッドも書ける</span>
+        System.out.println(label + " : " + price + "円 → " + apply(price) + "円");
+    }
+}</pre>
+<p>子の側は <code>public class TimeSale extends Sale</code> のように <code>extends</code> で引き継ぎ、<code>apply</code> の中身だけを書きます。<code>show</code> は親に1回書くだけで、中の <code>apply(price)</code> は中身（子）の <code>apply</code> が呼ばれます。ここでもポリモーフィズムが働いています。</p>
+<table><tr><th></th><th>インタフェース</th><th>抽象クラス</th></tr><tr><td>書き方</td><td><code>public interface Coupon</code></td><td><code>public abstract class Sale</code></td></tr><tr><td>子の側</td><td><code>implements Coupon</code></td><td><code>extends Sale</code></td></tr><tr><td>いくつ親にできるか</td><td><strong>いくつでも</strong>（カンマで並べる）</td><td><strong>1つだけ</strong></td></tr><tr><td>書けるもの</td><td>約束（中身の無いメソッド）が中心</td><td>約束に加えて、フィールド・コンストラクタ・中身のあるメソッド</td></tr><tr><td>向いている場面</td><td>「〜できる」ものを、種類を問わず集めたい</td><td>共通の中身があり、「〜の一種」と言える</td></tr></table>
+<p>インタフェースと抽象クラスは、どちらも <code>new</code> できません。<code>new Sale("特売")</code> と書くと「型 Sale のインスタンスを生成できません」というエラーになります。インタフェースと抽象クラスは、<strong>変数・配列・引数の型として使うためのもの</strong>です。</p>
+</div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①で2種類の送料が表示できたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　インタフェース <code>Shipping</code>（配送方法）を作る。約束は、名前を返す <code>getName()</code> と、合計金額を受け取って送料を返す <code>getFee(int total)</code> の2つ。<code>StorePickup</code>（店頭受け取り・送料はいつでも0円）と <code>HomeDelivery</code>（宅配・合計5000円以上なら0円、それより少なければ600円）に <code>implements</code> させ、<code>ShippingMain</code> で2種類を <code>Shipping[]</code> に入れて、合計3000円と6000円の送料を表示する。</li><li>②　<code>ExpressDelivery</code>（お急ぎ便・送料はいつでも1000円）を足す。<strong><code>for</code> と <code>show</code> を1文字も変えずに</strong>、配列に1行足すだけで3種類目が表示されることを確かめる。</li></ul>
+<h2>骨組み</h2>
+<p>①の4つのファイルの全体です。<code>// ここに…</code> の所を書きます。②の <code>ExpressDelivery</code> は、骨組みなしで作ります。</p>
+<p><code>Shipping</code> に約束を書くと、<code>StorePickup</code>・<code>HomeDelivery</code> に赤い印が出ます（③解説の2と同じエラー）。中身を書き足すと消えます。</p>
+<p class="fname">Shipping.java</p>
+<pre class="code" id="c14">package lesson07;
+
+public interface Shipping {
+    <span class="cm">// ここに、名前を返す getName() の約束を書く</span>
+    <span class="cm">// ここに、合計金額 total を受け取って送料を返す getFee(int total) の約束を書く</span>
+}</pre>
+<div class="btn-row"><button data-copy="c14">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">StorePickup.java</p>
+<pre class="code" id="c15">package lesson07;
+
+public class StorePickup implements Shipping {
+    <span class="cm">// ここに getName() を書く（「店頭受け取り」を返す）</span>
+
+    <span class="cm">// ここに getFee(int total) を書く（いつでも 0 を返す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c15">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">HomeDelivery.java</p>
+<pre class="code" id="c16">package lesson07;
+
+public class HomeDelivery implements Shipping {
+    <span class="cm">// ここに getName() を書く（「宅配」を返す）</span>
+
+    <span class="cm">// ここに getFee(int total) を書く（5000円以上なら 0、それより少なければ 600 を返す）</span>
+}</pre>
+<div class="btn-row"><button data-copy="c16">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">ShippingMain.java</p>
+<pre class="code" id="c17">package lesson07;
+
+public class ShippingMain {
+    public static void main(String[] args) {
+        Shipping[] list = {
+            <span class="cm">// ここに new StorePickup() と new HomeDelivery() を、カンマで区切って書く</span>
+        };
+
+        for (Shipping s : list) {
+            show(s, 3000);
+            show(s, 6000);
+        }
+    }
+
+    static void show(Shipping s, int total) {
+        <span class="cm">// ここに「名前 : 合計円の注文 → 送料○円」の表示を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c17">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">店頭受け取り : 3000円の注文 → 送料0円
+店頭受け取り : 6000円の注文 → 送料0円
+宅配 : 3000円の注文 → 送料600円
+宅配 : 6000円の注文 → 送料0円
+お急ぎ便 : 3000円の注文 → 送料1000円
+お急ぎ便 : 6000円の注文 → 送料1000円</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　<code>Shipping</code> の約束は、<code>Coupon</code> の2行と同じ形です。中身の <code>{ }</code> は書かず、<code>;</code> で終えます。</li><li>②　約束のメソッドを書くときは、<code>@Override</code> と <code>public</code> を付けます。<code>public</code> を忘れると、③解説の2のエラーになります。</li><li>③　<code>HomeDelivery</code> の <code>getFee</code> は、<code>if</code> で「5000以上か」を分け、それぞれ <code>return</code> します。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第7回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　Shipping と2種類</summary><div class="sol">
+<p class="fname">Shipping.java</p>
+<pre class="code" id="c18">package lesson07;
+
+public interface Shipping {
+    <span class="cm">// ここに、名前を返す getName() の約束を書く</span>
+    String getName();
+    <span class="cm">// ここに、合計金額 total を受け取って送料を返す getFee(int total) の約束を書く</span>
+    int getFee(int total);
+}</pre>
+<p class="fname">StorePickup.java</p>
+<pre class="code" id="c19">package lesson07;
+
+public class StorePickup implements Shipping {
+    <span class="cm">// ここに getName() を書く（「店頭受け取り」を返す）</span>
+    @Override
+    public String getName() {
+        return "店頭受け取り";
+    }
+
+    <span class="cm">// ここに getFee(int total) を書く（いつでも 0 を返す）</span>
+    @Override
+    public int getFee(int total) {
+        return 0;
+    }
+}</pre>
+<p class="fname">HomeDelivery.java</p>
+<pre class="code" id="c20">package lesson07;
+
+public class HomeDelivery implements Shipping {
+    <span class="cm">// ここに getName() を書く（「宅配」を返す）</span>
+    @Override
+    public String getName() {
+        return "宅配";
+    }
+
+    <span class="cm">// ここに getFee(int total) を書く（5000円以上なら 0、それより少なければ 600 を返す）</span>
+    @Override
+    public int getFee(int total) {
+        if (total &gt;= 5000) {
+            return 0;
+        }
+        return 600;
+    }
+}</pre>
+<p class="fname">ShippingMain.java</p>
+<pre class="code" id="c21">package lesson07;
+
+public class ShippingMain {
+    public static void main(String[] args) {
+        Shipping[] list = {
+            <span class="cm">// ここに new StorePickup() と new HomeDelivery() を、カンマで区切って書く</span>
+            new StorePickup(),
+            new HomeDelivery()
+        };
+
+        for (Shipping s : list) {
+            show(s, 3000);
+            show(s, 6000);
+        }
+    }
+
+    static void show(Shipping s, int total) {
+        <span class="cm">// ここに「名前 : 合計円の注文 → 送料○円」の表示を書く</span>
+        System.out.println(s.getName() + " : " + total + "円の注文 → 送料" + s.getFee(total) + "円");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">店頭受け取り : 3000円の注文 → 送料0円
+店頭受け取り : 6000円の注文 → 送料0円
+宅配 : 3000円の注文 → 送料600円
+宅配 : 6000円の注文 → 送料0円</div>
+<div class="note"><code>StorePickup</code> の <code>getFee</code> は <code>total</code> を使いませんが、引数は約束どおりに書きます。約束と引数の形が違うと、別のメソッドとみなされ、③解説の2のエラーになります。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　ExpressDelivery を足す</summary><div class="sol">
+<p class="fname">ExpressDelivery.java</p>
+<pre class="code" id="c22">package lesson07;
+
+public class ExpressDelivery implements Shipping {
+    @Override
+    public String getName() {
+        return "お急ぎ便";
+    }
+
+    @Override
+    public int getFee(int total) {
+        return 1000;
+    }
+}</pre>
+<p class="fname">ShippingMain.java（1行足したもの）</p>
+<pre class="code" id="c23">package lesson07;
+
+public class ShippingMain {
+    public static void main(String[] args) {
+        Shipping[] list = {
+            <span class="cm">// ここに new StorePickup() と new HomeDelivery() を、カンマで区切って書く</span>
+            new StorePickup(),
+            new HomeDelivery(),
+            new ExpressDelivery()                      <span class="cm">// 足した行</span>
+        };
+
+        for (Shipping s : list) {
+            show(s, 3000);
+            show(s, 6000);
+        }
+    }
+
+    static void show(Shipping s, int total) {
+        <span class="cm">// ここに「名前 : 合計円の注文 → 送料○円」の表示を書く</span>
+        System.out.println(s.getName() + " : " + total + "円の注文 → 送料" + s.getFee(total) + "円");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">店頭受け取り : 3000円の注文 → 送料0円
+店頭受け取り : 6000円の注文 → 送料0円
+宅配 : 3000円の注文 → 送料600円
+宅配 : 6000円の注文 → 送料0円
+お急ぎ便 : 3000円の注文 → 送料1000円
+お急ぎ便 : 6000円の注文 → 送料1000円</div>
+<div class="note">変えたのは配列の1行だけです。<code>show</code> は <code>Shipping</code> 型で受けているので、新しい配送方法のことを知らないまま動きます。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>「親の型で受けると、子の動きが出る」を、<code>Coupon</code> の例で説明できる</li><li>インタフェースを書き、<code>implements</code> したクラスで約束のメソッドを全部書ける</li><li>インタフェースと抽象クラスの違いを1つ言える</li></ul></div>
+<h2>次回</h2><p><strong>次回は、コレクションの ArrayList と HashMap です。</strong>今日まで使ってきた配列は、作るときに個数を決めないといけません。次回は<strong>あとから何個でも足せる入れ物</strong>を扱います。そこで出てくる <code>List</code> は、今日のインタフェースそのものです。</p></div>
+<div class="card"><div class="card-title">用語の説明</div>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>インタフェース</td><td>いんたふぇーす</td><td>「このメソッドを持つこと」という約束だけを並べたもの。<code>public interface Coupon { ... }</code>。Eclipse の表示では「インターフェース」</td></tr><tr><td>ポリモーフィズム</td><td>ぽりもーふぃずむ</td><td>親の型で受けて同じ呼び方をしても、中身（子）によって動きが変わること。多態性とも言います</td></tr><tr><td>implements</td><td>いんぷりめんつ</td><td>「そのインタフェースの約束を守ります」という宣言。<code>class PercentCoupon implements Coupon</code></td></tr><tr><td>実装する</td><td>じっそうする</td><td>約束（抽象メソッド）に、中身を書くこと</td></tr><tr><td>親の型</td><td>おやのかた</td><td>いくつもの種類をまとめて受け取れる型。インタフェースか、親クラス（抽象クラスを含む）で作ります</td></tr><tr><td>抽象メソッド</td><td>ちゅうしょうめそっど</td><td>中身の <code>{ }</code> が無く、<code>;</code> で終わるメソッド。子が必ず中身を書きます</td></tr><tr><td>abstract</td><td>あぶすとらくと</td><td>「中身がまだ決まっていない」という印。<code>abstract class</code> <code>abstract int apply(...)</code></td></tr><tr><td>抽象クラス</td><td>ちゅうしょうくらす</td><td><code>abstract</code> を付けたクラス。<code>new</code> できず、親の型として使います。フィールドや中身のあるメソッドも持てます</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親や約束のメソッドを書いています」という印。名前の打ち間違いをエラーで知らせてくれます（第6回）</td></tr><tr><td>extends</td><td>えくすてんず</td><td>親クラスを引き継ぐ宣言。親にできるのは1つだけです（第6回）</td></tr><tr><td>可視性</td><td>かしせい</td><td>そのメソッドをどこから呼べるかの範囲。<code>public</code> や <code>private</code> で決まります</td></tr></table></div>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 7 回 ／ 全 18 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
