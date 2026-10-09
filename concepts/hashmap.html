@@ -1,0 +1,25 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HashMapで数を集計する | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>HashMapで数を集計する</strong></nav><span class="eyebrow">第8回の補足</span><h1>HashMapで数を集計する</h1><p class="subtitle">Mapは「名前 → 件数」を覚える。putの仕組みを理解すると集計が分かる。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong>Mapの<code>put(key,value)</code>は値を登録・上書きするだけ。既存の値に1を足したいなら、<code>get</code>や<code>getOrDefault</code>で今の件数を取る必要がある。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>まず実際にどう動くかを見て、その理由を下で整理する。</p><div class="codehead"><span>Main.java（出現回数を集計）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>import java.util.HashMap;
+import java.util.Map;
+
+public class Main {
+    public static void main(String[] args) {
+        String[] sold = {&quot;ノート&quot;, &quot;ペン&quot;, &quot;ノート&quot;};
+        Map&lt;String, Integer&gt; count = new HashMap&lt;&gt;();
+
+        for (String item : sold) {
+            int before = count.getOrDefault(item, 0);
+            count.put(item, before + 1);
+        }
+        System.out.println(count.get(&quot;ノート&quot;));
+        System.out.println(count.get(&quot;ペン&quot;));
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果</div><pre class="output">2
+1</pre><h3>1行ずつ考えると</h3><ol class="steps"><li>最初のノートは未登録なので、<code>getOrDefault("ノート",0)</code>が0を返す。<code>put</code>で1を登録。</li><li>ペンも未登録なので1を登録。</li><li>2回目のノートでは前の1を取り出し、<code>1+1</code>で2に更新する。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong><code>count.put(item, +1)</code> は「1を入れ直す」という意味。<code>+1</code> だけでは「現在の値に足す」処理にはならない。また<code>get</code>は存在しないキーでnullを返すので、<code>getOrDefault</code>が便利。</div><h3>ArrayListとHashMapの違い</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>// Listは順番で取り出す
+List&lt;String&gt; names = new ArrayList&lt;&gt;();
+names.add(&quot;A&quot;);
+System.out.println(names.get(0));
+
+// Mapはキーで取り出す
+Map&lt;String, Integer&gt; stock = new HashMap&lt;&gt;();
+stock.put(&quot;A&quot;, 3);
+System.out.println(stock.get(&quot;A&quot;));</code></pre><p>上の比較コードを実行する場合、<code>java.util.List</code>、<code>ArrayList</code>、<code>Map</code>、<code>HashMap</code>をimportする。HashMapは挿入した順番を保証しない。</p></section><section class="card"><h2>30秒で理解チェック</h2><p>ノートが3回登場するとき、ループ内で毎回<code>map.put("ノート", 1)</code>したら最後はいくつ？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>1。</strong> putは既存の値を上書きするだけ。3にするには今の件数に1を足す。</p></details></section><div class="links"><a href="../lesson08.html">← 第8回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義を補助するための解説です。比較用のコードは必要部分のみの抜粋です。実際のJava実行はEclipseなどで行ってください。</footer></main></body></html>
