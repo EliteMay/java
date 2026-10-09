@@ -131,7 +131,6 @@
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">クラス</span>　<span class="term">インスタンス</span>　<span class="term">フィールド</span>　<span class="term">コンストラクタと this</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>クラスから <code>new</code> でインスタンスを作れる</li><li>同じクラスから作った2つのインスタンスが、別物だと説明できる</li><li>コンストラクタで、作ると同時に値を入れられる</li></ul></div>
 </div>
-<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　クラス・インスタンス・フィールド・コンストラクタと this を、たい焼きで</li><li>② 写して動かす　<code>Product</code> と <code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑥の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>Book</code> と <code>Member</code> を作る</li><li>⑤ まとめ・次回</li></ul></div>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>クラス</td><td>オブジェクトの設計図。そのオブジェクトが持つ値（フィールド）と、できる処理（メソッド）をまとめて定義したものです。<code class="ex">public class Product { ... }</code></td></tr><tr><td>インスタンス</td><td>クラスをもとに <code>new</code> で作った実体。インスタンスごとに、別々のフィールドの値を持ちます。<code class="ex">Product p1 = new Product("ボールペン", 150);</code></td></tr><tr><td>フィールド</td><td>クラスの中、メソッドの外に書く変数です。インスタンスごとに、別々の値を持ちます。<code class="ex">String name;
@@ -216,11 +215,8 @@ int price;</code></td></tr><tr><td>コンストラクタと this</td><td><strong
 </svg><p class="figcap">フィールドは「くぼみ」、コンストラクタは「焼くときの手順」、this は「いま焼いているこの1匹」</p><p>焼き型には、あんこを入れる<strong>くぼみ</strong>があります。どのたい焼きにも同じくぼみがあり、中身だけが1匹ごとに違います。このくぼみが<strong>フィールド</strong>です。</p>
 <p>焼くときは、生地を流してあんこを詰める手順が決まっています。この「焼くときの手順」が<strong>コンストラクタ</strong>です。手順の中で「いま焼いているこの1匹に詰める」と指すのが <strong><code>this</code></strong> です。</p>
 </div></div>
-<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>たい焼きの型</td><td>クラス　<code>public class Product { ... }</code></td></tr><tr><td>型から1匹焼く</td><td><code>new Product(...)</code></td></tr><tr><td>たい焼き</td><td>インスタンス　<code>p1</code> <code>p2</code> <code>p3</code></td></tr><tr><td>あんこ／クリーム</td><td>それぞれの中に入っている値</td></tr><tr><td>あんこを入れるくぼみ</td><td>フィールド　<code>String name;</code> <code>int price;</code></td></tr><tr><td>焼くときに、あんこを詰める手順</td><td>コンストラクタ　<code>Product(String name, int price)</code></td></tr><tr><td>いま焼いているこの1匹</td><td><code>this</code>　<code>this.name = name;</code></td></tr></table>
 <h2>なぜ必要か</h2>
 <table class="define"><tr><td>クラス</td><td>名前・価格・在庫のように1つの物に付いた値を、ばらばらの変数ではなく、ひとまとまりで扱うためです。</td></tr><tr><td>インスタンス</td><td>1つの設計図から、値の違う物をいくつでも作るためです。</td></tr><tr><td>フィールド</td><td>1つ1つのインスタンスが、自分の値（名前・価格など）を持ち続けるためです。</td></tr><tr><td>コンストラクタと this</td><td>作ると同時に値を入れれば、入れ忘れを防げるからです。<code>this</code> が無いと、同じ名前の引数とフィールドを区別できません。</td></tr></table>
-<h2>使う場面</h2>
-<table class="define"><tr><td>クラス</td><td>商品・会員・注文のように、アプリに出てくる「物」ごとに作ります。</td></tr><tr><td>インスタンス</td><td>ボールペン・ノート・消しゴムを、同じ <code>Product</code> クラスから別々に作るとき。</td></tr><tr><td>フィールド</td><td>商品の名前・価格・在庫のように、その物が持つ情報を書くとき。</td></tr><tr><td>コンストラクタと this</td><td><code>new Product("ボールペン", 150)</code> のように、作るときに名前と価格を決めたいとき。</td></tr></table>
 <p>今日のゴールは、この絵をコードで書けるようになることです。まず写します。</p>
 </div>
 <div class="card"><div class="card-title">② 写して動かす</div>
@@ -396,6 +392,7 @@ public class Main {
 <text fill="#1f2933" font-size="13" text-anchor="start" x="290" y="105">値を入れる箱は、new で実物を作ったときにできる</text>
 </svg><p class="figcap">設計図そのものに、名前や価格は書き込めない</p><p><code>Product</code> は設計図です。設計図には「名前という欄がある」と決めてあるだけで、値を入れる箱はまだどこにもありません。箱は <code>new</code> で実物を作ったときに、実物1つにつき1組できます。写したコードのとおり、<code>new</code> で作ってから <code>p1.show()</code> と呼びます。エラー文の「static」は次回扱います。</p>
 </div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>thisの意味</h2><p>コンストラクタの <code>this.name = name;</code> は左右で何が違う？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>左はそのインスタンスのフィールド <code>this.name</code>、右はコンストラクタで受け取った引数 <code>name</code>。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
 <p>ここからは自力です。2問あります。<strong>①が1冊でも表示できたら、今日の目的は達成です。</strong></p>
 <h2>課題</h2>
@@ -570,9 +567,9 @@ public class MemberMain {
 <div class="card"><div class="card-title">⑤ まとめ</div>
 <h2>確認チェック</h2><div class="check"><ul><li>クラスとインスタンスの違いを、たい焼き以外の自分のたとえで説明できる</li><li>同じクラスから作った2つのインスタンスが、別物だと説明できる</li><li><code>this.name = name;</code> の左右が何を指しているか説明できる</li></ul></div>
 <h2>次回</h2><p><strong>次回は、カプセル化と static です。</strong>今日作った <code>Product</code> は、外から <code>p1.price = -999;</code> と書けてしまいます。次回は<strong>それを防ぐ鍵のかけ方</strong>と、第1回から出ていた <code>static</code> の正体を扱います。</p></div>
-<div class="card"><div class="card-title">用語の説明</div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
-<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>クラス</td><td>くらす</td><td>設計図。「どんな値を持ち、何ができるか」を書いたもの。<code>public class Product { ... }</code></td></tr><tr><td>インスタンス</td><td>いんすたんす</td><td>設計図から作った実物。<code>new</code> で1つ作られます</td></tr><tr><td>オブジェクト</td><td>おぶじぇくと</td><td>インスタンスとほぼ同じ意味で使われます。この講座では同じものと考えて構いません</td></tr><tr><td>new</td><td>にゅー</td><td>インスタンスを1つ作る命令。<code>new Product("ボールペン", 150)</code></td></tr><tr><td>フィールド</td><td>ふぃーるど</td><td>クラスの直下に書いた変数。そのインスタンスが持ち続ける値</td></tr><tr><td>インスタンスメソッド</td><td>―</td><td><code>static</code> の付かないメソッド。<code>p1.show()</code> のように、実物に対して呼びます</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの。クラスと同じ名前で、戻り値の型を書きません。Eclipse の表示では「コンストラクター」</td></tr><tr><td>this</td><td>でぃす</td><td>「いま動いているこのインスタンスの」という意味。<code>this.name</code> はフィールド</td></tr><tr><td>引数</td><td>ひきすう</td><td>メソッドやコンストラクタが受け取る値。丸括弧の中に書きます（第3回）</td></tr><tr><td>初期値</td><td>しょきち</td><td>フィールドに最初から入っている値。<code>String</code> は <code>null</code>、<code>int</code> は <code>0</code>、<code>boolean</code> は <code>false</code></td></tr><tr><td>null</td><td>ぬる</td><td>「何も入っていない」を表す値。表示すると <code>null</code> と出ます。第9回で詳しく扱います</td></tr><tr><td>拡張for文</td><td>かくちょうふぉーぶん</td><td><code>for (Book b : books)</code> の形。配列の中身を1つずつ取り出します（第2回）</td></tr></table></div>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>クラス</td><td>くらす</td><td>設計図。「どんな値を持ち、何ができるか」を書いたもの。<code>public class Product { ... }</code></td></tr><tr><td>インスタンス</td><td>いんすたんす</td><td>設計図から作った実物。<code>new</code> で1つ作られます</td></tr><tr><td>オブジェクト</td><td>おぶじぇくと</td><td>インスタンスとほぼ同じ意味で使われます。この講座では同じものと考えて構いません</td></tr><tr><td>new</td><td>にゅー</td><td>インスタンスを1つ作る命令。<code>new Product("ボールペン", 150)</code></td></tr><tr><td>フィールド</td><td>ふぃーるど</td><td>クラスの直下に書いた変数。そのインスタンスが持ち続ける値</td></tr><tr><td>インスタンスメソッド</td><td>―</td><td><code>static</code> の付かないメソッド。<code>p1.show()</code> のように、実物に対して呼びます</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの。クラスと同じ名前で、戻り値の型を書きません。Eclipse の表示では「コンストラクター」</td></tr><tr><td>this</td><td>でぃす</td><td>「いま動いているこのインスタンスの」という意味。<code>this.name</code> はフィールド</td></tr><tr><td>引数</td><td>ひきすう</td><td>メソッドやコンストラクタが受け取る値。丸括弧の中に書きます（第3回）</td></tr><tr><td>初期値</td><td>しょきち</td><td>フィールドに最初から入っている値。<code>String</code> は <code>null</code>、<code>int</code> は <code>0</code>、<code>boolean</code> は <code>false</code></td></tr><tr><td>null</td><td>ぬる</td><td>「何も入っていない」を表す値。表示すると <code>null</code> と出ます。第9回で詳しく扱います</td></tr><tr><td>拡張for文</td><td>かくちょうふぉーぶん</td><td><code>for (Book b : books)</code> の形。配列の中身を1つずつ取り出します（第2回）</td></tr></table></details>
 <footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 4 回 ／ 全 18 回</footer>
 </div>
 <script>
