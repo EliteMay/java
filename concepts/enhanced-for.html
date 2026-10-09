@@ -1,0 +1,19 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>拡張for文と通常のfor文 | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>拡張for文と通常のfor文</strong></nav><span class="eyebrow">第2回の補足</span><h1>拡張for文と通常のfor文</h1><p class="subtitle">配列の値を順番に読むだけなら拡張for。番号が必要なら通常for。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong><code>for (int score : scores)</code> は「scoresの要素を1つ取り出してscoreに入れる」を繰り返す。<code>score</code> は配列の番号ではなく、要素の値。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>まず実際にどう動くかを見て、その理由を下で整理する。</p><div class="codehead"><span>Main.java（そのまま実行できる例）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>public class Main {
+    public static void main(String[] args) {
+        int[] scores = {60, 80, 100};
+        int sum = 0;
+
+        for (int score : scores) {
+            sum += score;
+            System.out.println(&quot;取り出した値: &quot; + score);
+        }
+        System.out.println(&quot;合計: &quot; + sum);
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果</div><pre class="output">取り出した値: 60
+取り出した値: 80
+取り出した値: 100
+合計: 240</pre><h3>1行ずつ考えると</h3><ol class="steps"><li>最初の周回で<code>scores[0]</code>の値60が<code>score</code>に入る。</li><li>次は80、次は100。配列の最後まで自動で進む。</li><li>各周回で<code>sum += score</code>を実行。<code>sum</code>は0→60→140→240になる。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong><code>score</code> は取り出した値を受け取る変数。<code>score = 0;</code> としても、元の <code>scores</code> の要素は0にならない。配列を書き換えたいときは添字を使う。</div><h3>通常forは「添字（番号）」も使える</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>int[] scores = {60, 80, 100};
+for (int i = 0; i &lt; scores.length; i++) {
+    scores[i] += 5; // 配列そのものを更新
+}
+System.out.println(scores[1]); // 85</code></pre><p><code>i</code> は0→1→2と変わる番号。<code>scores[i]</code> なら配列の要素を直接変更できる。番号がいらない集計なら拡張forで十分。<code>break</code>は両方のforで使える。</p></section><section class="card"><h2>30秒で理解チェック</h2><p><code>int[] a = {3, 6, 9};</code> に対し、<code>for (int x : a) { x += 1; }</code> のあと、<code>a[0]</code> は何？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>3のまま。</strong> <code>x</code> は要素の値を受け取るだけ。<code>a[0]</code> を変えるなら添字を指定して更新する。</p></details></section><div class="links"><a href="../lesson02.html">← 第2回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義を補助するための解説です。比較用のコードは必要部分のみの抜粋です。実際のJava実行はEclipseなどで行ってください。</footer></main></body></html>
