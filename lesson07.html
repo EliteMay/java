@@ -125,12 +125,13 @@
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson06.html">前の講義</a><a href="lesson08.html">次の講義</a><a href="problems.html">問題集</a></nav>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson06.html">前の講義</a><a href="lesson08.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
 <header><span class="badge">第 7 回 ／ 全 18 回</span><h1>インタフェース・抽象クラスとポリモーフィズム</h1><p>第10章　インタフェース ／ ポリモーフィズム ／ 抽象クラス</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">インタフェース</span>　<span class="term">ポリモーフィズム</span>　<span class="term">抽象クラス</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>インタフェースを書き、<code>implements</code> でその約束を守るクラスを作れる</li><li>親の型の変数・配列・引数に、種類の違うインスタンスを入れられる</li><li>種類を足しても、使う側のコードを変えずに済むことを説明できる</li></ul></div>
 </div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/interface.html">インタフェースと多態性を詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>インタフェース</td><td>クラスが持つべきメソッドの名前・引数・戻り値の型だけを決めたもの。中身は書きません。<code>implements</code> したクラスは、そのメソッドを全部書かなければなりません。<code class="ex">public interface Coupon {
