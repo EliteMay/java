@@ -131,7 +131,6 @@
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">継承</span>　<span class="term">オーバーライド</span>　<span class="term">super</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li><code>extends</code> で、親のクラスを書き写さずに子クラスを作れる</li><li>親のメソッドを子で書き直し（オーバーライド）、<code>@Override</code> を付けられる</li><li>子のコンストラクタに <code>super(...)</code> を書く理由を説明できる</li></ul></div>
 </div>
-<div class="card"><div class="card-title">今日の授業内容</div><ul class="plain"><li>① 今日の主役　継承・オーバーライド・<code>super</code> を、会員規約と付則で</li><li>② 写して動かす　<code>Member</code>・<code>GoldMember</code>・<code>Main</code> の全体を写して実行する</li><li>③ 解説　写したコードを①〜⑥の順に。よくある間違いも一緒に</li><li>④ 自力で書く　<code>PlatinumMember</code> と <code>StudentMember</code> を作る</li><li>⑤ まとめ・次回</li></ul></div>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>継承</td><td>あるクラス（親クラス）のフィールドとメソッドを引き継いで、新しいクラス（子クラス）を作る仕組み。子クラスには、追加や変更する所だけを書きます。親にできるクラスは1つだけです。<code class="ex">public class GoldMember extends Member { ... }</code></td></tr><tr><td>オーバーライド</td><td>親クラスにあるメソッドを、子クラスで同じ名前・同じ引数のまま書き直すこと。<code class="ex">@Override
@@ -204,11 +203,8 @@ super.show();</code></td></tr></table>
 </svg><p class="figcap">オーバーライドは「付則で条文を書き換える」、super は「付則から『基本の規約のとおり』と呼び出す」</p><p>付則で、基本の規約の条文を書き換えることを<strong>オーバーライド</strong>と言います。ゴールド会員の付則は、「割引率」の条文だけを書き換えています。</p>
 <p>付則の中で「名前の登録は、基本の規約のとおり」と、基本の規約を呼び出すのが <strong><code>super</code></strong> です。</p>
 </div></div>
-<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>基本の会員規約</td><td>親クラス　<code>Member</code></td></tr><tr><td>ゴールド会員の付則</td><td>子クラス　<code>public class GoldMember extends Member</code></td></tr><tr><td>付則に書かない条文</td><td>そのまま引き継がれる　<code>show()</code> <code>calcPrice()</code></td></tr><tr><td>付則で差し替える条文</td><td>子で書き直すメソッド　<code>getDiscountRate()</code></td></tr><tr><td>条文を付則で書き換える</td><td>オーバーライド　<code>@Override</code></td></tr><tr><td>「基本の規約のとおり」と呼び出す</td><td><code>super</code>　<code>super(name);</code></td></tr></table>
 <h2>なぜ必要か</h2>
 <table class="define"><tr><td>継承</td><td>共通の部分を何度も書かず、違う所だけを書くためです。共通の部分を直すときも、親の1か所で済みます。</td></tr><tr><td>オーバーライド</td><td>親と同じ呼び方のまま、子に合った動きに変えるためです。</td></tr><tr><td>super</td><td>子クラスからは、親の <code>private</code> なフィールドに直接値を入れられないので、親に頼んで入れてもらうためです。<code>super.メソッド名()</code> は、親の処理をそのまま使い、そこに付け足すためです。</td></tr></table>
-<h2>使う場面</h2>
-<table class="define"><tr><td>継承</td><td>普通会員とゴールド会員のように、「〜の一種」と言える関係のクラスを作るとき。</td></tr><tr><td>オーバーライド</td><td>会員の種類ごとに、割引率だけを変えるとき。</td></tr><tr><td>super</td><td>子クラスのコンストラクタで、親の部分に値を入れるとき。親のメソッドの動きに、少し付け足したいとき。</td></tr></table>
 <p>今日のゴールは、この付則をコードで書けるようになることです。まず写します。</p>
 </div>
 <div class="card"><div class="card-title">② 写して動かす</div>
@@ -452,6 +448,7 @@ public class GoldMember extends Member {
 <table><tr><th>修飾子</th><th>そのクラスの中</th><th>同じパッケージ</th><th>別のパッケージの子クラス</th><th>どこからでも</th></tr><tr><td><code>private</code></td><td>○</td><td>×</td><td>×</td><td>×</td></tr><tr><td>何も書かない</td><td>○</td><td>○</td><td>×</td><td>×</td></tr><tr><td><code>protected</code></td><td>○</td><td>○</td><td>○</td><td>×</td></tr><tr><td><code>public</code></td><td>○</td><td>○</td><td>○</td><td>○</td></tr></table>
 <div class="note">フィールドは <code>private</code> にして getter を通すのが基本です。<code>protected</code> にすると、子クラスから値を自由に書き換えられるようになります。</div>
 </div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>継承と上書き</h2><p>親にも子にも同じ <code>show()</code> があり、子インスタンスで呼んだらどちらが実行される？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>子でオーバーライドした <code>show()</code> が実行される。<code>@Override</code> を書くと上書きの間違いに気付きやすい。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
 <p>ここからは自力です。2問あります。<strong>①が表示できたら、今日の目的は達成です。</strong></p>
 <h2>課題</h2>
@@ -588,9 +585,9 @@ public class StudentMember extends Member {
 <div class="card"><div class="card-title">⑤ まとめ</div>
 <h2>確認チェック</h2><div class="check"><ul><li>継承を、会員規約と付則以外の自分のたとえで説明できる</li><li>子クラスに書くのは親と違う所だけ、と説明できる</li><li><code>@Override</code> を付ける理由を、綴りを間違えたときの動きで説明できる</li><li>子のコンストラクタに <code>super(...)</code> を書く理由を説明できる</li></ul></div>
 <h2>次回</h2><p><strong>次回は、インタフェース・抽象クラスとポリモーフィズムです。</strong>今日は会員を1人ずつ別の変数に入れて表示しました。次回は、10%オフ券や300円引き券のような種類の違う割引券を<strong>1つの配列にまとめて入れ、同じ1行で呼んでも種類ごとに違う動きをする</strong>書き方を扱います。</p></div>
-<div class="card"><div class="card-title">用語の説明</div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
-<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>継承</td><td>けいしょう</td><td>すでにあるクラスの中身を引き継いで、新しいクラスを作ること</td></tr><tr><td>extends</td><td>えくすてんず</td><td>「〜を引き継ぐ」。<code>public class GoldMember extends Member</code> のように書きます。親は1つだけ書けます</td></tr><tr><td>親クラス</td><td>おやくらす</td><td>引き継がれるほう。スーパークラスとも言います。例では <code>Member</code></td></tr><tr><td>子クラス</td><td>こくらす</td><td>引き継ぐほう。サブクラスとも言います。例では <code>GoldMember</code></td></tr><tr><td>Object</td><td>おぶじぇくと</td><td><code>extends</code> を書かないクラスも、Java が自動で <code>Object</code> というクラスを親にします。<code>Object</code> はすべてのクラスの親です</td></tr><tr><td>オーバーライド</td><td>おーばーらいど</td><td>親のメソッドを、子で同じ名前・同じ引数のまま書き直すこと</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親のメソッドを書き直しています」という印。親に同じメソッドが無いとエラーにしてくれます</td></tr><tr><td>アノテーション</td><td>あのてーしょん</td><td><code>@Override</code> のように <code>@</code> で始まる印。Eclipse の表示では「注釈」</td></tr><tr><td>super</td><td>すーぱー</td><td>親を指す言葉。<code>super(name)</code> で親のコンストラクタ、<code>super.show()</code> で親のメソッドを呼びます</td></tr><tr><td>オーバーロード</td><td>おーばーろーど</td><td>同じ名前で、引数の違うメソッドを並べること。オーバーライドとは別物です</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>そのクラスの中だけで使える、という修飾子。子クラスからも見えません（第5回）</td></tr><tr><td>protected</td><td>ぷろてくてっど</td><td>子クラスと、同じパッケージのクラスから使える、という修飾子</td></tr><tr><td>修飾子</td><td>しゅうしょくし</td><td><code>public</code> <code>private</code> <code>protected</code> など、どこから使えるかを決める言葉（第5回）</td></tr><tr><td>getter</td><td>げったー</td><td><code>private</code> のフィールドの値を読み出すためのメソッド。<code>getName()</code> など（第5回）</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。子のコンストラクタは、1行目で親のコンストラクタを呼びます</td></tr></table></div>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>継承</td><td>けいしょう</td><td>すでにあるクラスの中身を引き継いで、新しいクラスを作ること</td></tr><tr><td>extends</td><td>えくすてんず</td><td>「〜を引き継ぐ」。<code>public class GoldMember extends Member</code> のように書きます。親は1つだけ書けます</td></tr><tr><td>親クラス</td><td>おやくらす</td><td>引き継がれるほう。スーパークラスとも言います。例では <code>Member</code></td></tr><tr><td>子クラス</td><td>こくらす</td><td>引き継ぐほう。サブクラスとも言います。例では <code>GoldMember</code></td></tr><tr><td>Object</td><td>おぶじぇくと</td><td><code>extends</code> を書かないクラスも、Java が自動で <code>Object</code> というクラスを親にします。<code>Object</code> はすべてのクラスの親です</td></tr><tr><td>オーバーライド</td><td>おーばーらいど</td><td>親のメソッドを、子で同じ名前・同じ引数のまま書き直すこと</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親のメソッドを書き直しています」という印。親に同じメソッドが無いとエラーにしてくれます</td></tr><tr><td>アノテーション</td><td>あのてーしょん</td><td><code>@Override</code> のように <code>@</code> で始まる印。Eclipse の表示では「注釈」</td></tr><tr><td>super</td><td>すーぱー</td><td>親を指す言葉。<code>super(name)</code> で親のコンストラクタ、<code>super.show()</code> で親のメソッドを呼びます</td></tr><tr><td>オーバーロード</td><td>おーばーろーど</td><td>同じ名前で、引数の違うメソッドを並べること。オーバーライドとは別物です</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>そのクラスの中だけで使える、という修飾子。子クラスからも見えません（第5回）</td></tr><tr><td>protected</td><td>ぷろてくてっど</td><td>子クラスと、同じパッケージのクラスから使える、という修飾子</td></tr><tr><td>修飾子</td><td>しゅうしょくし</td><td><code>public</code> <code>private</code> <code>protected</code> など、どこから使えるかを決める言葉（第5回）</td></tr><tr><td>getter</td><td>げったー</td><td><code>private</code> のフィールドの値を読み出すためのメソッド。<code>getName()</code> など（第5回）</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。子のコンストラクタは、1行目で親のコンストラクタを呼びます</td></tr></table></details>
 <footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 6 回 ／ 全 18 回</footer>
 </div>
 <script>
