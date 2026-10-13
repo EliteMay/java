@@ -33,6 +33,12 @@ for(const n of [11,12,13]){
  assert.ok(page.includes('mysql --protocol=TCP -h 127.0.0.1 -P 65534 -u root -p'),n+': CLI port missing');
  total+=5;
 }
+const workbook=read('problems.html');
+assert.ok(!workbook.includes('localhost:3306'), 'workbook still uses old port');
+assert.ok(!workbook.includes('"password"'), 'workbook still uses old password');
+assert.ok(workbook.includes('jdbc:mysql://localhost:65534/stock'), 'workbook needs classroom URL');
+assert.ok(workbook.includes('private static final String PASSWORD = "pass";'), 'workbook needs classroom password');
+total+=4;
 const l11=read('lesson11.html');
 assert.ok(l11.includes('"wrongpass"'), 'the deliberate wrong-password example must stay incorrect');
 assert.ok(read('concise-explanations.css').includes('.explain-more'), 'styles missing');
