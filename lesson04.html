@@ -285,14 +285,21 @@ public class Main {
 ノート / 220円</div>
 <p>実行するのは <code>Main</code> のほうです。<code>Product</code> には <code>main</code> が無いので、<code>Product</code> を選んで実行しても動きません。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　フィールド（①）</h2>
+<p class="explain-brief">フィールドはインスタンスごとの情報。クラスに書いておく。</p>
+<p class="explain-mini"><code>String name; int price;</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Product.java（抜き出し）</p>
 <pre class="code" id="c3">    String name;                          <span class="cm">// <span class="cn">①</span> フィールド</span>
     int price;                            <span class="cm">// <span class="cn">①</span> フィールド</span></pre>
 <p><code>String name;</code> と <code>int price;</code> は<strong>フィールド</strong>です。クラスの直下に書いた変数で、たとえの「あんこを入れるくぼみ」です。<strong>なぜフィールドにするのか。</strong>商品ごとに名前と価格を持たせるためです。インスタンス1つ1つが、自分の <code>name</code> と <code>price</code> を持ちます。</p>
+</div></details>
 <h2>2　コンストラクタと this（②③）</h2>
+<p class="explain-brief"><code>new</code>するとコンストラクタが動く。<code>this.name</code>はその実物のフィールド。</p>
+<p class="explain-mini"><code>this.name = name;</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Product.java（抜き出し）</p>
 <pre class="code" id="c4">    Product(String name, int price) {     <span class="cm">// <span class="cn">②</span> コンストラクタ</span>
         this.name = name;                 <span class="cm">// <span class="cn">③</span> this</span>
@@ -354,7 +361,11 @@ public class Main {
 <div class="expected err">コンストラクター Product() は未定義です
 （The constructor Product() is undefined）</div>
 <p>コンストラクタを1つも書かないときは、Java が引数なしのものを黙って用意しています。<strong>自分で書いた瞬間に、その気づかいは無くなります。</strong>写したコードのとおり、<code>new Product("ボールペン", 150)</code> と値を渡して作ります。</p>
+</div></details>
 <h2>3　インスタンスを作って、メソッドを呼ぶ（④⑤⑥）</h2>
+<p class="explain-brief">クラスは設計図、インスタンスは実物。作った変数からメソッドを呼ぶ。</p>
+<p class="explain-mini"><code>Product p = new Product(...); p.show();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Product.java（抜き出し）</p>
 <pre class="code" id="c7">    void show() {                         <span class="cm">// <span class="cn">④</span> メソッド</span>
         System.out.println(name + " / " + price + "円");
@@ -397,6 +408,7 @@ public class Main {
 <text fill="#1f2933" font-size="13" text-anchor="start" x="290" y="85">設計図の欄に、直接値を書こうとしている</text>
 <text fill="#1f2933" font-size="13" text-anchor="start" x="290" y="105">値を入れる箱は、new で実物を作ったときにできる</text>
 </svg><p class="figcap">設計図そのものに、名前や価格は書き込めない</p><p><code>Product</code> は設計図です。設計図には「名前という欄がある」と決めてあるだけで、値を入れる箱はまだどこにもありません。箱は <code>new</code> で実物を作ったときに、実物1つにつき1組できます。写したコードのとおり、<code>new</code> で作ってから <code>p1.show()</code> と呼びます。エラー文の「static」は次回扱います。</p>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>thisの意味</h2><p>コンストラクタの <code>this.name = name;</code> は左右で何が違う？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>左はそのインスタンスのフィールド <code>this.name</code>、右はコンストラクタで受け取った引数 <code>name</code>。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
