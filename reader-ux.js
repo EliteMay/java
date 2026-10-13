@@ -13,7 +13,9 @@ const lessonTitles = [
 "第8回 List・Map",
 "第9回 null・例外",
 "第10回 ファイル・CSV",
-"第11回 SQL・JDBC"
+"第11回 SQL・JDBC",
+"第12回 PreparedStatement",
+"第13回 DTO・DAO・3層"
 ];
 function makeLink(label, href) {
   const a = document.createElement("a");
