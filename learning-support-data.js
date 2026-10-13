@@ -107,7 +107,7 @@ window.JAVA_SUPPORT_DATA = {
     snippet:"String sql = \"UPDATE products SET price = ? WHERE id = ?\";\nPreparedStatement ps = conn.prepareStatement(sql);\nps.setInt(1, 300);\nps.setInt(2, 5);\nint changed = ps.executeUpdate();",
     steps:["SQLの1番目の?は新しいprice、2番目の?は対象id。","setInt(1,300)、setInt(2,5)で値を設定する。","executeUpdateでDBを更新し、影響を受けた行数を返す。接続・closeなどは省略した断片。"],
     question:"setInt(2, 5)が入れるのは、2番目の?？",choices:["はい","いいえ"],answer:0,
-    reason:"番号は1から。WHERE id = ?の?が2番目。実際のDB接続と適切な後片付けが必要。",link:"lesson11.html",linkText:"前の講義：SQL・JDBC"
+    reason:"番号は1から。WHERE id = ?の?が2番目。実際のDB接続と適切な後片付けが必要。",link:"concepts/preparedstatement.html",linkText:"PreparedStatementと更新処理"
   },
   13: {
     title:"DTO・DAO・Serviceを分ける理由",
@@ -117,6 +117,6 @@ window.JAVA_SUPPORT_DATA = {
     snippet:"// 処理の流れ（概念図）\n画面: 商品IDを受け取る\n  ↓\nService: 販売できるか確認する\n  ↓\nDAO: SQLで在庫を更新する\n  ↓\nDTO: 商品情報を持ち運ぶ",
     steps:["画面側がユーザーの操作を受け取る。","Serviceで値のチェックや処理の順番を決める。","DAOがDBへ問い合わせる。DTOは情報を層間で渡すときに使う。"],
     question:"SQLを直接扱う責任は一般にどの層？",choices:["DTO","DAO","画面"],answer:1,
-    reason:"DAOがデータの永続化に責任を持つ。DTOはデータを運び、Serviceが業務ルールを扱う。",link:"lesson12.html",linkText:"前の講義：PreparedStatement"
+    reason:"DAOがデータの永続化に責任を持つ。DTOはデータを運び、Serviceが業務ルールを扱う。",link:"concepts/dto-dao.html",linkText:"DTO・DAO・3層の理解"
   }
 };
