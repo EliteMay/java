@@ -128,7 +128,7 @@
 <body>
 <button id="bigbtn">文字を大きくする</button>
 <div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson08.html">前の講義</a><a href="lesson10.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
-<header><span class="badge">第 9 回 ／ 全 18 回</span><h1>null・例外と try-catch</h1><p>第11章 11-4 と 第12章　null ／ 例外と try-catch ／ 入力の検査</p></header>
+<header><span class="badge">第 9 回 ／ 全 22 回</span><h1>null・例外と try-catch</h1><p>第11章 11-4 と 第12章　null ／ 例外と try-catch ／ 入力の検査</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">null</span>　<span class="term">例外</span>　<span class="term">try-catch</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>例外が起きると、その行から先が実行されないことを説明できる</li><li><code>try-catch</code> で例外を受け止め、プログラムを続けられる</li><li><code>null</code> かどうかを <code>==</code> で確かめてから使える</li></ul></div>
@@ -779,7 +779,7 @@ public class StockInput {
 <details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
 <table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>例外</td><td>れいがい</td><td>続けられない事態が起きたときに、Java が投げる知らせ。受け止めないとプログラムが止まります</td></tr><tr><td>throw</td><td>すろー</td><td>「ここで例外を投げる」命令。<code>throw new IllegalArgumentException("理由");</code></td></tr><tr><td>try</td><td>とらい</td><td>例外が起きるかもしれない処理を囲む範囲</td></tr><tr><td>catch</td><td>きゃっち</td><td>丸括弧に書いた種類の例外が来たときに動く所。<code>catch (NumberFormatException e)</code></td></tr><tr><td>finally</td><td>ふぁいなりー</td><td>例外が起きても起きなくても、最後に必ず動く所。後片付けを書きます</td></tr><tr><td>getMessage()</td><td>げっとめっせーじ</td><td>例外に入っている理由の文を取り出すメソッド</td></tr><tr><td>IllegalArgumentException</td><td>いりーがる あーぎゅめんと えくせぷしょん</td><td>「渡された値がおかしい」ことを表す例外。自分で投げるときによく使います</td></tr><tr><td>NumberFormatException</td><td>なんばー ふぉーまっと えくせぷしょん</td><td>文字列が数字の形になっていないことを表す例外。<code>Integer.parseInt</code> が投げます。<code>IllegalArgumentException</code> の子クラスです</td></tr><tr><td>NullPointerException</td><td>ぬる ぽいんたー えくせぷしょん</td><td><code>null</code> に対してメソッドを呼んだり、フィールドを使ったりしたときの例外</td></tr><tr><td>null</td><td>ぬる</td><td>「どの実物も指していない」ことを表す値。比べるときは <code>==</code> を使います</td></tr><tr><td>握りつぶし</td><td>にぎりつぶし</td><td>例外を <code>catch</code> して何もしないこと。失敗が誰にも伝わらなくなります</td></tr><tr><td>while (true)</td><td>ほわいる とぅるー</td><td>条件がいつも <code>true</code> なので、<code>break</code> するまで回り続けるループ</td></tr><tr><td>break</td><td>ぶれーく</td><td>ループをその場で抜ける命令。ループの後ろの行へ進みます</td></tr><tr><td>Scanner</td><td>すきゃなー</td><td>キーボードからの入力を読む道具。<code>nextLine()</code> で1行読みます</td></tr><tr><td>Integer.parseInt</td><td>いんてじゃー ぱーすいんと</td><td>文字列を <code>int</code> に変えるメソッド。変えられないときは <code>NumberFormatException</code> を投げます</td></tr><tr><td>子クラス</td><td>こくらす</td><td>ほかのクラスを継承したクラス（第6回）。<code>catch</code> では子を先に書きます</td></tr></table></details>
-<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 9 回 ／ 全 18 回</footer>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 9 回 ／ 全 22 回</footer>
 </div>
 <script>
   if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
