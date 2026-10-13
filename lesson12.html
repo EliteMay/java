@@ -449,10 +449,13 @@ public class Main {
 4 / 定規 / 180円 / 残り20個</div>
 <p><code>Main</code> を実行すると、MySQL の表の中身が書き換わります。最後の「いまの商品」は、書き換えたあとの表を <code>findAll</code> で読み直したものです。定規の id は 4 で、消した消しゴム（ID 3）は表示されていません。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
-<p>間違いの形の実行結果は、どれも最初の3件から始めたときのものです。試すときは、その前に②の SQL を実行して、最初の3件に戻してください。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
+<p class="note">DBの変更を試す前は、必要に応じて②の準備SQLで初期データに戻してください。</p>
 <h2>1　? に値を入れて、1つ探す（①②③）</h2>
+<p class="explain-brief">SQLの<code>?</code>は値を渡す場所。<code>setInt(1, ...)</code>は1番目の<code>?</code>。</p>
+<p class="explain-mini"><code>ps.setInt(1, id);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductDao.java（抜き出し）</p>
 <pre class="code" id="c5">    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
     public Product findById(int id) throws SQLException {
@@ -542,7 +545,11 @@ ID 9 の商品はありません
 1 / ボールペン / 150円 / 残り30個
 2 / ノート / 220円 / 残り10個
 4 / 定規 / 180円 / 残り20個</div>
+</div></details>
 <h2>2　追加する（④⑤）</h2>
+<p class="explain-brief"><code>INSERT</code>で追加。<code>executeUpdate()</code>は影響した行数を返す。</p>
+<p class="explain-mini"><code>int changed = ps.executeUpdate();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductDao.java（抜き出し）</p>
 <pre class="code" id="c13">    <span class="cm">// 追加する。変わった行数を返す</span>
     public int insert(Product p) throws SQLException {
@@ -616,7 +623,11 @@ System.out.println("追加: " + n + "件");</pre>
 <p><code>'</code> を含む文字をわざと入れて、SQL の形を書き換える攻撃があります。これを、<strong>SQLインジェクション</strong>と言います。写したコードのとおり <code>?</code> と <code>setString</code> で渡せば、<code>Jim's Pen</code> もそのまま入ります。</p>
 <div class="words"><b>ここで出た言葉</b><span><b>SQLインジェクション</b>　入力欄に <code>'</code> などを含む文字を入れて、SQL の形を書き換えてしまう攻撃。SQL を <code>+</code> でつないで作ると、この穴ができます</span></div>
 <div class="trap"><strong>SQL を <code>+</code> でつないで作りません。</strong>値は必ず <code>?</code> で渡します。</div>
+</div></details>
 <h2>3　更新する・削除する（⑥）</h2>
+<p class="explain-brief"><code>UPDATE</code>と<code>DELETE</code>では、対象を絞る<code>WHERE</code>が重要。</p>
+<p class="explain-mini"><code>UPDATE products SET price=? WHERE id=?</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductDao.java（抜き出し）</p>
 <pre class="code" id="c22">    <span class="cm">// 更新する。変わった行数を返す</span>
     public int update(Product p) throws SQLException {
@@ -734,7 +745,11 @@ ID 9 の商品はありません
 2 / ノート / 220円 / 残り5個
 3 / 消しゴム / 100円 / 残り50個
 4 / 定規 / 180円 / 残り20個</div>
+</div></details>
 <h2>4　読んで、変えて、書き戻す（⑦⑧）</h2>
+<p class="explain-brief">Javaのオブジェクトを変えるだけではDBは変わらない。DAOの更新処理が必要。</p>
+<p class="explain-mini"><code>product.setStock(5); dao.update(product);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c33">    public static void main(String[] args) {
         ProductDao dao = new ProductDao();
@@ -776,6 +791,7 @@ ID 9 の商品はありません
 <p>⑧の <code>catch (SQLException e)</code> で、MySQL とのやりとりで起きた失敗を受け止めます。<code>e.getMessage()</code> で理由の文を取り出し、「データベースのエラー: 」の後ろにつないで表示します。</p>
 <p><code>ProductDao</code> のメソッドは、失敗を <code>throws SQLException</code> で呼んだ側に任せています。それを、<code>Main</code> が受け止めます。<code>ProductDao</code> の中で受け止めて何もしないと、呼んだ側は失敗に気づけません（第9回の握りつぶし）。失敗をどう伝えるかは、使う側が決めます。</p>
 </div>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>PreparedStatementはどこに値を渡す？</h2><p>SQLの <code>?</code> は何のために使う？ また <code>executeUpdate()</code> は何を返す？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>SQLの <code>?</code> に <code>setInt</code> や <code>setString</code> で値を安全に渡す。<code>executeUpdate()</code> は追加・更新・削除などで影響を受けた行数を返す。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
