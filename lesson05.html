@@ -332,9 +332,12 @@ public class Main {
 登録した商品: 2個</div>
 <p>1行目は、<code>setPrice(-100)</code> がはじかれたときの表示です。そのあとの <code>setPrice(180)</code> は通ったので、ボールペンは180円になっています。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　欄に private と static を付ける（①②）</h2>
+<p class="explain-brief"><code>private</code>は外からの直接変更を制限、<code>static</code>はクラス全体で共有する。</p>
+<p class="explain-mini"><code>private int stock; static int count;</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p><code>Product.java</code> から抜き出しています。</p>
 <pre class="code" id="c3">private static int count = 0;   <span class="cm">// <span class="cn">①</span> 作った商品の数（全体で1つ）</span>
 
@@ -443,7 +446,11 @@ public class Product {
 </svg><p class="figcap">static を付けた欄は、実物がいくつあっても1つしかない</p><p><code>static</code> を付けた欄は、クラスに1組しかありません。<code>p2</code> を作ったときに、<code>p1</code> のボールペンの値が上書きされます。<strong>全員が1枚の棚を使っている状態です。</strong>付けるかどうかは、次の1つで決めます。</p>
 <table><tr><th>問い</th><th>答え</th><th>static</th><th>写したコードでは</th></tr><tr><td>1つ1つで中身が違うか</td><td>違う</td><td><strong>付けない</strong></td><td><code>id</code> <code>name</code> <code>price</code> <code>stock</code></td></tr><tr><td></td><td>全部で同じ</td><td><strong>付ける</strong></td><td><code>count</code></td></tr></table>
 <div class="trap">Eclipse は黄色い警告「static フィールド Product.name には static にアクセスする必要があります」を出すだけで、実行できてしまいます。<strong>商品が全部同じ値になったら、欄の <code>static</code> を疑ってください。</strong></div>
+</div></details>
 <h2>2　作るたびに数える（③）</h2>
+<p class="explain-brief">コンストラクタは<code>new</code>のたびに実行される。共有数のカウントにも使える。</p>
+<p class="explain-mini"><code>Product() { count++; }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c6">public Product(int id, String name, int price, int stock) {
     this.id = id;
     this.name = name;
@@ -453,7 +460,11 @@ public class Product {
 }</pre>
 <p>コンストラクタの中で、<code>count</code> を1増やします。<strong>なぜここで数えるのか。</strong>商品を作るときは必ずコンストラクタが動くので、ここで数えれば数え漏れがありません。商品をもう1つ <code>new</code> すれば、最後の数は3になります。</p>
 <p>コンストラクタの中からでも、<code>static</code> の欄 <code>count</code> に届きます。コンストラクタに付けた <code>public</code>（どこからでも使える）は、別のパッケージからも <code>new</code> できるようにする印です。</p>
+</div></details>
 <h2>3　読み書きの入口 getter と setter（④⑤）</h2>
+<p class="explain-brief"><code>getter</code>は値を読む入口、<code>setter</code>は条件を確認してから変更する入口。</p>
+<p class="explain-mini"><code>getPrice() / setPrice(...)</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c7">public int getId() { return id; }              <span class="cm">// <span class="cn">④</span> getter</span>
 public String getName() { return name; }       <span class="cm">// <span class="cn">④</span> getter</span>
 public int getPrice() { return price; }        <span class="cm">// <span class="cn">④</span> getter</span>
@@ -471,7 +482,11 @@ public void setPrice(int price) {              <span class="cm">// <span class="
 <p><strong>setter</strong> は、フィールドに値を入れるメソッドです。負の値なら表示を出して <code>return;</code> で抜け、そうでなければ入れます。<strong>なぜ setter を通すのか。</strong>値を変える入口をここ1か所にすれば、検査もここ1か所で済むからです。<code>setStock</code> も同じ形です。</p>
 <table><tr><th>種類</th><th>名前</th><th>戻り値の型</th><th>引数</th></tr><tr><td>getter</td><td><code>get</code> ＋ フィールド名（先頭を大文字）</td><td>フィールドと同じ型</td><td>なし</td></tr><tr><td>setter</td><td><code>set</code> ＋ フィールド名（先頭を大文字）</td><td><code>void</code></td><td>フィールドと同じ型を1つ</td></tr></table>
 <div class="trap">Eclipse では、コードの何もない所で右クリック →［ソース］→［getter および setter の生成］で、getter と setter を自動で作れます。<strong>ただし、自動で作った setter に検査は入っていません。</strong><code>if (price &lt; 0)</code> のような検査は、自分で書き足します。</div>
+</div></details>
 <h2>4　実物に対して呼ぶか、クラス名で呼ぶか（⑥⑦⑧）</h2>
+<p class="explain-brief">通常のメソッドは実物から呼ぶ。<code>static</code>はクラス名から呼べる。</p>
+<p class="explain-mini"><code>p.show(); / Product.getCount();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c8">public static int getCount() { return count; }   <span class="cm">// <span class="cn">⑥</span> static メソッド</span></pre>
 <p><code>getCount()</code> は <strong><code>static</code></strong> を付けたメソッドです。実物ではなく、クラスに対して呼びます。<code>count</code> はクラスに1つなので、どの商品に聞いても答えは同じだからです。</p>
 <p><code>Main.java</code> から抜き出しています。</p>
@@ -530,6 +545,7 @@ public class Main {
 <line marker-end="url(#ar6)" stroke="#b91c1c" stroke-dasharray="6 4" stroke-width="1.8" x1="330" x2="446" y1="200" y2="160"></line>
 </svg><p class="figcap">クラス名で呼べるのは、クラスに1つしかないもの（static）だけ</p><p>名前は商品ごとに違うので、クラス名で聞いても「どの商品の名前か」が決まりません。<code>p1.getName()</code> のように実物を指します。<code>static</code> の付いたメソッドの中からも、<code>static</code> の付かない欄やメソッドは、名前だけでは呼べません。<code>main</code> の中の <code>p1.setPrice(180)</code> のように、実物を指せば呼べます。</p>
 <p><strong>なぜ main に static が付いているのか。</strong>Java は <code>Main</code> の実物を作らずに、クラスに対して <code>main</code> を呼ぶからです。<code>main</code> が動き出した時点では、<code>Main</code> の実物は1つもありません。そのため <code>main</code> から名前だけで呼べるのは、<code>static</code> の付いたメソッドだけです。</p>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>staticを見分ける</h2><p>商品を3個newしたら、<code>static int count</code> は商品ごとに3個できる？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>できない。staticはクラスに属する共有の値。通常のフィールドはインスタンスごとに別の値になる。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
