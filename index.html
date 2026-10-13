@@ -5,7 +5,20 @@
 .lesson-tag{display:inline-block;font-size:11px;line-height:1.6;color:#874008;font-weight:650;background:#fff1dc;border:1px solid #f4cca0;border-radius:6px;padding:1px 7px;white-space:nowrap}
 .lesson:hover .lesson-tag{background:#ffe9c6}
 @media(max-width:550px){.lesson-copy strong{font-size:14px}.lesson-tags{gap:4px}}
-</style></head><body><header><h1>Java 学習教材</h1><p>元の授業資料をベースに学ぶ。第2回〜第13回</p></header><main><p class="note">元の授業資料の説明・コード・演習・答えを基本的に残しています。各講義の上から移動できるようにしました。</p><section class="note"><strong>つまずいたら、ここから復習。</strong> <a href="concepts/index.html">拡張for文・値渡し・staticなど、難しい内容をコードで詳しく読む →</a></section><h2>講義一覧</h2><a class="lesson" href="lesson02.html"><span>第2回</span><span class="lesson-copy"><strong>変数と演算子・条件分岐・配列と繰り返し</strong><span class="lesson-tags"><span class="lesson-tag">int</span><span class="lesson-tag">if</span><span class="lesson-tag">for</span><span class="lesson-tag">配列</span></span></span><span aria-hidden="true">→</span></a>
+
+.learning-paths{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:0 0 22px}
+.learning-path{display:block;padding:17px 18px;border:1px solid #e2c2a5;background:#fff;border-radius:12px;color:#1e293b;text-decoration:none;box-shadow:0 1px 4px #00000010}
+.learning-path:first-child{background:#fff8ee;border-left:5px solid #cc6800}
+.learning-path:hover{background:#fff2df;border-color:#da8a42}
+.learning-path:focus-visible{outline:3px solid #b75b05;outline-offset:3px}
+.learning-path strong{display:block;color:#8c430d;font-size:17px;margin-bottom:4px}
+.learning-path small{display:block;line-height:1.55;color:#58677b;font-size:13px}
+.learning-path .tag{font-weight:750;font-size:11px;color:#ab540b}
+@media(max-width:610px){.learning-paths{grid-template-columns:1fr}.learning-path{padding:14px}}
+</style></head><body><header><h1>Java 学習教材</h1><p>元の授業資料をベースに学ぶ。第2回〜第13回</p></header><main><section class="learning-paths" aria-label="学び方を選ぶ">
+<a class="learning-path" href="start.html"><span class="tag">初めての人向け</span><strong>Javaの最初の一歩から始める →</strong><small>main・クラス・Eclipseから必要な部分だけ確認。次の講義でも「基礎から理解」を選べます。</small></a>
+<a class="learning-path" href="lesson02.html?learn=review"><span class="tag">復習向け</span><strong>今の知識で講義を進める →</strong><small>詳しい説明は必要なときだけ。「基礎から理解」にいつでも切り替え可能。</small></a>
+</section><p class="note">元の授業資料の説明・コード・演習・答えを基本的に残しています。各講義の上から移動できるようにしました。</p><section class="note"><strong>つまずいたら、ここから復習。</strong> <a href="concepts/index.html">拡張for文・値渡し・staticなど、難しい内容をコードで詳しく読む →</a></section><h2>講義一覧</h2><a class="lesson" href="lesson02.html"><span>第2回</span><span class="lesson-copy"><strong>変数と演算子・条件分岐・配列と繰り返し</strong><span class="lesson-tags"><span class="lesson-tag">int</span><span class="lesson-tag">if</span><span class="lesson-tag">for</span><span class="lesson-tag">配列</span></span></span><span aria-hidden="true">→</span></a>
 <a class="lesson" href="lesson03.html"><span>第3回</span><span class="lesson-copy"><strong>メソッド・引数・戻り値と値渡し</strong><span class="lesson-tags"><span class="lesson-tag">引数</span><span class="lesson-tag">return</span><span class="lesson-tag">値渡し</span></span></span><span aria-hidden="true">→</span></a>
 <a class="lesson" href="lesson04.html"><span>第4回</span><span class="lesson-copy"><strong>クラスとインスタンス、コンストラクタ</strong><span class="lesson-tags"><span class="lesson-tag">new</span><span class="lesson-tag">this</span><span class="lesson-tag">コンストラクタ</span></span></span><span aria-hidden="true">→</span></a>
 <a class="lesson" href="lesson05.html"><span>第5回</span><span class="lesson-copy"><strong>カプセル化と static</strong><span class="lesson-tags"><span class="lesson-tag">private</span><span class="lesson-tag">getter</span><span class="lesson-tag">static</span></span></span><span aria-hidden="true">→</span></a>
