@@ -28,6 +28,11 @@ jobs:
         run: |
           node --check reader-ux.js
           node tests/validate-ux.mjs
+      - name: Verify progressive beginner support
+        run: |
+          node --check learning-support-data.js
+          node --check learning-support.js
+          node tests/validate-learning.mjs
       - name: Compile and run Java concept examples
         run: node tests/validate-examples.mjs
       - uses: actions/configure-pages@v5
