@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第13回｜DTO・DAO・3層</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style>
+<link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader-ux.css">
+<script defer src="reader.js"></script>
+<script defer src="reader-ux.js"></script>
+</head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson12.html">前の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
+
+<header><span class="badge">第 13 回 ／ 全 22 回</span><h1>DTO・DAO・3層</h1><p>第17章 17-4〜17-6　DTO ／ DAO ／ Service と3層 ／ 依存の向き</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">DTO</span>　<span class="term">DAO</span>　<span class="term">3層（Service）</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>DTO・DAO・Service のそれぞれに何を書くか、説明できる</li><li>窓口（<code>Main</code>）からは Service だけを呼ぶ形で、商品を登録できる</li><li>Service の検査で、おかしな値を例外にして断れる</li></ul></div>
+</div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/dto-dao.html">DTO・DAO・Serviceと3層を詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>DTO</td><td>Data Transfer Object。データベースの1行分などの値をまとめて持ち、クラスの間で受け渡すためだけのクラス。フィールドとコンストラクタ、getter・setter だけを持ちます。<code class="ex">new ProductDTO(2, "ノート", 240, 15)</code></td></tr><tr><td>DAO</td><td>Data Access Object。データベースとのやりとり（SQL の実行）だけを受け持つクラス。ほかのクラスは SQL を書かず、DAO のメソッドを呼びます。<code class="ex">dao.findAll()</code></td></tr><tr><td>3層（Service）</td><td>プログラムを、窓口（プレゼンテーション層）・判断をする Service（ビジネスロジック層）・データベースとやりとりする DAO（データアクセス層）の3つに分ける形です。呼ぶ向きは、窓口 → Service → DAO の一方通行です。<code class="ex">ProductService service = new ProductService();
+service.add(pad);</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>DAO は「倉庫係」、DTO は「商品を入れて運ぶ箱」</h3><p class="lead">倉庫係は、言われた物を出し入れするだけです。売ってよいかは店長が決めます。</p><svg class="fig" viewBox="0 0 720 262" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="36" width="140" height="96" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="10" y="36" width="140" height="26" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<rect x="11" y="55" width="138" height="8" fill="#e0f2fe"/>
+<text x="80" y="54" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">窓口</text>
+<text x="20" y="82" font-size="14" fill="#1f2933">Main</text>
+<text x="20" y="102" font-size="14" fill="#1f2933">頼む・見せる</text>
+<text x="20" y="122" font-size="14" fill="#1f2933">（次回の画面）</text>
+<rect x="194" y="36" width="140" height="96" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="194" y="36" width="140" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="195" y="55" width="138" height="8" fill="#fff3e6"/>
+<text x="264" y="54" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">店長</text>
+<text x="204" y="82" font-size="14" fill="#1f2933">ProductService</text>
+<text x="204" y="102" font-size="14" fill="#1f2933">受けてよいかを</text>
+<text x="204" y="122" font-size="14" fill="#1f2933">判断する</text>
+<rect x="378" y="36" width="140" height="96" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="378" y="36" width="140" height="26" rx="6" fill="#f0fdf4" stroke="#334155" stroke-width="1.5"/>
+<rect x="379" y="55" width="138" height="8" fill="#f0fdf4"/>
+<text x="448" y="54" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">倉庫係</text>
+<text x="388" y="82" font-size="14" fill="#1f2933">ProductDAO</text>
+<text x="388" y="102" font-size="14" fill="#1f2933">出し入れだけ</text>
+<text x="388" y="122" font-size="14" fill="#1f2933">SQL はここだけ</text>
+<rect x="562" y="36" width="148" height="96" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="562" y="36" width="148" height="26" rx="6" fill="#f1f5f9" stroke="#334155" stroke-width="1.5"/>
+<rect x="563" y="55" width="146" height="8" fill="#f1f5f9"/>
+<text x="636" y="54" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">倉庫</text>
+<text x="572" y="82" font-size="14" fill="#1f2933">MySQL</text>
+<text x="572" y="102" font-size="14" fill="#1f2933">products 表</text>
+<line x1="150" y1="84" x2="192" y2="84" stroke="#334155" stroke-width="1.8" marker-end="url(#ar1)"/>
+<text x="171" y="76" font-size="13" text-anchor="middle" fill="#334155">頼む</text>
+<line x1="334" y1="84" x2="376" y2="84" stroke="#334155" stroke-width="1.8" marker-end="url(#ar1)"/>
+<text x="355" y="76" font-size="13" text-anchor="middle" fill="#334155">頼む</text>
+<line x1="518" y1="84" x2="560" y2="84" stroke="#334155" stroke-width="1.8" marker-end="url(#ar1)"/>
+<text x="539" y="76" font-size="13" text-anchor="middle" fill="#334155">SQL</text>
+<line x1="171" y1="96" x2="171" y2="170" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="4 3"/>
+<line x1="355" y1="96" x2="355" y2="170" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="4 3"/>
+<line x1="539" y1="96" x2="539" y2="170" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="4 3"/>
+<rect x="10" y="170" width="700" height="40" rx="6" fill="#f5f3ff" stroke="#7c3aed" stroke-width="1.5"/>
+<text x="360" y="196" font-size="14" text-anchor="middle" fill="#5b21b6" font-weight="bold">ProductDTO（箱）　商品1件分の id・名前・価格・在庫を入れて、間を運ぶ</text>
+<text x="360" y="240" font-size="13" text-anchor="middle" fill="#64748b">矢印は左から右への一方通行。倉庫係が窓口を呼ぶことはありません</text>
+</svg><p class="figcap">窓口・店長・倉庫係は、それぞれ自分の仕事だけをする。間を行き来するのは箱</p><p>店には3つの持ち場があります。お客さんと話す<strong>窓口</strong>、受けてよい注文かを決める<strong>店長</strong>、棚から出し入れする<strong>倉庫係</strong>です。窓口は倉庫に入りません。倉庫係は値段を決めません。</p>
+<p>Java でも同じように分けます。倉庫（MySQL）との出し入れだけをするクラスが <strong>DAO</strong> です。今日の <code>ProductDAO</code> がこれです。</p>
+<p>持ち場の間を行き来するのは、商品1件分の値を入れた箱です。これが <strong>DTO</strong> です。今日の <code>ProductDTO</code> がこれです。</p>
+<p>今日新しく作るのは、店長にあたる <code>ProductService</code> です。<strong>窓口は店長にだけ頼み、店長が倉庫係に頼みます。</strong>この3つの持ち場の分け方を<strong>3層</strong>と言います。</p>
+</div>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>DTO</td><td>1件分の値をひとまとめにして渡せば、クラスの間のやりとりが単純になるからです。</td></tr><tr><td>DAO</td><td>SQL をこの1か所に閉じ込めて、ほかのクラスがデータベースを気にせずに済むようにするためです。SQL や接続先を直すのは DAO だけです。</td></tr><tr><td>3層（Service）</td><td>役割を分けておくと、窓口を画面に変えても判断の処理はそのまま使え、直す場所もすぐ分かるからです。</td></tr></table>
+<p>次回は、今日の <code>ProductService</code> を、ボタンのある画面から呼びます。</p>
+<p>今日のゴールは、窓口から店長を通して、商品を1件登録することです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各箇所の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は新しいプロジェクト <code>lesson13</code> に、クラスを4つ作ります。</p>
+<p>始める前に、MySQL が動いているかを確かめます。Windows キーを押して「サービス」と入力して開き、<code>MySQL80</code>（8.4 を入れた PC は <code>MySQL84</code>）の状態が「実行中」なら、そのまま進みます。空欄なら、右クリック →［開始］を押します。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson13</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson13</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］→ 講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーの「参照ライブラリー」の下に jar が出たことを確かめる</td></tr><tr><td>⑤</td><td><code>lesson13</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑥</td><td>名前に <code>ProductDTO</code> と入力する。パッケージ欄に <code>lesson13</code> と入っていることを確かめて［完了］（空なら <code>lesson13</code> と入力する）</td></tr><tr><td>⑦</td><td>⑤⑥をくり返し、<code>ProductDAO</code>・<code>ProductService</code>・<code>Main</code> のクラスを作る</td></tr><tr><td>⑧</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑨</td><td>コマンド プロンプトで <code>mysql -u root -p</code> と入力してパスワードを入れ、<code>mysql&gt;</code> と出たら、下の「mysql に貼る SQL」を貼って <code>Enter</code> を押す。最後に3件の表が出れば準備ができています</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<p>第12回で商品を足したり消したりしたので、表の中身は人によって違います。⑨で3件の状態に戻してから始めます。<strong>この回の実行結果は、どれも3件に戻した直後に実行したときのものです。</strong>違って見えたら、⑨の SQL をもう一度実行してください。</p>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の4つのファイルだけです。どれも1行目は <code>package lesson13;</code> です。</p>
+<p>第12回の <code>Product</code> は <code>ProductDTO</code> に、<code>ProductDao</code> は <code>ProductDAO</code> に名前を変えます。名前の最後で、そのクラスの役目（DTO・DAO）が分かるようにするためです。<code>ProductService</code> は今日新しく作ります。</p>
+<p>下の5つが、SQL と、それぞれのファイルの中身の全部です。行の右にある ①〜⑩ は、③解説の番号です。</p>
+<svg class="fig" viewBox="0 0 720 300" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="40" y="34" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">lesson13</text>
+<line x1="48" y1="42" x2="48" y2="268" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="48" y1="70" x2="66" y2="70" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="72" y="75" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">src</text>
+<line x1="80" y1="82" x2="80" y2="108" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="80" y1="108" x2="98" y2="108" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="104" y="113" font-size="14" text-anchor="start" fill="#1f2933">lesson13（パッケージ）</text>
+<line x1="118" y1="120" x2="118" y2="228" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="138" x2="136" y2="138" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="168" x2="136" y2="168" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="198" x2="136" y2="198" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="228" x2="136" y2="228" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="140" y="124" width="170" height="28" rx="6" fill="#f5f3ff" stroke="#334155" stroke-width="1.5"/>
+<text x="152" y="143" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">ProductDTO.java</text>
+<rect x="140" y="154" width="170" height="28" rx="6" fill="#f0fdf4" stroke="#334155" stroke-width="1.5"/>
+<text x="152" y="173" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">ProductDAO.java</text>
+<rect x="140" y="184" width="170" height="28" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<text x="152" y="203" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">ProductService.java</text>
+<rect x="140" y="214" width="170" height="28" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="152" y="233" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">Main.java</text>
+<text x="328" y="143" font-size="13" text-anchor="start" fill="#475569">箱。値を持つだけ（第12回の Product）</text>
+<text x="328" y="173" font-size="13" text-anchor="start" fill="#475569">倉庫係。SQL を書く（第12回の ProductDao）</text>
+<text x="328" y="203" font-size="13" text-anchor="start" fill="#475569">店長。検査してから DAO を呼ぶ（今日作る）</text>
+<text x="328" y="233" font-size="13" text-anchor="start" fill="#475569">窓口。Service だけを呼ぶ</text>
+<line x1="48" y1="268" x2="66" y2="268" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="72" y="273" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">参照ライブラリー</text>
+<text x="200" y="273" font-size="13" text-anchor="start" fill="#475569">mysql-connector-j-8.4.0.jar（第11回と同じ）</text>
+</svg><p class="figcap">プロジェクトの中身。4つのファイルと、MySQL につなぐための jar</p><p class="fname">mysql に貼る SQL　最初の3件に戻す（第12回と同じ）</p>
+<pre class="code" id="c1">CREATE DATABASE IF NOT EXISTS stock DEFAULT CHARACTER SET utf8mb4;
+USE stock;
+
+DROP TABLE IF EXISTS products;
+CREATE TABLE products (
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(100) NOT NULL,
+    price  INT NOT NULL,
+    stock  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO products (name, price, stock) VALUES
+    ('ボールペン', 150, 30), ('ノート', 220, 10), ('消しゴム', 100, 50);
+
+SELECT id, name, price, stock FROM products ORDER BY id;</pre>
+<p class="fname">ProductDTO.java　箱</p>
+<pre class="code" id="c2">package lesson13;
+
+public class ProductDTO {                                       <span class="cm">// <span class="cn">①</span> DTO</span>
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public ProductDTO(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) { this.price = price; }     <span class="cm">// <span class="cn">②</span> 検査しない</span>
+    public void setStock(int stock) { this.stock = stock; }     <span class="cm">// <span class="cn">②</span> 検査しない</span>
+}</pre>
+<p class="fname">ProductDAO.java　倉庫係</p>
+<pre class="code" id="c3">package lesson13;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDAO {                                       <span class="cm">// <span class="cn">③</span> DAO</span>
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),  <span class="cm">// <span class="cn">④</span> 1行を DTO に詰める</span>
+                                        rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public ProductDTO findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                          rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(ProductDTO p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(ProductDTO p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+}</pre>
+<p class="fname">ProductService.java　店長（今日作る）</p>
+<pre class="code" id="c4">package lesson13;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();                  <span class="cm">// <span class="cn">⑤</span> DAO を持つ</span>
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);                                               <span class="cm">// <span class="cn">⑥</span> 先に検査</span>
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");  <span class="cm">// <span class="cn">⑦</span> 例外で断る</span>
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<p class="fname">Main.java　窓口</p>
+<pre class="code" id="c5">package lesson13;
+
+import java.sql.SQLException;
+
+public class Main {
+    public static void main(String[] args) throws SQLException {
+        ProductService service = new ProductService();          <span class="cm">// <span class="cn">⑧</span> Service だけを使う</span>
+        ProductDTO pad = new ProductDTO(0, "付箋", 200, 25);    <span class="cm">// <span class="cn">⑨</span> 箱に詰める</span>
+
+        try {
+            service.add(pad);
+            System.out.println(pad.getName() + "を登録しました");
+        } catch (IllegalArgumentException e) {                  <span class="cm">// <span class="cn">⑩</span> 断られたとき</span>
+            System.out.println("登録できません: " + e.getMessage());
+        }
+
+        for (ProductDTO p : service.findAll()) {
+            System.out.println(p.getId() + " / " + p.getName() + " / " + p.getPrice()
+                    + "円 / 残り" + p.getStock() + "個");
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">付箋を登録しました
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個
+4 / 付箋 / 200円 / 残り25個</div>
+<p><code>ProductDAO</code> の <code>PASSWORD</code> は、授業で使うパスワードに合わせて変えてください。</p>
+<p>付箋の ID は 4 です。<code>Main</code> では 0 を入れましたが、表の <code>id</code> は自動採番なので、<code>insert</code> は <code>id</code> を使いません。</p>
+<p><strong>実行するたびに付箋が1件ずつ増えます。</strong>増えた付箋を消したいときは、⑨の SQL で3件に戻します。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<h2>1　箱を作る（①②）</h2>
+<pre class="code" id="c6">public class ProductDTO {                                       <span class="cm">// <span class="cn">①</span> DTO</span>
+    <span class="cm">// （中略）</span>
+    public void setPrice(int price) { this.price = price; }     <span class="cm">// <span class="cn">②</span> 検査しない</span>
+    public void setStock(int stock) { this.stock = stock; }     <span class="cm">// <span class="cn">②</span> 検査しない</span>
+}</pre>
+<div class="line-block"><pre class="code" id="c7">public class ProductDTO {   <span class="cm">// <span class="cn">①</span> DTO</span>
+    <span class="cm">// （中略）</span></pre>
+<p><code>ProductDTO.java</code> のクラスの行です。<strong>DTO</strong>（Data Transfer Object）は、商品1件分の値を持って運ぶだけのクラスです。</p>
+<p><code>// （中略）</code> の所には、フィールドとコンストラクタと getter があります。フィールドは <code>id</code>・<code>name</code>・<code>price</code>・<code>stock</code> の4つです。表の4つの列と同じです。コンストラクタは、4つの値を受け取ってフィールドに入れます。getter（<code>getId()</code> など）は、フィールドの値を返すだけです。</p>
+<p>DTO は表示の仕事を持ちません。表示は、窓口（<code>Main</code>）が getter で値を取り出して行います。</p>
+</div>
+<div class="line-block"><pre class="code" id="c8">    public void setPrice(int price) { this.price = price; }   <span class="cm">// <span class="cn">②</span> 検査しない</span>
+    public void setStock(int stock) { this.stock = stock; }   <span class="cm">// <span class="cn">②</span> 検査しない</span>
+}</pre>
+<p><code>setPrice</code> は価格を、<code>setStock</code> は在庫を入れ直す setter です。setter は、フィールドに値を入れるメソッドです（第5回）。</p>
+<p><code>(int price)</code> で新しい価格を受け取り、<code>this.price = price;</code> でフィールドに入れます。<code>this.price</code> がフィールド、右の <code>price</code> が受け取った値です。値を入れるだけで何も返さないので、戻り値の型は <code>void</code> です。</p>
+<p>2つの setter は、受け取った値をそのまま入れます。「負の値なら入れない」のような検査はしません。<strong>なぜ検査しないのか。</strong>検査は店長（Service）の仕事にまとめるためです。箱にも検査があると、同じ検査が2か所に分かれます。すると、片方だけ直す事故が起きやすくなります。</p>
+</div>
+<h2>2　倉庫係を作る（③④）</h2>
+<pre class="code" id="c9">public class ProductDAO {                                       <span class="cm">// <span class="cn">③</span> DAO</span>
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),  <span class="cm">// <span class="cn">④</span> 1行を DTO に詰める</span>
+                                        rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<div class="line-block"><pre class="code" id="c10">public class ProductDAO {   <span class="cm">// <span class="cn">③</span> DAO</span>
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";</pre>
+<p><code>ProductDAO.java</code> のクラスの行です。<strong>DAO</strong>（Data Access Object）は、表との出し入れだけをするクラスです。</p>
+<p>続く3行は、MySQL につなぐための情報です。<code>private</code> は、このクラスの中だけで使うという印です。<code>static final</code> は、クラスに1つだけ持ち、あとから変えない値（定数）の印です。</p>
+<p><code>URL</code> は、つなぎ先です。<code>jdbc:mysql:</code> は、MySQL につなぐという印です。<code>localhost</code> は、この PC のことです。<code>3306</code> は、MySQL が接続を受け付ける番号（ポート番号）です。最後の <code>stock</code> は、データベースの名前です。</p>
+<p><code>USER</code> の <code>"root"</code> は、MySQL のユーザー名です。MySQL を入れたときにできる管理者です。<code>PASSWORD</code> の <code>"password"</code> は、MySQL のパスワードです。授業で使うパスワードに合わせて変えます。</p>
+<p>SQL と接続の情報は、このクラスにしか書きません。そのため、SQL や接続先を直すのは DAO だけです。</p>
+</div>
+<div class="line-block"><pre class="code" id="c11"><span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+public List&lt;ProductDTO&gt; findAll() throws SQLException {</pre>
+<p><code>findAll()</code> は、表の全部の商品を読むメソッドです。戻り値の型 <code>List&lt;ProductDTO&gt;</code> は、<code>ProductDTO</code> を並べたリストです。<code>throws SQLException</code> は、データベースの例外を呼んだ側に任せるという宣言です（第10回）。</p>
+</div>
+<div class="line-block"><pre class="code" id="c12">List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+String sql = "SELECT id, name, price, stock FROM products ORDER BY id";</pre>
+<p><code>new ArrayList&lt;&gt;()</code> で空のリストを作り、<code>list</code> に入れます。ここに、1件ずつ足していきます。<code>sql</code> は、実行する SQL の文です。<code>id</code>・<code>name</code>・<code>price</code>・<code>stock</code> の4つの列を読みます。<code>ORDER BY id</code> で、<code>id</code> の小さい順に並べます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c13">try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+     PreparedStatement ps = con.prepareStatement(sql);
+     ResultSet rs = ps.executeQuery()) {</pre>
+<p><code>try ( )</code> の丸かっこの中で作ったものは、<code>try</code> を抜けるときに自動で閉じます（第11回）。</p>
+<p><code>DriverManager.getConnection(URL, USER, PASSWORD)</code> で、MySQL への接続を開きます。開いた接続が、<code>Connection</code> の <code>con</code> です。</p>
+<p><code>con.prepareStatement(sql)</code> で、SQL を実行する準備をします。準備したものが、<code>PreparedStatement</code> の <code>ps</code> です。</p>
+<p><code>ps.executeQuery()</code> で、SELECT を実行します。結果の表を受け取るのが、<code>ResultSet</code> の <code>rs</code> です。</p>
+</div>
+<div class="line-block"><pre class="code" id="c14">    while (rs.next()) {
+        list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),   <span class="cm">// <span class="cn">④</span> 1行を DTO に詰める</span>
+                                rs.getInt("price"), rs.getInt("stock")));
+    }
+}</pre>
+<p><code>rs.next()</code> は、結果の表の次の行へ進みます。行があれば <code>true</code>、もう無ければ <code>false</code> を返します。<code>while</code> で、行がある間くり返します。</p>
+<p>④で、今の行の4つの値を <code>ProductDTO</code> に詰めて、<code>list</code> に足します。<code>rs.getInt("id")</code> は、<code>id</code> 列の値を整数で取り出します。<code>rs.getString("name")</code> は、<code>name</code> 列の値を文字列で取り出します。<code>rs.getInt("price")</code> と <code>rs.getInt("stock")</code> で、価格と在庫を整数で取り出します。4つの値は、コンストラクタと同じ順（ID・商品名・価格・在庫）に渡します。<code>new ProductDTO(...)</code> で箱を作り、<code>list.add(...)</code> でリストに足します。</p>
+<p><strong>なぜ詰め替えるのか。</strong><code>ResultSet</code> は、<code>try</code> を抜けると閉じて読めなくなります。そのため、DAO の外へは出せません。外へ渡すのは、中身の分かる箱だけにします。受け取った側は、<code>p.getName()</code> のように名前で値を取り出せます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c15">        return list;
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><code>return list;</code> で、全部の商品を詰めたリストを返します。<code>// （中略）</code> の所には、<code>findById</code>・<code>insert</code>・<code>update</code>・<code>delete</code> の4つのメソッドがあります。どれも、接続を開いて SQL を実行する形は同じです。</p>
+</div>
+<h2>3　店長を作る（⑤⑥⑦）</h2>
+<p class="fname">ProductService.java（抜き出し）</p>
+<pre class="code" id="c16">    private ProductDAO dao = new ProductDAO();                  <span class="cm">// <span class="cn">⑤</span> DAO を持つ</span>
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);                                               <span class="cm">// <span class="cn">⑥</span> 先に検査</span>
+        dao.insert(p);
+    }
+
+    <span class="cm">// （中略）</span>
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");  <span class="cm">// <span class="cn">⑦</span> 例外で断る</span>
+        }
+        <span class="cm">// （中略）</span>
+    }</pre>
+<div class="line-block"><pre class="code" id="c17">private ProductDAO dao = new ProductDAO();   <span class="cm">// <span class="cn">⑤</span> DAO を持つ</span></pre>
+<p><code>ProductService</code> のフィールドです。<code>new ProductDAO()</code> で倉庫係を作り、<code>dao</code> として持ちます。<strong>Service</strong> は、表のことを全部この <code>dao</code> に頼みます。倉庫係を知っているのは店長だけ、という形にします。</p>
+</div>
+<div class="line-block"><pre class="code" id="c18">public List&lt;ProductDTO&gt; findAll() throws SQLException {
+    return dao.findAll();
+}</pre>
+<p><code>findAll()</code> は、<code>dao.findAll()</code> の結果をそのまま返します。一覧を読むだけなので、検査はありません。<code>dao.findAll()</code> は、<code>SQLException</code> を投げることがあります。そのため、このメソッドにも <code>throws SQLException</code> を書いて、呼んだ側に任せます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c19">public void add(ProductDTO p) throws SQLException {
+    check(p);   <span class="cm">// <span class="cn">⑥</span> 先に検査</span>
+    dao.insert(p);
+}
+
+<span class="cm">// （中略）</span></pre>
+<p><code>add</code> は、商品を1件登録するメソッドです。受け取るのは箱の <code>p</code> です。何も返さないので <code>void</code> です。</p>
+<p>⑥の <code>check(p)</code> で、先に中身を確かめます。通らなければ、<code>check</code> の中で例外が投げられます。そのときは次の行へ進みません。通ったときだけ、<code>dao.insert(p)</code> で表に追加します。</p>
+<p><strong>検査は必ず書き込む前です。</strong>一度表に入った値は、あとから検査しても消えません。</p>
+<p><code>// （中略）</code> の所には、<code>update</code> があります。<code>add</code> と同じく、<code>check(p)</code> で検査してから <code>dao.update(p)</code> を呼びます。無い ID のときは、次の <code>delete</code> と同じく例外を投げます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c20">public void delete(int id) throws SQLException {
+    if (dao.delete(id) == 0) {
+        throw new IllegalArgumentException("ID " + id + " の商品はありません");
+    }
+}</pre>
+<p><code>delete</code> は、ID を受け取って商品を消すメソッドです。<code>dao.delete(id)</code> は、消えた行の数を返します。無い ID なら 0 です。</p>
+<p>0 なら、<code>throw</code> で <code>IllegalArgumentException</code> を投げます。<code>throw</code> は、例外を投げる命令です（第9回）。<code>"ID " + id + " の商品はありません"</code> は理由の文です。ID が 9 なら「ID 9 の商品はありません」になります。</p>
+<p><strong>DAO は事実だけを返し、それをどう扱うかは Service が決めます。</strong></p>
+</div>
+<div class="line-block"><pre class="code" id="c21">private void check(ProductDTO p) {
+    if (p.getName() == null || p.getName().isBlank()) {
+        throw new IllegalArgumentException("商品名を入力してください");   <span class="cm">// <span class="cn">⑦</span> 例外で断る</span>
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><code>check</code> は、箱の中身を確かめるメソッドです。<code>private</code> なので、このクラスの中（<code>add</code> と <code>update</code>）からしか呼べません。</p>
+<p><code>if</code> で、商品名を調べます。<code>p.getName() == null</code> は、商品名に何も入っていない（<code>null</code>）かどうかです。<code>||</code> は「または」です。<code>isBlank()</code> は、空か空白だけなら <code>true</code> を返します。</p>
+<p>⑦で、どちらかに当てはまれば、第9回と同じ <code>IllegalArgumentException</code> を投げます。中の「商品名を入力してください」が、断った理由です。</p>
+<p><code>// （中略）</code> の所には、価格と在庫の検査があります。どちらも、負なら同じ形で例外を投げます。</p>
+</div>
+<p><code>Main</code> の⑨の価格を <code>-200</code> にして実行すると、<code>dao.insert(p)</code> まで届かずに断られます。表には何も書かれません。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">登録できません: 価格に負の値は設定できません
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個</div>
+<p><strong>よくある間違い：Service が表示して return する。</strong>第5回の <code>setPrice</code> と同じく、Service の中で表示して <code>return</code> した形です。<code>add</code> の中だけ変えています。<code>Main</code> は、⑨の価格を <code>-200</code> にしたものです。</p>
+<p class="fname">ProductService.java の add（間違いあり）</p>
+<pre class="code" id="c22">    public void add(ProductDTO p) throws SQLException {
+        if (p.getPrice() &lt; 0) {
+            System.out.println("価格に負の値は設定できません");  <span class="cm">// ここが問題</span>
+            return;                                              <span class="cm">// ここが問題</span>
+        }
+        dao.insert(p);
+    }</pre>
+<p><code>add</code> の定義行は、写したものと同じです。⑥の <code>check(p)</code> の代わりに、<code>if (p.getPrice() &lt; 0)</code> で価格が負かどうかを調べています。負なら、<code>System.out.println</code> で「価格に負の値は設定できません」とコンソールに表示します。続く <code>return;</code> で、<code>add</code> をそこで終わります。負でなければ <code>if</code> の中を飛ばし、<code>dao.insert(p)</code> で登録します。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">価格に負の値は設定できません
+付箋を登録しました
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個</div>
+<p>「価格に負の値は設定できません」と出たのに、続けて「付箋を登録しました」と出ています。<code>add</code> は例外を投げずに、ふつうに終わりました。そのため <code>Main</code> は、成功したと思い込んで次の行へ進みました。次回の画面から呼んだ場合も、この文はコンソールに出るだけです。画面を見ている人には届きません。<strong>何を、どこに、どう見せるかは窓口が決めます。</strong>Service は、理由の入った例外を投げるだけにします。</p>
+<p><strong>よくある間違い：Service に throws SQLException を書き忘れる。</strong><code>findAll</code> の定義行から <code>throws SQLException</code> を消すと、次のエラーになります。</p>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">処理されない例外の型 SQLException
+（Unhandled exception type SQLException）</div>
+<p><code>SQLException</code> は、第10回の<strong>検査例外</strong>です。検査例外は、受け止めるか任せるかを書かないと、コンパイルが通らない例外です。<code>dao.findAll()</code> は、この例外を投げるかもしれないと宣言しています。そのため呼ぶ側は、<code>try-catch</code> で受け止めるか、<code>throws</code> で呼んだ側へ任せるかを書きます。Service の中で <code>try-catch</code> はしません。つながらなかったときに利用者へどう伝えるかは、Service では決められないからです。今日は、<code>Main</code> の <code>main</code> まで任せています。</p>
+<h2>4　窓口から頼む（⑧⑨⑩）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c23">    public static void main(String[] args) throws SQLException {
+        ProductService service = new ProductService();          <span class="cm">// <span class="cn">⑧</span> Service だけを使う</span>
+        ProductDTO pad = new ProductDTO(0, "付箋", 200, 25);    <span class="cm">// <span class="cn">⑨</span> 箱に詰める</span>
+
+        try {
+            service.add(pad);
+            System.out.println(pad.getName() + "を登録しました");
+        } catch (IllegalArgumentException e) {                  <span class="cm">// <span class="cn">⑩</span> 断られたとき</span>
+            System.out.println("登録できません: " + e.getMessage());
+        }
+        <span class="cm">// （中略）</span>
+    }</pre>
+<div class="line-block"><pre class="code" id="c24">public static void main(String[] args) throws SQLException {</pre>
+<p><code>main</code> の定義行です。<code>throws SQLException</code> で、データベースの例外を <code>main</code> の外へ任せます。つながらなかったときは、コンソールに赤い文字が出て止まります。</p>
+</div>
+<div class="line-block"><pre class="code" id="c25">ProductService service = new ProductService();   <span class="cm">// <span class="cn">⑧</span> Service だけを使う</span></pre>
+<p>⑧で、店長の <code>ProductService</code> を作り、<code>service</code> に入れます。<code>Main</code> が使うのは Service だけです。<code>ProductDAO</code> という名前は、<code>Main</code> に1回も出てきません。</p>
+</div>
+<div class="line-block"><pre class="code" id="c26">ProductDTO pad = new ProductDTO(0, "付箋", 200, 25);   <span class="cm">// <span class="cn">⑨</span> 箱に詰める</span></pre>
+<p>⑨で、登録したい商品を箱に詰めます。<code>0</code> は <code>id</code> の仮の値です。表の <code>id</code> は自動採番なので、登録では使いません。<code>"付箋"</code> は商品名、<code>200</code> は価格（円）、<code>25</code> は在庫（個）です。値を4つばらばらに渡すより、箱1つで渡すほうが、項目が増えたときに直す所が少なくて済みます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c27">    try {
+        service.add(pad);
+        System.out.println(pad.getName() + "を登録しました");
+    } catch (IllegalArgumentException e) {   <span class="cm">// <span class="cn">⑩</span> 断られたとき</span>
+        System.out.println("登録できません: " + e.getMessage());
+    }
+    <span class="cm">// （中略）</span>
+}</pre>
+<p><code>try</code> の中で、<code>service.add(pad)</code> で登録を頼みます。登録できたときだけ、次の行で「付箋を登録しました」と表示します。商品名は、<code>pad.getName()</code> で取り出しています。</p>
+<p>断られると例外が投げられ、次の行は動かずに <code>catch</code> へ飛びます。⑩の <code>catch (IllegalArgumentException e)</code> は、Service が断ったときだけ動きます。<code>e</code> は、投げられた例外です。</p>
+<p><code>e.getMessage()</code> で、Service が入れた理由を取り出します。「登録できません: 価格に負の値は設定できません」のように表示されます。失敗しても止まらずに、次の一覧の表示へ進みます。</p>
+<p><code>// （中略）</code> の所には、一覧を表示する <code>for</code> 文があります。<code>service.findAll()</code> で全部の商品を受け取り、1件ずつ表示します。</p>
+</div>
+<p><strong>よくある間違い：窓口から DAO を直接呼ぶ。</strong>「DAO にも <code>insert</code> があるのだから、直接呼べば早い」と考えた形です。<code>Main</code> だけ変えています。</p>
+<p class="fname">Main.java（間違いあり）</p>
+<pre class="code" id="c28">package lesson13;
+
+import java.sql.SQLException;
+
+public class Main {
+    public static void main(String[] args) throws SQLException {
+        ProductDAO dao = new ProductDAO();                      <span class="cm">// Service を飛ばした</span>
+        ProductDTO pad = new ProductDTO(0, "付箋", -200, 25);   <span class="cm">// 価格が負</span>
+
+        dao.insert(pad);                                        <span class="cm">// 検査を通らない</span>
+        System.out.println(pad.getName() + "を登録しました");
+
+        for (ProductDTO p : dao.findAll()) {
+            System.out.println(p.getId() + " / " + p.getName() + " / " + p.getPrice()
+                    + "円 / 残り" + p.getStock() + "個");
+        }
+    }
+}</pre>
+<p><code>package</code> の行、<code>import java.sql.SQLException;</code>、クラスの行、<code>main</code> の定義行は、写したものと同じです。<code>main</code> の中の1行目で、<code>ProductService</code> ではなく <code>ProductDAO</code> を作っています。価格が <code>-200</code> の付箋を箱 <code>pad</code> に詰めます。<code>dao.insert(pad)</code> で、Service を通さずに、DAO へ直接追加を頼みます。そのあと、「付箋を登録しました」と表示します。</p>
+<p>最後の <code>for</code> 文は、一覧の表示です。<code>dao.findAll()</code> で全部の商品を読み、1件ずつ <code>p</code> に入れてくり返します。<code>p.getId()</code> などで4つの値を取り出し、<code>" / "</code> や <code>"円 / 残り"</code> とつないで表示します。1件目なら「1 / ボールペン / 150円 / 残り30個」と出ます。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">付箋を登録しました
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個
+4 / 付箋 / -200円 / 残り25個</div>
+<p><strong>エラーは出ません。</strong>-200円の付箋が、そのまま表に入りました。検査は、Service の中にしかありません。<code>Main</code> が Service を飛ばせば、検査も一緒に飛びます。</p>
+<div class="trap">あとから検査を足しても、入ってしまった行は消えません。②の手順⑨の SQL で3件に戻してください。<strong>窓口のコードに <code>ProductDAO</code> という名前が出てきたら、それが飛ばしている印です。</strong></div>
+</div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>DTO・DAO・Serviceの役割は？</h2><p>商品データの入れ物、データベースとの通信、業務ルールを、それぞれどのクラスに分ける？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>データの入れ物は <code>DTO</code>、保存・取得は <code>DAO</code>、価格や在庫の確認などの業務ルールは <code>Service</code> に置く。<code>Main</code> から直接SQLを書かない設計を目指す。</p></details></div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。どちらも <code>ProductService</code> にメソッドを足します。<strong>①の一覧が表示できたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>ProductService</code> に <code>findLowStock(int limit)</code> を足す。在庫が <code>limit</code> 個以下の商品だけを <code>List</code> で返す。<code>limit</code> が負なら <code>IllegalArgumentException</code> を投げる。<code>LowStockMain</code> で確かめる。</li><li>②　<code>ProductService</code> に <code>restock(int id, int amount)</code> を足す。ID で商品を探し、在庫に <code>amount</code> を足して更新する。<code>amount</code> が 0 以下のときと、商品が無いときは <code>IllegalArgumentException</code> を投げる。<code>RestockMain</code> で確かめる。</li></ul>
+<h2>骨組み</h2>
+<p>3つのファイルの全体です。<code>// ここに…</code> の所を書きます。<code>ProductService</code> は②の <code>ProductService.java</code> に書き足します。<code>LowStockMain</code> と <code>RestockMain</code> はこのまま写します。</p>
+<p>貼った直後は <code>LowStockMain</code>・<code>RestockMain</code> に赤い印が出ます（<code>ProductService</code> にまだメソッドが無いため）。書き足すと消えます。</p>
+<p class="fname">ProductService.java（2つのメソッドを書き足す）</p>
+<pre class="code" id="c29">package lesson13;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    <span class="cm">// ここに findLowStock を書く</span>
+    <span class="cm">//   limit が負なら「個数に負の値は指定できません」の例外を投げる</span>
+    <span class="cm">//   findAll で全部を受け取り、在庫が limit 以下のものだけを List に入れて返す</span>
+
+    <span class="cm">// ここに restock を書く</span>
+    <span class="cm">//   amount が 0 以下なら「入荷数は1以上にしてください」の例外を投げる</span>
+    <span class="cm">//   findById で探し、見つからなければ「ID 9 の商品はありません」の形の例外を投げる</span>
+    <span class="cm">//   見つかったら、在庫に amount を足して update する</span>
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c29">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c30">package lesson13;
+
+import java.sql.SQLException;
+
+public class LowStockMain {
+    public static void main(String[] args) throws SQLException {
+        ProductService service = new ProductService();
+
+        System.out.println("在庫が20個以下の商品");
+        for (ProductDTO p : service.findLowStock(20)) {
+            System.out.println(p.getId() + " / " + p.getName() + " / 残り" + p.getStock() + "個");
+        }
+
+        try {
+            service.findLowStock(-1);
+        } catch (IllegalArgumentException e) {
+            System.out.println("探せません: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c30">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">RestockMain.java</p>
+<pre class="code" id="c31">package lesson13;
+
+import java.sql.SQLException;
+
+public class RestockMain {
+    public static void main(String[] args) throws SQLException {
+        ProductService service = new ProductService();
+        int[] ids = {2, 9, 3};
+        int[] amounts = {20, 5, 0};
+
+        for (int i = 0; i &lt; ids.length; i++) {
+            try {
+                service.restock(ids[i], amounts[i]);
+                System.out.println("ID " + ids[i] + " に" + amounts[i] + "個入荷しました");
+            } catch (IllegalArgumentException e) {
+                System.out.println("入荷できません: " + e.getMessage());
+            }
+        }
+
+        for (ProductDTO p : service.findAll()) {
+            System.out.println(p.getId() + " / " + p.getName() + " / " + p.getPrice()
+                    + "円 / 残り" + p.getStock() + "個");
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c31">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">在庫が20個以下の商品
+2 / ノート / 残り10個
+探せません: 個数に負の値は指定できません
+
+ID 2 に20個入荷しました
+入荷できません: ID 9 の商品はありません
+入荷できません: 入荷数は1以上にしてください
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り30個
+3 / 消しゴム / 100円 / 残り50個</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①は、<code>dao.findAll()</code> で全部を受け取り、拡張for文で1つずつ在庫を調べ、条件に合うものだけ新しい <code>ArrayList</code> に <code>add</code> します（<code>import java.util.ArrayList;</code> を足します）。SQL は書き足しません。「少ないかどうか」は店長の判断だからです。</li><li>②　②は、<code>dao.findById(id)</code> の結果が <code>null</code> かどうかで、商品があるかを調べます。在庫は箱の setter で <code>p.setStock(p.getStock() + amount);</code> と足し、<code>dao.update(p);</code> で表に書き込みます。</li><li>③　②の実行結果は、表を3件に戻してから <code>RestockMain</code> を1回だけ実行したときのものです。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第13回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　在庫の少ない商品を探す</summary><div class="sol">
+<p class="fname">ProductService.java</p>
+<pre class="code" id="c32">package lesson13;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    <span class="cm">// ここに findLowStock を書く</span>
+    public List&lt;ProductDTO&gt; findLowStock(int limit) throws SQLException {
+        if (limit &lt; 0) {
+            throw new IllegalArgumentException("個数に負の値は指定できません");
+        }
+        List&lt;ProductDTO&gt; result = new ArrayList&lt;&gt;();
+        for (ProductDTO p : dao.findAll()) {
+            if (p.getStock() &lt;= limit) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+
+    <span class="cm">// ここに restock を書く</span>
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">在庫が20個以下の商品
+2 / ノート / 残り10個
+探せません: 個数に負の値は指定できません</div>
+<div class="note"><code>findLowStock(-1)</code> は例外になるので、戻り値を受け取らずに <code>catch</code> へ移ります。<code>limit</code> の検査を先に書いているので、表を読みに行く前に断っています。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　入荷する</summary><div class="sol">
+<p class="fname">ProductService.java（①も足したもの）</p>
+<pre class="code" id="c33">package lesson13;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    <span class="cm">// ここに findLowStock を書く</span>
+    public List&lt;ProductDTO&gt; findLowStock(int limit) throws SQLException {
+        if (limit &lt; 0) {
+            throw new IllegalArgumentException("個数に負の値は指定できません");
+        }
+        List&lt;ProductDTO&gt; result = new ArrayList&lt;&gt;();
+        for (ProductDTO p : dao.findAll()) {
+            if (p.getStock() &lt;= limit) {
+                result.add(p);
+            }
+        }
+        return result;
+    }
+
+    <span class="cm">// ここに restock を書く</span>
+    public void restock(int id, int amount) throws SQLException {
+        if (amount &lt;= 0) {
+            throw new IllegalArgumentException("入荷数は1以上にしてください");
+        }
+        ProductDTO p = dao.findById(id);
+        if (p == null) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+        p.setStock(p.getStock() + amount);
+        dao.update(p);
+    }
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">ID 2 に20個入荷しました
+入荷できません: ID 9 の商品はありません
+入荷できません: 入荷数は1以上にしてください
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り30個
+3 / 消しゴム / 100円 / 残り50個</div>
+<div class="note">ID 3 に 0個 のときは、<code>findById</code> を呼ぶ前に断っています。検査で断れるものは、表を読む前に断ります。<code>RestockMain</code> を2回実行すると、ノートはさらに20個増えて50個になります。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>DTO・DAO・Service のそれぞれに何を書くかを、窓口・店長・倉庫係のたとえで説明できる</li><li>窓口（<code>Main</code>）から DAO を直接呼ぶと、何が起きるか説明できる</li><li>Service が失敗を表示せずに、例外で返す理由を説明できる</li><li><code>SQLException</code> を投げるメソッドを呼ぶとき、<code>throws</code> が要る理由を説明できる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、Swing の画面とイベントです。</strong>今日の <code>ProductDTO</code>・<code>ProductDAO</code>・<code>ProductService</code> は1行も変えずに、窓口をコンソールの <code>Main</code> からボタンのある画面に替えます。ボタンを押したときに動く「イベント」が主役です。</p></div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>DTO</td><td>でぃーてぃーおー</td><td>Data Transfer Object。1件分の値を持って運ぶだけのクラス。<code>ProductDTO</code></td></tr><tr><td>DAO</td><td>だお</td><td>Data Access Object。データベースとの出し入れだけをするクラス。SQL はここにだけ書きます。<code>ProductDAO</code></td></tr><tr><td>Service</td><td>さーびす</td><td>業務の判断（検査など）をするクラス。窓口から頼まれ、DAO に頼みます。<code>ProductService</code></td></tr><tr><td>3層</td><td>さんそう</td><td>プログラムを、見せる所・判断する所・出し入れする所の3つに分ける作り方</td></tr><tr><td>プレゼンテーション層</td><td>ぷれぜんてーしょんそう</td><td>3層のうち、入力を受け取って結果を見せる所。今日の <code>Main</code>、次回の画面</td></tr><tr><td>ビジネスロジック層</td><td>びじねすろじっくそう</td><td>3層のうち、業務の判断をする所。<code>ProductService</code></td></tr><tr><td>データアクセス層</td><td>でーたあくせすそう</td><td>3層のうち、データベースと出し入れする所。<code>ProductDAO</code></td></tr><tr><td>依存の向き</td><td>いぞんのむき</td><td>どのクラスがどのクラスを呼ぶか、の向き。窓口 → Service → DAO の一方通行にします</td></tr><tr><td>自動採番</td><td>じどうさいばん</td><td>表に行を足すと、MySQL が <code>id</code> を1から順に振ること。<code>AUTO_INCREMENT</code> を付けた列です（第11回）</td></tr><tr><td>executeUpdate()</td><td>えぐぜきゅーと あっぷでーと</td><td>INSERT・UPDATE・DELETE を実行し、変わった行の数を返します（第12回）</td></tr><tr><td>SQLException</td><td>えすきゅーえる えくせぷしょん</td><td>データベースとのやりとりでうまくいかなかったときの例外。検査例外なので、<code>throws</code> か <code>try-catch</code> が要ります</td></tr><tr><td>IllegalArgumentException</td><td>いりーがる あーぎゅめんと えくせぷしょん</td><td>「渡された値がおかしい」ことを表す例外。Service の検査で使います（第9回）</td></tr><tr><td>throws</td><td>すろーず</td><td>「この例外は、呼んだ側に任せる」という宣言。メソッドの定義行に書きます（第10回）</td></tr><tr><td>isBlank()</td><td>いずぶらんく</td><td>文字列が空か、空白だけなら <code>true</code> を返すメソッド。似た <code>isEmpty()</code> は空のときだけ <code>true</code> で、空白だけなら <code>false</code> です。この講座では <code>isBlank()</code> を使います</td></tr><tr><td>getter / setter</td><td>げったー／せったー</td><td>フィールドの値を取り出すメソッドと、入れるメソッド（第5回）。DTO の setter は検査をしません</td></tr></table></details>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 13 回 ／ 全 22 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
+</html>
