@@ -1,0 +1,32 @@
+
+/* ③ 解説: 一番大事な結論だけ表示、重複する写経コードと細かな説明は任意 */
+.explanation-card .card-title { font-size:.84rem; margin-bottom:.65rem; color:#9c4808; }
+.explanation-card .explanation-intro { background:#fff8eb; border-left:4px solid #e18b26; border-radius:5px; padding:8px 11px; margin:.4rem 0 1.15rem; font-size:.91rem; line-height:1.65; }
+.explanation-card > h2 { margin:20px 0 7px; font-size:1.04rem; line-height:1.55; }
+.explanation-card > h2:first-of-type { margin-top:6px; }
+.explanation-card .explain-brief { font-size:1rem; line-height:1.7; margin:6px 0; font-weight:650; color:#263548; overflow-wrap:anywhere; }
+.explanation-card .explain-mini { margin:7px 0 10px; }
+.explanation-card .explain-mini code { display:inline-block; max-width:100%; font-size:.89rem; color:#7b3b06; background:#fff0dc; border:1px solid #f1c694; border-radius:6px; padding:5px 10px; overflow-wrap:anywhere; white-space:pre-wrap; }
+.explanation-card .explain-more { border:1px solid #dce3eb; border-radius:9px; overflow:visible; margin:0 0 1.1rem; background:#fff; }
+.explanation-card .explain-more > summary { cursor:pointer; font-size:.88rem; color:#7b4a24; font-weight:750; background:#f8fafc; padding:9px 12px; border-radius:9px; list-style-position:inside; }
+.explanation-card .explain-more > summary::marker { color:#b56716; }
+.explanation-card .explain-more > summary:hover { background:#fff3e1; }
+.explanation-card .explain-more > summary:focus-visible { outline:3px solid #cb6e12; outline-offset:2px; }
+.explanation-card .explain-more[open] > summary { border-radius:9px 9px 0 0; border-bottom:1px solid #e0e6ee; }
+.explanation-card .explain-detail { padding:13px; overflow-wrap:anywhere; }
+.explanation-card .explain-detail > :first-child { margin-top:0; }
+.explanation-card .explain-detail .line-block { min-width:0; }
+.mysql-class-settings { padding:13px 17px; border:1px solid #f0c388; border-left:5px solid #bd6109; background:#fffaf1; }
+.mysql-class-settings .card-title { margin-bottom:6px; }
+.mysql-class-settings p { font-size:.9rem; line-height:1.65; margin:5px 0; }
+.mysql-class-settings .config-note { color:#765a42; font-size:.82rem; }
+@media(max-width:640px){
+  .explanation-card > h2 { font-size:1rem; }
+  .explanation-card .explain-detail { padding:9px; }
+  .explanation-card .explain-brief { font-size:.94rem; }
+  .explanation-card .explain-mini code { font-size:.82rem; }
+}
+@media print {
+  .explanation-card .explain-more { break-inside:auto; }
+  .explanation-card .explain-more:not([open]) { display:none; }
+}
