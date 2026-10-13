@@ -128,7 +128,7 @@
 <body>
 <button id="bigbtn">文字を大きくする</button>
 <div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson06.html">前の講義</a><a href="lesson08.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
-<header><span class="badge">第 7 回 ／ 全 18 回</span><h1>インタフェース・抽象クラスとポリモーフィズム</h1><p>第10章　インタフェース ／ ポリモーフィズム ／ 抽象クラス</p></header>
+<header><span class="badge">第 7 回 ／ 全 22 回</span><h1>インタフェース・抽象クラスとポリモーフィズム</h1><p>第10章　インタフェース ／ ポリモーフィズム ／ 抽象クラス</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">インタフェース</span>　<span class="term">ポリモーフィズム</span>　<span class="term">抽象クラス</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>インタフェースを書き、<code>implements</code> でその約束を守るクラスを作れる</li><li>親の型の変数・配列・引数に、種類の違うインスタンスを入れられる</li><li>種類を足しても、使う側のコードを変えずに済むことを説明できる</li></ul></div>
@@ -728,7 +728,7 @@ public class ShippingMain {
 <details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
 <table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>インタフェース</td><td>いんたふぇーす</td><td>「このメソッドを持つこと」という約束だけを並べたもの。<code>public interface Coupon { ... }</code>。Eclipse の表示では「インターフェース」</td></tr><tr><td>ポリモーフィズム</td><td>ぽりもーふぃずむ</td><td>親の型で受けて同じ呼び方をしても、中身（子）によって動きが変わること。多態性とも言います</td></tr><tr><td>implements</td><td>いんぷりめんつ</td><td>「そのインタフェースの約束を守ります」という宣言。<code>class PercentCoupon implements Coupon</code></td></tr><tr><td>実装する</td><td>じっそうする</td><td>約束（抽象メソッド）に、中身を書くこと</td></tr><tr><td>親の型</td><td>おやのかた</td><td>いくつもの種類をまとめて受け取れる型。インタフェースか、親クラス（抽象クラスを含む）で作ります</td></tr><tr><td>抽象メソッド</td><td>ちゅうしょうめそっど</td><td>中身の <code>{ }</code> が無く、<code>;</code> で終わるメソッド。子が必ず中身を書きます</td></tr><tr><td>abstract</td><td>あぶすとらくと</td><td>「中身がまだ決まっていない」という印。<code>abstract class</code> <code>abstract int apply(...)</code></td></tr><tr><td>抽象クラス</td><td>ちゅうしょうくらす</td><td><code>abstract</code> を付けたクラス。<code>new</code> できず、親の型として使います。フィールドや中身のあるメソッドも持てます</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親や約束のメソッドを書いています」という印。名前の打ち間違いをエラーで知らせてくれます（第6回）</td></tr><tr><td>extends</td><td>えくすてんず</td><td>親クラスを引き継ぐ宣言。親にできるのは1つだけです（第6回）</td></tr><tr><td>可視性</td><td>かしせい</td><td>そのメソッドをどこから呼べるかの範囲。<code>public</code> や <code>private</code> で決まります</td></tr></table></details>
-<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 7 回 ／ 全 18 回</footer>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 7 回 ／ 全 22 回</footer>
 </div>
 <script>
   if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
