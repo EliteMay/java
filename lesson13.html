@@ -142,6 +142,7 @@
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>DTO・DAO・Service のそれぞれに何を書くか、説明できる</li><li>窓口（<code>Main</code>）からは Service だけを呼ぶ形で、商品を登録できる</li><li>Service の検査で、おかしな値を例外にして断れる</li></ul></div>
 </div>
 <aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/dto-dao.html">DTO・DAO・Serviceと3層を詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
+<aside class="card mysql-class-settings"><div class="card-title">授業PCのMySQL接続設定</div><p><strong>ポート：<code>65534</code> ／ ユーザー：<code>root</code> ／ 学習用パスワード：<code>pass</code></strong></p><p>接続先：<code>jdbc:mysql://localhost:65534/stock</code>。コマンドから接続する場合は <code>mysql --protocol=TCP -h 127.0.0.1 -P 65534 -u root -p</code>（入力するパスワードは <code>pass</code>）。</p><p class="config-note">この値は授業用の例です。実際のサービスでは公開コードにパスワードを保存しないでください。接続前にMySQL起動とJDBCドライバの追加も必要です。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>DTO</td><td>Data Transfer Object。データベースの1行分などの値をまとめて持ち、クラスの間で受け渡すためだけのクラス。フィールドとコンストラクタ、getter・setter だけを持ちます。<code class="ex">new ProductDTO(2, "ノート", 240, 15)</code></td></tr><tr><td>DAO</td><td>Data Access Object。データベースとのやりとり（SQL の実行）だけを受け持つクラス。ほかのクラスは SQL を書かず、DAO のメソッドを呼びます。<code class="ex">dao.findAll()</code></td></tr><tr><td>3層（Service）</td><td>プログラムを、窓口（プレゼンテーション層）・判断をする Service（ビジネスロジック層）・データベースとやりとりする DAO（データアクセス層）の3つに分ける形です。呼ぶ向きは、窓口 → Service → DAO の一方通行です。<code class="ex">ProductService service = new ProductService();
@@ -203,7 +204,7 @@ service.add(pad);</code></td></tr></table>
 <p>今日は新しいプロジェクト <code>lesson13</code> に、クラスを4つ作ります。</p>
 <p>始める前に、MySQL が動いているかを確かめます。Windows キーを押して「サービス」と入力して開き、<code>MySQL80</code>（8.4 を入れた PC は <code>MySQL84</code>）の状態が「実行中」なら、そのまま進みます。空欄なら、右クリック →［開始］を押します。</p>
 <h2>Eclipse の手順</h2>
-<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson13</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson13</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］→ 講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーの「参照ライブラリー」の下に jar が出たことを確かめる</td></tr><tr><td>⑤</td><td><code>lesson13</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑥</td><td>名前に <code>ProductDTO</code> と入力する。パッケージ欄に <code>lesson13</code> と入っていることを確かめて［完了］（空なら <code>lesson13</code> と入力する）</td></tr><tr><td>⑦</td><td>⑤⑥をくり返し、<code>ProductDAO</code>・<code>ProductService</code>・<code>Main</code> のクラスを作る</td></tr><tr><td>⑧</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑨</td><td>コマンド プロンプトで <code>mysql -u root -p</code> と入力してパスワードを入れ、<code>mysql&gt;</code> と出たら、下の「mysql に貼る SQL」を貼って <code>Enter</code> を押す。最後に3件の表が出れば準備ができています</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson13</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson13</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］→ 講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーの「参照ライブラリー」の下に jar が出たことを確かめる</td></tr><tr><td>⑤</td><td><code>lesson13</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑥</td><td>名前に <code>ProductDTO</code> と入力する。パッケージ欄に <code>lesson13</code> と入っていることを確かめて［完了］（空なら <code>lesson13</code> と入力する）</td></tr><tr><td>⑦</td><td>⑤⑥をくり返し、<code>ProductDAO</code>・<code>ProductService</code>・<code>Main</code> のクラスを作る</td></tr><tr><td>⑧</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑨</td><td>コマンド プロンプトで <code>mysql --protocol=TCP -h 127.0.0.1 -P 65534 -u root -p</code> と入力してパスワードを入れ、<code>mysql&gt;</code> と出たら、下の「mysql に貼る SQL」を貼って <code>Enter</code> を押す。最後に3件の表が出れば準備ができています</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
 <p>第12回で商品を足したり消したりしたので、表の中身は人によって違います。⑨で3件の状態に戻してから始めます。<strong>この回の実行結果は、どれも3件に戻した直後に実行したときのものです。</strong>違って見えたら、⑨の SQL をもう一度実行してください。</p>
 <h2>全体像</h2>
 <p>プロジェクトの中は、次の4つのファイルだけです。どれも1行目は <code>package lesson13;</code> です。</p>
@@ -290,9 +291,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDAO {                                       <span class="cm">// <span class="cn">③</span> DAO</span>
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;ProductDTO&gt; findAll() throws SQLException {
@@ -432,7 +433,7 @@ public class Main {
 2 / ノート / 220円 / 残り10個
 3 / 消しゴム / 100円 / 残り50個
 4 / 付箋 / 200円 / 残り25個</div>
-<p><code>ProductDAO</code> の <code>PASSWORD</code> は、授業で使うパスワードに合わせて変えてください。</p>
+<p><code>ProductDAO</code> の <code>PASSWORD</code> は、この授業PCでは <code>pass</code> です（別のPCでは自分の設定値を使ってください）。</p>
 <p>付箋の ID は 4 です。<code>Main</code> では 0 を入れましたが、表の <code>id</code> は自動採番なので、<code>insert</code> は <code>id</code> を使いません。</p>
 <p><strong>実行するたびに付箋が1件ずつ増えます。</strong>増えた付箋を消したいときは、⑨の SQL で3件に戻します。</p>
 </div>
@@ -459,9 +460,9 @@ public class Main {
 </div>
 <h2>2　倉庫係を作る（③④）</h2>
 <pre class="code" id="c9">public class ProductDAO {                                       <span class="cm">// <span class="cn">③</span> DAO</span>
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;ProductDTO&gt; findAll() throws SQLException {
@@ -480,13 +481,13 @@ public class Main {
     <span class="cm">// （中略）</span>
 }</pre>
 <div class="line-block"><pre class="code" id="c10">public class ProductDAO {   <span class="cm">// <span class="cn">③</span> DAO</span>
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";</pre>
+    private static final String PASSWORD = "pass";</pre>
 <p><code>ProductDAO.java</code> のクラスの行です。<strong>DAO</strong>（Data Access Object）は、表との出し入れだけをするクラスです。</p>
 <p>続く3行は、MySQL につなぐための情報です。<code>private</code> は、このクラスの中だけで使うという印です。<code>static final</code> は、クラスに1つだけ持ち、あとから変えない値（定数）の印です。</p>
-<p><code>URL</code> は、つなぎ先です。<code>jdbc:mysql:</code> は、MySQL につなぐという印です。<code>localhost</code> は、この PC のことです。<code>3306</code> は、MySQL が接続を受け付ける番号（ポート番号）です。最後の <code>stock</code> は、データベースの名前です。</p>
-<p><code>USER</code> の <code>"root"</code> は、MySQL のユーザー名です。MySQL を入れたときにできる管理者です。<code>PASSWORD</code> の <code>"password"</code> は、MySQL のパスワードです。授業で使うパスワードに合わせて変えます。</p>
+<p><code>URL</code> は、つなぎ先です。<code>jdbc:mysql:</code> は、MySQL につなぐという印です。<code>localhost</code> は、この PC のことです。<code>65534</code> は、MySQL が接続を受け付ける番号（ポート番号）です。最後の <code>stock</code> は、データベースの名前です。</p>
+<p><code>USER</code> の <code>"root"</code> は、MySQL のユーザー名です。MySQL を入れたときにできる管理者です。<code>PASSWORD</code> の <code>"pass"</code> は、MySQL のパスワードです。この授業PCでは <code>pass</code> を使います。</p>
 <p>SQL と接続の情報は、このクラスにしか書きません。そのため、SQL や接続先を直すのは DAO だけです。</p>
 </div>
 <div class="line-block"><pre class="code" id="c11"><span class="cm">// 全部の商品を読む（第11回と同じ）</span>
