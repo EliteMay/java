@@ -1,0 +1,25 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>DTO・DAO・Serviceと3層 | Javaつまずき解説</title><link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../reader.css"><script defer src="../reader.js"></script><script defer src="script.js"></script></head><body><header><div class="wrap"><nav class="breadcrumbs" aria-label="パンくず"><a href="../index.html">Java学習教材</a><span>›</span><a href="index.html">つまずき解説</a><span>›</span><strong>DTO・DAO・Serviceと3層</strong></nav><span class="eyebrow">第13回の補足</span><h1>DTO・DAO・Serviceと3層</h1><p class="subtitle">クラスを役割ごとに分けると何が楽になるのか。</p></div></header><main class="wrap page"><section class="card summary-card"><div class="label">まず結論</div><p><strong>DTOはデータを運ぶ入れ物、DAOはDBへの保存や取得、Serviceは業務ルールを担当する。Mainや画面がSQLと業務ルールを全部持たないように分ける。</strong></p></section><section class="card"><h2>コードと結果で確認</h2><p>処理の流れを先に捉えてから、各行の意味を確認しよう。</p><div class="codehead"><span>設計のイメージ（簡略サンプル）</span><button type="button" data-copy-code="main-code">コードをコピー</button></div><pre class="code" id="main-code"><code>// DTO: データの入れ物
+class ProductDTO {
+    int id;
+    String name;
+    int price;
+}
+
+// DAO: データの保存と取得（DB処理はここ）
+class ProductDAO {
+    void insert(ProductDTO product) {
+        // JDBCでINSERTする処理
+    }
+}
+
+// Service: 業務ルール
+class ProductService {
+    private final ProductDAO dao = new ProductDAO();
+    void register(ProductDTO product) {
+        if (product.price &lt; 0) {
+            throw new IllegalArgumentException(&quot;価格が不正&quot;);
+        }
+        dao.insert(product);
+    }
+}</code></pre><div class="label" style="margin-top:14px">実行結果・前提</div><pre class="output">これはクラスの役割を示す抜粋。単独では実行しない。</pre><h3>1行ずつ考えると</h3><ol class="steps"><li>Main（または画面）は<code>ProductService.register</code>に登録を依頼する。</li><li>Serviceは価格が不正なら登録を拒否する。ルールに問題なければDAOを呼ぶ。</li><li>DAOがJDBCでDBに登録する。DTOは処理の間で商品データを受け渡す。</li></ol></section><section class="card"><h2>ここで間違えやすい</h2><div class="pitfall"><strong>よくある勘違い</strong>DTOにSQLを書いたり、Mainで直接<code>conn.prepareStatement</code>を大量に呼んだりすると、修正箇所が散らばりやすい。Serviceを置いただけで自動的に正しい設計になるわけではなく、責任の分担が大切。</div><h3>処理がどの方向へ流れるか</h3><div class="codehead"><span>比較用のコード（必要部分を抜粋）</span><button type="button" data-copy-code="compare-code">コードをコピー</button></div><pre class="code" id="compare-code"><code>Main → ProductService → ProductDAO → Database
+        ProductDTO（商品データを受け渡す）</code></pre><p>この矢印は呼び出しの流れを簡略化した図。ServiceがDAOを使い、DAOがDBを扱う。画面の変更やDB実装の変更で影響を限定しやすくなる。</p></section><section class="card"><h2>30秒で理解チェック</h2><p>価格がマイナスの商品を登録させないルールは、DTO・DAO・Serviceのどこが基本的に担当する？</p><details class="exercise"><summary>答えと理由を開く</summary><p><strong>Service。</strong> 業務上の登録ルールを判定する。DBの制約も併用できるが、画面からDAOへ直接渡す前にルールをまとめる。</p></details></section><div class="links"><a href="../lesson13.html">← 第13回の講義に戻る</a><a href="index.html">つまずき解説の一覧へ →</a></div><footer>このページは元の講義の補足です。コードは前提が必要な抜粋であり、DB接続なしでそのまま実行できるものではありません。</footer></main></body></html>
