@@ -128,7 +128,7 @@
 <body>
 <button id="bigbtn">文字を大きくする</button>
 <div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson04.html">前の講義</a><a href="lesson06.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
-<header><span class="badge">第 5 回 ／ 全 18 回</span><h1>カプセル化と static</h1><p>第9章　カプセル化 ／ static の意味 ／ static とインスタンスの使い分け</p></header>
+<header><span class="badge">第 5 回 ／ 全 22 回</span><h1>カプセル化と static</h1><p>第9章　カプセル化 ／ static の意味 ／ static とインスタンスの使い分け</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">カプセル化</span>　<span class="term">private</span>　<span class="term">static</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>フィールドを <code>private</code> にして、getter と setter を通して読み書きできる</li><li>setter に検査を入れて、おかしな値をはじける</li><li><code>static</code> が「クラスに1つ」、付けないと「実物1つにつき1つ」だと説明できる</li></ul></div>
@@ -742,7 +742,7 @@ public class TicketMain {
 <details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
 <table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>カプセル化</td><td>かぷせるか</td><td>フィールドを外から直接さわれないようにし、決めた入口（メソッド）だけを開けておくこと</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>「そのクラスの中だけ」で使える、という印。フィールドに付けます</td></tr><tr><td>public</td><td>ぱぶりっく</td><td>「どこからでも」使える、という印。コンストラクタやメソッドに付けます</td></tr><tr><td>アクセス修飾子</td><td>あくせすしゅうしょくし</td><td><code>private</code> <code>public</code> など、どこから使えるかを決める言葉</td></tr><tr><td>不可視</td><td>ふかし</td><td>見えない、という意味。<code>private</code> の欄を外から使うと「フィールド … は不可視です」と出ます</td></tr><tr><td>getter</td><td>げったー</td><td>フィールドの値を返すメソッド。<code>getPrice()</code> のように <code>get</code> ＋ フィールド名</td></tr><tr><td>setter</td><td>せったー</td><td>フィールドに値を入れるメソッド。<code>setPrice(int price)</code> のように <code>set</code> ＋ フィールド名。中で検査できます</td></tr><tr><td>static</td><td>すたてぃっく</td><td>「クラスに1つ」という印。付けないと「実物1つにつき1つ」になります</td></tr><tr><td>static フィールド</td><td>―</td><td><code>static</code> を付けたフィールド。全部の実物で1つを共有します。クラス変数ともいいます</td></tr><tr><td>static メソッド</td><td>―</td><td><code>static</code> を付けたメソッド。<code>Product.getCount()</code> のようにクラス名で呼びます。クラスメソッドともいいます</td></tr><tr><td>インスタンスメソッド</td><td>―</td><td><code>static</code> の付かないメソッド。<code>p1.getName()</code> のように、実物に対して呼びます（第4回）</td></tr><tr><td>return;</td><td>りたーん</td><td>メソッドをそこで終わらせる文。<code>void</code> のメソッドでも、途中で抜けるのに使えます</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。今日はここで <code>count</code> を数えています</td></tr><tr><td>this</td><td>でぃす</td><td>「いま動いているこのインスタンスの」という意味。<code>this.price</code> はフィールド（第4回）</td></tr></table></details>
-<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 5 回 ／ 全 18 回</footer>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 5 回 ／ 全 22 回</footer>
 </div>
 <script>
   if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
