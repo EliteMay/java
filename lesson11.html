@@ -349,9 +349,12 @@ public class Main {
 全部で3件です</div>
 <p><code>Main</code> には商品の名前も価格も1つも書いていません。表示された3件は、mysql で③に入れたものを、実行するたびに MySQL から読んできたものです。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　データベースと表を作る（①②）</h2>
+<p class="explain-brief"><code>CREATE DATABASE</code>はDB、<code>CREATE TABLE</code>は表を作る。列名と型を決める。</p>
+<p class="explain-mini"><code>CREATE TABLE products (...);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">mysql に貼る SQL（抜き出し）</p>
 <pre class="code" id="c5">CREATE DATABASE stock DEFAULT CHARACTER SET utf8mb4;       -- <span class="cn">①</span> データベースを作る
 USE stock;                                                 -- <span class="cn">①</span> これから使う
@@ -365,7 +368,11 @@ CREATE TABLE products (                                    -- <span class="cn">�
 <p><code>CREATE DATABASE</code> で <code>stock</code> という名前の<strong>データベース</strong>（倉庫）を作り、<code>USE stock;</code> でこれから使うと指定します。<code>utf8mb4</code> は文字コードの指定で、日本語の商品名がそのまま入ります。データベースの名前の <code>stock</code> と、在庫の列 <code>stock</code> は別物です。</p>
 <p><code>CREATE TABLE</code> で<strong>表（テーブル）</strong>を作ります。<code>id INT</code> のように「列の名前と型」を並べます。<code>VARCHAR(100)</code> は最大100文字の文字列、<code>NOT NULL</code> は「空を許さない」です。<code>id</code> の <code>AUTO_INCREMENT PRIMARY KEY</code> は「番号を自動で振り、その行を1つに決める列」です。</p>
 <p><strong>なぜ列を決めておくのか。</strong>列と型を決めておくと、MySQL が型を守ってくれます。列は <code>Product</code> のフィールドと同じ4つにしてあるので、表の1行が <code>Product</code> 1つになります。</p>
+</div></details>
 <h2>2　行を入れて、取り出す（③④）</h2>
+<p class="explain-brief"><code>INSERT</code>で行を追加、<code>SELECT</code>で行を取得する。</p>
+<p class="explain-mini"><code>SELECT * FROM products;</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">mysql に貼る SQL（抜き出し）</p>
 <pre class="code" id="c6">INSERT INTO products (name, price, stock) VALUES           -- <span class="cn">③</span> 3件入れる
     ('ボールペン', 150, 30),
@@ -375,7 +382,11 @@ CREATE TABLE products (                                    -- <span class="cn">�
 SELECT id, name, price, stock FROM products ORDER BY id;   -- <span class="cn">④</span> 取り出す</pre>
 <p><strong>INSERT</strong> は「表に行を入れる」SQL です。丸括弧の列の順に値を並べ、文字列は <code>'ボールペン'</code> のようにシングルクォートで囲みます。<code>id</code> は書きません。②の <code>AUTO_INCREMENT</code> が 1・2・3 と振るので、番号がぶつかりません。</p>
 <p><strong>SELECT</strong> は「表から取り出す」SQL です。「<code>products</code> から、4つの列を、<code>id</code> の小さい順に」と読みます。mysql の画面で3件入ったことを確かめる文で、<strong>同じ文を⑥で Java から送ります。</strong></p>
+</div></details>
 <h2>3　つなぐ先を決める（⑤）</h2>
+<p class="explain-brief">この授業PCはポート<code>65534</code>、ユーザー<code>root</code>、パスワード<code>pass</code>。</p>
+<p class="explain-mini"><code>jdbc:mysql://localhost:65534/stock</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductDao.java（抜き出し）</p>
 <pre class="code" id="c7">    private static final String URL = "jdbc:mysql://localhost:65534/stock";   <span class="cm">// <span class="cn">⑤</span> つなぐ先</span>
     private static final String USER = "root";                               <span class="cm">// <span class="cn">⑤</span> つなぐ先</span>
@@ -417,7 +428,11 @@ public class ProductDao {
 <p><code>Access denied</code> は「入れてもらえない」という意味です。MySQL までは届いたけれど、ユーザー名かパスワードが合わなかった、ということです。どこで失敗したかで、メッセージが変わります。</p>
 <table><tr><th>メッセージ</th><th>何が起きているか</th><th>見る所</th></tr><tr><td><code>No suitable driver found</code></td><td>Connector/J が入っていない</td><td>②の Eclipse の手順④⑤（ビルド・パス）</td></tr><tr><td><code>Communications link failure</code></td><td>MySQL が動いていない、またはポート番号が違う</td><td>MySQL が起動しているか。<code>URL</code> の <code>65534</code></td></tr><tr><td><code>Access denied for user</code></td><td>ユーザー名かパスワードが違う</td><td><code>USER</code> と <code>PASSWORD</code></td></tr><tr><td><code>Unknown database</code></td><td>そのデータベースが無い</td><td><code>URL</code> の <code>stock</code> の綴り。mysql で①をしたか</td></tr><tr><td><code>Table ... doesn't exist</code></td><td>その表が無い</td><td>SQL の表の名前の綴り。mysql で②をしたか</td></tr></table>
 <div class="trap"><code>No suitable driver found</code> だけは、Java のコードをいくら見ても間違いがありません。<strong>jar をビルド・パスに入れ忘れた</strong>ときに出ます。ツリーに「参照ライブラリー」があるかを見てください。</div>
+</div></details>
 <h2>4　SQL を用意して、つないで、実行する（⑥〜⑨）</h2>
+<p class="explain-brief"><code>PreparedStatement</code>でSQLを実行し、<code>ResultSet</code>で検索結果を受け取る。</p>
+<p class="explain-mini"><code>ResultSet rs = ps.executeQuery();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductDao.java（抜き出し）</p>
 <pre class="code" id="c9">    public List&lt;Product&gt; findAll() throws SQLException {
         List&lt;Product&gt; list = new ArrayList&lt;&gt;();
@@ -505,7 +520,11 @@ public class ProductDao {
 全部で1件です</div>
 <div class="words"><b>ここで出た言葉</b><span><b><code>WHERE</code></b>　取り出す行を条件で絞ります。<code>WHERE id = 2</code> は「<code>id</code> が 2 の行だけ」</span></div>
 <table><tr><th>意味</th><th>Java</th><th>SQL</th></tr><tr><td>等しい</td><td><code>==</code></td><td><code>=</code></td></tr><tr><td>等しくない</td><td><code>!=</code></td><td><code>&lt;&gt;</code></td></tr><tr><td>かつ</td><td><code>&amp;&amp;</code></td><td><code>AND</code></td></tr><tr><td>または</td><td><code>||</code></td><td><code>OR</code></td></tr><tr><td>文字列</td><td><code>"ノート"</code></td><td><code>'ノート'</code></td></tr></table>
+</div></details>
 <h2>5　1行ずつ読んで、閉じる（⑩〜⑫）</h2>
+<p class="explain-brief"><code>rs.next()</code>で次の行へ。列の値を取得して<code>Product</code>に入れる。</p>
+<p class="explain-mini"><code>rs.getString("name");</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductDao.java（抜き出し）</p>
 <pre class="code" id="c11">    public List&lt;Product&gt; findAll() throws SQLException {
         <span class="cm">// （中略）</span>
@@ -592,7 +611,11 @@ public class ProductDao {
 <div class="expected">データベースのエラー: Before start of result set</div>
 <p><code>Before start of result set</code> は「結果の表の、始まりより前」という意味です。1行目の手前には値が無いので、読めません。読む前に必ず <code>next()</code> を呼びます。全部の行なら <code>while (rs.next())</code>、1行だけなら <code>if (rs.next())</code> です。</p>
 <div class="trap">列の名前を <code>"nane"</code> のように打ち間違えても、赤い波線は出ずにコンパイルが通ります。Java から見るとただの文字列だからです。実行すると <code>Column 'nane' not found.</code> と出ます。<strong>メッセージに出ている名前を、コードの中で探す</strong>のが早道です。</div>
+</div></details>
 <h2>6　Main から読んでもらう（⑬⑭）</h2>
+<p class="explain-brief"><code>Main</code>はDAOに読み取りを頼む。DBの失敗は<code>SQLException</code>で扱う。</p>
+<p class="explain-mini"><code>dao.findAll();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c13">    public static void main(String[] args) {
         ProductDao dao = new ProductDao();
@@ -609,6 +632,7 @@ public class ProductDao {
     }</pre>
 <p>⑬で <code>ProductDao</code> に「全部読んで」と頼み、<code>List&lt;Product&gt;</code> を受け取ります。<strong>なぜ ProductDao に分けるのか。</strong><code>Main</code> に SQL や JDBC を書かずに済ませるためです。MySQL とのやりとりは <code>ProductDao</code> が1か所で引き受けます。</p>
 <p>⑭は、データベースで起きた例外 <strong>SQLException</strong> を受け止めて、理由を表示します。<code>findAll</code> に <code>throws SQLException</code> と書いてあるので、呼んだ側が受け止めます（第10回の検査例外）。書かないとコンパイルエラーです。</p>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>SQLの更新範囲</h2><p><code>UPDATE products SET price = 100;</code> の危険な点は？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>WHEREがないので、原則すべての行の価格が100になる。特定の行だけ変えるなら適切なWHEREを付ける。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
