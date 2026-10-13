@@ -128,7 +128,7 @@
 <body>
 <button id="bigbtn">文字を大きくする</button>
 <div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson02.html">前の講義</a><a href="lesson04.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
-<header><span class="badge">第 3 回 ／ 全 18 回</span><h1>メソッド・引数・戻り値と値渡し</h1><p>第7章　メソッドの定義と呼び出し ／ 引数と戻り値 ／ スコープ ／ 値渡しと参照</p></header>
+<header><span class="badge">第 3 回 ／ 全 22 回</span><h1>メソッド・引数・戻り値と値渡し</h1><p>第7章　メソッドの定義と呼び出し ／ 引数と戻り値 ／ スコープ ／ 値渡しと参照</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">メソッド</span>　<span class="term">引数</span>　<span class="term">戻り値</span>　<span class="term">値渡しと参照</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li>引数を受け取り、戻り値を返すメソッドを書いて、<code>main</code> から呼べる</li><li><code>int</code> を渡したときと配列を渡したときで、元が変わるかどうかを言い分けられる</li><li>「渡したのに変わらない」ときに、戻り値で受け取り直す形に直せる</li></ul></div>
@@ -596,7 +596,7 @@ public class PriceList {
 <details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
 <table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>インスタンス</td><td>いんすたんす</td><td>クラスから作った実体。第4回で扱います</td></tr><tr><td>メソッド</td><td>めそっど</td><td>ひとまとまりの処理に名前を付けたもの。<code>名前()</code> と書いて呼び出すと、中身が動きます</td></tr><tr><td>呼び出す</td><td>よびだす</td><td><code>printLine();</code> のように書いて、そのメソッドを動かすこと。終わると呼んだ行の次へ戻ります</td></tr><tr><td>引数</td><td>ひきすう</td><td>メソッドに渡す値。呼ぶ側に書く値（<code>calcTax(1000)</code> の <code>1000</code>）と、メソッドの丸括弧で受け取る変数（<code>calcTax(int price)</code> の <code>price</code>）を、どちらも引数と呼びます</td></tr><tr><td>戻り値</td><td>もどりち</td><td>メソッドが返す値。<code>return</code> で返し、呼んだ側で受け取ります</td></tr><tr><td>戻り値の型</td><td>もどりちのかた</td><td>メソッド名の前に書く、返す値の型。<code>static int calcTax</code> の <code>int</code></td></tr><tr><td>return</td><td>りたーん</td><td>値を返して、そのメソッドを終わらせる命令</td></tr><tr><td>void</td><td>ぼいど</td><td>「何も返さない」という意味。戻り値が無いメソッドに書きます</td></tr><tr><td>static</td><td>すたてぃっく</td><td><code>main</code> から直接呼ぶメソッドに付けるもの。意味は第5回で扱います</td></tr><tr><td>スコープ</td><td>すこーぷ</td><td>変数が使える範囲。宣言した <code>{ }</code> の中だけです</td></tr><tr><td>ローカル変数</td><td>ろーかるへんすう</td><td>メソッドの中で宣言した変数と引数。そのメソッドが終わると消えます</td></tr><tr><td>値渡し</td><td>あたいわたし</td><td>変数の中身をコピーして渡すこと。Java は引数をいつもこの形で渡します。配列を渡すときも、コピーされるのは住所という値です</td></tr><tr><td>基本データ型</td><td>きほんでーたがた</td><td>変数が値そのものを持つ型。<code>int</code> <code>double</code> <code>boolean</code> <code>char</code> など</td></tr><tr><td>参照型</td><td>さんしょうがた</td><td>変数が中身の置き場所（住所）を持つ型。配列、<code>String</code>、クラス（第4回）</td></tr><tr><td>length</td><td>れんぐす</td><td>配列の要素の数。<code>s.length</code></td></tr></table></details>
-<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 3 回 ／ 全 18 回</footer>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 3 回 ／ 全 22 回</footer>
 </div>
 <script>
   if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
