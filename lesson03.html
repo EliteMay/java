@@ -280,9 +280,12 @@ stocks[0] : 40個
 --------------------</div>
 <p><code>stock</code> は <code>30</code> のまま、<code>stocks[0]</code> は <code>40</code> に変わりました。どちらも「10 足す」メソッドに渡したのに、結果が分かれています。<strong>これが今日の山場です。</strong>理由は③解説の3と4で説明します。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　メソッドを作って呼ぶ（①）</h2>
+<p class="explain-brief">メソッドは繰り返し使う処理に名前を付けたもの。名前と<code>()</code>で呼び出す。</p>
+<p class="explain-mini"><code>show();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c2">public static void main(String[] args) {
     printLine();                                  <span class="cm">// <span class="cn">①</span> 呼び出し</span>
     <span class="cm">// （中略）</span>
@@ -313,7 +316,11 @@ public class Main {
 <div class="expected err">型 Main の非 static メソッド printLine() を static 参照することはできません
 （Cannot make a static reference to the non-static method printLine() from the type Main）</div>
 <p><code>main</code> は、プログラムを始めるときに JVM がインスタンスを作らずに呼ぶので、必ず <code>static</code> を付けます。<code>static</code> の付いたメソッドから名前だけで呼べるのは、<code>static</code> の付いたメソッドだけです。そのため <code>printLine</code> にも <code>static</code> を付けます。今日は「<code>main</code> から呼ぶメソッドには <code>static</code> を付ける」と覚えてください。意味は第5回で扱います。</p>
+</div></details>
 <h2>2　引数を渡し、戻り値を受け取る（②③④）</h2>
+<p class="explain-brief">引数は渡す値、<code>return</code>は結果を返す命令。呼ぶ側で受け取り直す。</p>
+<p class="explain-mini"><code>int result = add(2, 3);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c4">static int calcTax(int price) {                   <span class="cm">// <span class="cn">②</span> 引数と戻り値の型</span>
     return price * 110 / 100;                     <span class="cm">// <span class="cn">③</span> return</span>
 }</pre>
@@ -373,7 +380,11 @@ public class Main {
 <text fill="#475569" font-size="13" text-anchor="middle" x="629" y="170">受け取った側が決める</text>
 </svg><p class="figcap">void は「画面に出して終わり」、戻り値は「手渡し」</p><p><code>void</code> のメソッドは何も返さないので、<code>total</code> に入れるものがありません。計算するメソッドは、<code>calcTax</code> のように <code>int</code> と <code>return</code> で値を返し、表示は呼んだ側でします。</p>
 <div class="trap">戻り値の型を <code>int</code> にしたのに <code>return</code> を書き忘れると、「このメソッドは型 int の結果を戻す必要があります」（This method must return a result of type int）というエラーになります。</div>
+</div></details>
 <h2>3　int を渡す（⑤）</h2>
+<p class="explain-brief"><code>int</code>を渡すと数値がコピーされる。呼び出し先で変えても元の変数は変わらない。</p>
+<p class="explain-mini"><code>change(n); // 元のnはそのまま</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c7">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
     int stock = 30;
@@ -427,7 +438,11 @@ public class Main {
 }</pre>
 <p class="expected-label">実行結果</p>
 <div class="expected">stock : 40個</div>
+</div></details>
 <h2>4　配列を渡す（⑥）</h2>
+<p class="explain-brief">配列を渡すと参照の値がコピーされる。要素を書き換えると元の配列にも反映される。</p>
+<p class="explain-mini"><code>values[0] = 99;</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c9">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
     int[] stocks = {30, 12, 5};
@@ -469,6 +484,7 @@ static void addStockAll(int[] s) {                <span class="cm">// <span clas
 </svg><p class="figcap">配列を渡すと、住所のコピーが渡る。行き先は同じ配列</p><p>配列の変数が持っているのは、中身ではなく、中身が置いてある場所（<strong>住所</strong>）です。メソッドに渡るのは住所のコピーなので、<code>s</code> と <code>stocks</code> は同じ1つの配列を指します。そこへ <code>s[i] += 10</code> と書き込めば、<code>main</code> から見ても変わっています。</p>
 <table><tr><th>渡すもの</th><th>コピーされるもの</th><th>メソッドの中で書き換えると</th></tr><tr><td><code>int</code> などの基本データ型</td><td>値そのもの</td><td>元は<strong>変わらない</strong>（<code>addStock</code>）</td></tr><tr><td>配列などの参照型</td><td>住所</td><td>中身（<code>s[i]</code>）を書き換えると、元も<strong>変わる</strong>（<code>addStockAll</code>）</td></tr></table>
 <div class="note"><strong>よくある間違い：</strong>表示するだけのつもりのメソッドで配列に書き込むと、元の値まで変わってしまいます。<code>addStockAll</code> は在庫を増やしたいので、元が変わってよいのです。変えてよいかを決めてから書きます。</div>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>値渡しと配列</h2><p><code>int n = 10;</code> をメソッドへ渡して、その中だけで <code>n = 99;</code> にしても、呼び出し元の値は？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>10のまま。Javaは値をコピーして渡す。配列を渡した場合は参照の値がコピーされ、同じ配列の要素を変更すると元からも見える。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
