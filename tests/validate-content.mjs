@@ -5,7 +5,7 @@ const read = (name) => readFileSync(new URL('../' + name, import.meta.url), 'utf
 const required = ['① 今日の主役', '② 写して動かす', '③ 解説', '④ 自力で書く', '⑤ まとめ'];
 let checks = 0;
 
-for (let n = 2; n <= 11; n++) {
+for (let n = 2; n <= 13; n++) {
   const name = 'lesson' + String(n).padStart(2, '0') + '.html';
   const html = read(name);
   for (const label of required) {
@@ -25,7 +25,7 @@ for (let n = 2; n <= 11; n++) {
   checks += 6;
 }
 const home = read('index.html');
-for (let n = 2; n <= 11; n++) {
+for (let n = 2; n <= 13; n++) {
   const name = 'lesson' + String(n).padStart(2, '0') + '.html';
   assert.ok(home.includes(name), 'Index missing ' + name);
   checks++;
@@ -41,7 +41,8 @@ console.log('Java study site: ' + checks + ' structural checks passed');
 
 const topics = [
   'enhanced-for', 'value-pass', 'this-constructor', 'static-instance',
-  'override-super', 'interface', 'hashmap', 'null-exception', 'file-io', 'jdbc'
+  'override-super', 'interface', 'hashmap', 'null-exception', 'file-io', 'jdbc',
+  'preparedstatement', 'dto-dao'
 ];
 const conceptHome = read('concepts/index.html');
 assert.ok(home.includes('concepts/index.html'), 'Homepage missing concept guide link');
