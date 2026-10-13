@@ -128,7 +128,7 @@
 <body>
 <button id="bigbtn">文字を大きくする</button>
 <div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson05.html">前の講義</a><a href="lesson07.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
-<header><span class="badge">第 6 回 ／ 全 18 回</span><h1>継承・オーバーライド・super</h1><p>第10章 10-1　継承とオーバーライド ／ super ／ protected</p></header>
+<header><span class="badge">第 6 回 ／ 全 22 回</span><h1>継承・オーバーライド・super</h1><p>第10章 10-1　継承とオーバーライド ／ super ／ protected</p></header>
 <div class="hero">
 <div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">継承</span>　<span class="term">オーバーライド</span>　<span class="term">super</span></p></div>
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li><code>extends</code> で、親のクラスを書き写さずに子クラスを作れる</li><li>親のメソッドを子で書き直し（オーバーライド）、<code>@Override</code> を付けられる</li><li>子のコンストラクタに <code>super(...)</code> を書く理由を説明できる</li></ul></div>
@@ -591,7 +591,7 @@ public class StudentMember extends Member {
 <details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
 <p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
 <table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>継承</td><td>けいしょう</td><td>すでにあるクラスの中身を引き継いで、新しいクラスを作ること</td></tr><tr><td>extends</td><td>えくすてんず</td><td>「〜を引き継ぐ」。<code>public class GoldMember extends Member</code> のように書きます。親は1つだけ書けます</td></tr><tr><td>親クラス</td><td>おやくらす</td><td>引き継がれるほう。スーパークラスとも言います。例では <code>Member</code></td></tr><tr><td>子クラス</td><td>こくらす</td><td>引き継ぐほう。サブクラスとも言います。例では <code>GoldMember</code></td></tr><tr><td>Object</td><td>おぶじぇくと</td><td><code>extends</code> を書かないクラスも、Java が自動で <code>Object</code> というクラスを親にします。<code>Object</code> はすべてのクラスの親です</td></tr><tr><td>オーバーライド</td><td>おーばーらいど</td><td>親のメソッドを、子で同じ名前・同じ引数のまま書き直すこと</td></tr><tr><td>@Override</td><td>あっと おーばーらいど</td><td>「親のメソッドを書き直しています」という印。親に同じメソッドが無いとエラーにしてくれます</td></tr><tr><td>アノテーション</td><td>あのてーしょん</td><td><code>@Override</code> のように <code>@</code> で始まる印。Eclipse の表示では「注釈」</td></tr><tr><td>super</td><td>すーぱー</td><td>親を指す言葉。<code>super(name)</code> で親のコンストラクタ、<code>super.show()</code> で親のメソッドを呼びます</td></tr><tr><td>オーバーロード</td><td>おーばーろーど</td><td>同じ名前で、引数の違うメソッドを並べること。オーバーライドとは別物です</td></tr><tr><td>private</td><td>ぷらいべーと</td><td>そのクラスの中だけで使える、という修飾子。子クラスからも見えません（第5回）</td></tr><tr><td>protected</td><td>ぷろてくてっど</td><td>子クラスと、同じパッケージのクラスから使える、という修飾子</td></tr><tr><td>修飾子</td><td>しゅうしょくし</td><td><code>public</code> <code>private</code> <code>protected</code> など、どこから使えるかを決める言葉（第5回）</td></tr><tr><td>getter</td><td>げったー</td><td><code>private</code> のフィールドの値を読み出すためのメソッド。<code>getName()</code> など（第5回）</td></tr><tr><td>コンストラクタ</td><td>こんすとらくた</td><td><code>new</code> したときに1回だけ動くもの（第4回）。子のコンストラクタは、1行目で親のコンストラクタを呼びます</td></tr></table></details>
-<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 6 回 ／ 全 18 回</footer>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 6 回 ／ 全 22 回</footer>
 </div>
 <script>
   if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
