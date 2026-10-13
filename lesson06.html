@@ -303,9 +303,12 @@ public class Main {
   1000円 → 900円</div>
 <p>実行するのは <code>Main</code> です。<code>GoldMember</code> には <code>show()</code> も <code>calcPrice()</code> も書いていませんが、山田さんは割引 10%・900円で表示されます。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　違う所を1つのメソッドに切り出す（①②）</h2>
+<p class="explain-brief">親子で共通の処理は親へ。変わる部分はメソッドとして分ける。</p>
+<p class="explain-mini"><code>int getPrice() { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p><code>Member.java</code> から抜き出しています。</p>
 <pre class="code" id="c4">public int getDiscountRate() {                <span class="cm">// <span class="cn">①</span> 割引率</span>
     return 0;
@@ -320,7 +323,11 @@ public void show() {                          <span class="cm">// <span class="c
 }</pre>
 <p><code>getDiscountRate()</code> は割引率を答えるメソッドです。普通の会員は 0% なので <code>0</code> を返します。<strong>なぜメソッドに切り出すのか。</strong>会員の種類ごとに違うのは割引率だけなので、そこを1つのメソッドにしておけば、子クラスはここだけ書き直せば済むからです。</p>
 <p><code>calcPrice</code> と <code>show</code> は金額の計算と表示で、どちらも中で <code>getDiscountRate()</code> を呼んでいます。計算と表示は全部の会員で同じなので、親に1回だけ書きます。<strong>なぜ 0 と直接書かないのか。</strong><code>getDiscountRate()</code> を呼んでおくと、子が割引率を書き直したとき、計算と表示も子の割引率で動くからです。</p>
+</div></details>
 <h2>2　親を引き継ぎ、名前を親に渡す（③④）</h2>
+<p class="explain-brief"><code>extends</code>で親の機能を引き継ぐ。<code>super(...)</code>で親の初期化を呼ぶ。</p>
+<p class="explain-mini"><code>class Food extends Product { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p><code>GoldMember.java</code> から抜き出しています。</p>
 <pre class="code" id="c5">public class GoldMember extends Member {   <span class="cm">// <span class="cn">③</span> extends</span>
 
@@ -373,7 +380,11 @@ public class GoldMember extends Member {
 </svg><p class="figcap">super(...) を書かないと、引数なしの super() が入る</p><p>子のインスタンスを作るときは、先に親の部分を作ります。そのため子のコンストラクタは、1行目で必ず親のコンストラクタを呼びます。<strong>自分で書かなければ、Java が引数なしの <code>super();</code> を入れます。</strong>ところが <code>Member</code> にあるのは、名前を受け取る <code>Member(String name)</code> だけです。コンストラクタを自分で書いたクラスには、引数なしのコンストラクタは作られません。</p>
 <p>写したコードのとおり、1行目に <code>super(name);</code> を書けば動きます。</p>
 <div class="trap"><code>super(name);</code> は<strong>1行目</strong>でなければなりません。メッセージの行より下に書くと、「コンストラクター呼び出しは、コンストラクター内の最初のステートメントである必要があります」（Constructor call must be the first statement in a constructor）というエラーになります。</div>
+</div></details>
 <h2>3　親のメソッドを書き直す（⑤）</h2>
+<p class="explain-brief"><code>@Override</code>で親のメソッドを書き換える。動くのは実体のクラス側。</p>
+<p class="explain-mini"><code>@Override int getPrice() { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c7">@Override                                     <span class="cm">// <span class="cn">⑤</span> オーバーライド</span>
 public int getDiscountRate() {                <span class="cm">// <span class="cn">⑤</span> オーバーライド</span>
     return 10;
@@ -416,7 +427,11 @@ public class GoldMember extends Member {
 </svg><p class="figcap">@Override は「親のメソッドを書き直しています」という印</p><p><code>@Override</code> が付いていると、Java は親に同じ名前・同じ引数のメソッドがあるかを確かめます。<code>Member</code> に <code>getDiscountRete()</code> は無いので、その場でエラーになります。<strong>オーバーライドするときは、必ず <code>@Override</code> を付けてください。</strong></p>
 <div class="trap"><code>getDiscountRate(int price)</code> のように引数を付けた場合も、名前が同じでも別のメソッドとして扱われ、割引は 0% のままです。同じ名前で引数の違うメソッドを並べることを<strong>オーバーロード</strong>と呼び、オーバーライドとは別物です。<code>@Override</code> を付けていれば、同じエラーで気づけます。</div>
 <p><code>show()</code> を子で書き直すときに親の表示も使いたい場合は、中で <code>super.show();</code> と書きます。<code>super(...)</code> は親のコンストラクタ、<code>super.メソッド名()</code> は親のメソッドを呼びます。</p>
+</div></details>
 <h2>4　子に書いていないメソッドを呼ぶ（⑥）</h2>
+<p class="explain-brief">子に書いていないメソッドも、親から継承していれば呼べる。</p>
+<p class="explain-mini"><code>food.show();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p><code>Main.java</code> から抜き出しています。</p>
 <pre class="code" id="c9">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
@@ -453,6 +468,7 @@ public class GoldMember extends Member {
 <p>もう1つの直し方は、<code>Member</code> のフィールドを <code>protected String name;</code> にすることです。<strong>protected</strong> は、子クラスと同じパッケージのクラスから使えるようにする修飾子で、<code>private</code> と <code>public</code> の中間です。</p>
 <table><tr><th>修飾子</th><th>そのクラスの中</th><th>同じパッケージ</th><th>別のパッケージの子クラス</th><th>どこからでも</th></tr><tr><td><code>private</code></td><td>○</td><td>×</td><td>×</td><td>×</td></tr><tr><td>何も書かない</td><td>○</td><td>○</td><td>×</td><td>×</td></tr><tr><td><code>protected</code></td><td>○</td><td>○</td><td>○</td><td>×</td></tr><tr><td><code>public</code></td><td>○</td><td>○</td><td>○</td><td>○</td></tr></table>
 <div class="note">フィールドは <code>private</code> にして getter を通すのが基本です。<code>protected</code> にすると、子クラスから値を自由に書き換えられるようになります。</div>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>継承と上書き</h2><p>親にも子にも同じ <code>show()</code> があり、子インスタンスで呼んだらどちらが実行される？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>子でオーバーライドした <code>show()</code> が実行される。<code>@Override</code> を書くと上書きの間違いに気付きやすい。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
