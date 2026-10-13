@@ -344,9 +344,12 @@ ID 9 の商品はありません
 <p>「在庫を変えました」は表示されず、最後の「処理を続けます」は表示されています。例外が起きたのに、受け止めたのでプログラムは最後まで動きました。</p>
 <p>「ID 9 の商品はありません」は、登録していない ID 9 を探したときの表示です。③解説の4で説明します。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　例外を投げる（①）</h2>
+<p class="explain-brief"><code>throw</code>は例外を発生させる。条件に合わない値を知らせるために使う。</p>
+<p class="explain-mini"><code>throw new IllegalArgumentException();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Product.java（抜き出し）</p>
 <pre class="code" id="c3">public void setStock(int stock) {
     if (stock &lt; 0) {
@@ -356,7 +359,11 @@ ID 9 の商品はありません
 }</pre>
 <p><strong>throw</strong> は「ここで例外を投げる」命令です。<code>IllegalArgumentException</code> は「渡された値がおかしい」ことを表す例外で、丸括弧の中が理由の文になります。<code>throw</code> の行でメソッドは終わるので、<code>this.stock = stock;</code> まで届きません。</p>
 <p>もし <code>setStock</code> が表示して <code>return</code> するだけなら、<code>Main</code> は失敗に気づかず、次の行へ進んでしまいます。<code>throw</code> してあるので、<code>Main</code> は受け止めるか止まるかのどちらかになり、失敗を見逃しません。</p>
+</div></details>
 <h2>2　try で囲む（②③）</h2>
+<p class="explain-brief"><code>try</code>で失敗し得る処理を囲む。例外が起きると残りの処理は飛ばされる。</p>
+<p class="explain-mini"><code>try { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c4">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
@@ -409,7 +416,11 @@ public class Main {
 	at lesson09.Main.main(Main.java:17)</div>
 <p>何も表示されないまま止まりました。止まった場所は、<code>lesson09</code> で始まる行です（読み方は第1回と同じです）。自分の行が2つあるときは、上が例外を投げた場所（<code>Product.java</code> の①）、下がそれを呼んだ場所（<code>Main.java</code>）です。</p>
 <p>17行目より下の「在庫を変えました」も、⑦⑧も、「処理を続けます」も表示されていません。写経のコードのように <code>try</code> で囲んで <code>catch</code> すれば、先へ進めます。</p>
+</div></details>
 <h2>3　catch で受け止め、finally で締める（④⑤⑥）</h2>
+<p class="explain-brief"><code>catch</code>で対応し、<code>finally</code>は通常、後片付けに使う。</p>
+<p class="explain-mini"><code>catch (Exception e) { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c6">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
@@ -469,7 +480,11 @@ public class Main {
 ID 9 の商品はありません
 処理を続けます</div>
 <p>赤い文字も「変えられません」も出ません。在庫は 10個 のままで、変えられなかったことが誰にも伝わりません。例外を受け止めて何もしないことを<strong>握りつぶし</strong>と言います。あとで「在庫が合わない」と言われても、手がかりが残っていません。<code>catch</code> の中は空にせず、最低でも何が起きたかを表示します。</p>
+</div></details>
 <h2>4　無い名札で探し、null を確かめる（⑦⑧）</h2>
+<p class="explain-brief"><code>null</code>は参照先がない状態。メソッドを呼ぶ前に確認する。</p>
+<p class="explain-mini"><code>if (product != null) { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c8">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
@@ -552,6 +567,7 @@ public class Main {
 <p><code>NullPointerException</code> が起きるのは、ほぼ次の3つの型です。今日の⑦は①の型です。</p>
 <table><tr><th>型</th><th>例</th></tr><tr><td>① 探したが無かった</td><td><code>Map</code> の <code>get</code> に無い名札を渡すと <code>null</code> が返る</td></tr><tr><td>② フィールドを <code>new</code> していない</td><td><code>private List&lt;Product&gt; items;</code> のまま <code>items.add(p)</code> を呼ぶ</td></tr><tr><td>③ 配列の箱に入れていない</td><td><code>new Product[3]</code> の3つ目に何も入れずに <code>show()</code> を呼ぶ</td></tr></table>
 <div class="note"><code>NullPointerException</code> は、<code>catch</code> で受け止めるより、<strong>起きないように書く</strong>のが基本です。①の型は⑧のように確かめ、②の型は宣言と同時に <code>new ArrayList&lt;&gt;()</code> しておき、③の型は入れる数が決まっていないなら <code>List</code> に替えます。</div>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>nullと例外</h2><p><code>obj</code> が null のまま <code>obj.toString()</code> を呼ぶとどうなる？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>NullPointerExceptionが発生する。使用前に null の可能性を確認する。catchは原因を自動で修正するわけではない。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
