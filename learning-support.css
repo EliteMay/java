@@ -13,6 +13,7 @@
 .learn-switch:focus-visible, .learn-support button:focus-visible, .learn-support a:focus-visible, .learn-support summary:focus-visible { outline:3px solid #db850a; outline-offset:2px; }
 .learn-panel { padding:0 18px 18px; border-top:1px solid #efd4bb; }
 .learn-panel[hidden] { display:none !important; }
+.learn-support[data-mode="review"] .learn-panel { display:none !important; }
 .learn-start { padding:14px 0 4px; }
 .learn-start h3 { margin:0 0 5px; font-size:1rem; color:#873d08; }
 .learn-connect { color:#526476; font-size:.9rem; }
