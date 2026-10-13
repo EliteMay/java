@@ -437,9 +437,12 @@ public class Main {
 <p>付箋の ID は 4 です。<code>Main</code> では 0 を入れましたが、表の <code>id</code> は自動採番なので、<code>insert</code> は <code>id</code> を使いません。</p>
 <p><strong>実行するたびに付箋が1件ずつ増えます。</strong>増えた付箋を消したいときは、⑨の SQL で3件に戻します。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　箱を作る（①②）</h2>
+<p class="explain-brief"><code>DTO</code>は商品名・価格などのデータを運ぶ入れ物。</p>
+<p class="explain-mini"><code>ProductDTO product = new ProductDTO(...);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c6">public class ProductDTO {                                       <span class="cm">// <span class="cn">①</span> DTO</span>
     <span class="cm">// （中略）</span>
     public void setPrice(int price) { this.price = price; }     <span class="cm">// <span class="cn">②</span> 検査しない</span>
@@ -458,7 +461,11 @@ public class Main {
 <p><code>(int price)</code> で新しい価格を受け取り、<code>this.price = price;</code> でフィールドに入れます。<code>this.price</code> がフィールド、右の <code>price</code> が受け取った値です。値を入れるだけで何も返さないので、戻り値の型は <code>void</code> です。</p>
 <p>2つの setter は、受け取った値をそのまま入れます。「負の値なら入れない」のような検査はしません。<strong>なぜ検査しないのか。</strong>検査は店長（Service）の仕事にまとめるためです。箱にも検査があると、同じ検査が2か所に分かれます。すると、片方だけ直す事故が起きやすくなります。</p>
 </div>
+</div></details>
 <h2>2　倉庫係を作る（③④）</h2>
+<p class="explain-brief"><code>DAO</code>はSQLを使う係。DBの読み書きを一か所に集める。</p>
+<p class="explain-mini"><code>dao.findAll();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <pre class="code" id="c9">public class ProductDAO {                                       <span class="cm">// <span class="cn">③</span> DAO</span>
     private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
@@ -521,7 +528,11 @@ String sql = "SELECT id, name, price, stock FROM products ORDER BY id";</pre>
 }</pre>
 <p><code>return list;</code> で、全部の商品を詰めたリストを返します。<code>// （中略）</code> の所には、<code>findById</code>・<code>insert</code>・<code>update</code>・<code>delete</code> の4つのメソッドがあります。どれも、接続を開いて SQL を実行する形は同じです。</p>
 </div>
+</div></details>
 <h2>3　店長を作る（⑤⑥⑦）</h2>
+<p class="explain-brief"><code>Service</code>は在庫や価格の条件を確認する係。ルールを画面側から分ける。</p>
+<p class="explain-mini"><code>service.register(product);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductService.java（抜き出し）</p>
 <pre class="code" id="c16">    private ProductDAO dao = new ProductDAO();                  <span class="cm">// <span class="cn">⑤</span> DAO を持つ</span>
 
@@ -615,7 +626,11 @@ String sql = "SELECT id, name, price, stock FROM products ORDER BY id";</pre>
 <div class="expected err">処理されない例外の型 SQLException
 （Unhandled exception type SQLException）</div>
 <p><code>SQLException</code> は、第10回の<strong>検査例外</strong>です。検査例外は、受け止めるか任せるかを書かないと、コンパイルが通らない例外です。<code>dao.findAll()</code> は、この例外を投げるかもしれないと宣言しています。そのため呼ぶ側は、<code>try-catch</code> で受け止めるか、<code>throws</code> で呼んだ側へ任せるかを書きます。Service の中で <code>try-catch</code> はしません。つながらなかったときに利用者へどう伝えるかは、Service では決められないからです。今日は、<code>Main</code> の <code>main</code> まで任せています。</p>
+</div></details>
 <h2>4　窓口から頼む（⑧⑨⑩）</h2>
+<p class="explain-brief"><code>Main</code>はServiceへ依頼する。MainからDAOへ直接アクセスしない構成にする。</p>
+<p class="explain-mini"><code>Main → Service → DAO → MySQL</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c23">    public static void main(String[] args) throws SQLException {
         ProductService service = new ProductService();          <span class="cm">// <span class="cn">⑧</span> Service だけを使う</span>
@@ -681,6 +696,7 @@ public class Main {
 4 / 付箋 / -200円 / 残り25個</div>
 <p><strong>エラーは出ません。</strong>-200円の付箋が、そのまま表に入りました。検査は、Service の中にしかありません。<code>Main</code> が Service を飛ばせば、検査も一緒に飛びます。</p>
 <div class="trap">あとから検査を足しても、入ってしまった行は消えません。②の手順⑨の SQL で3件に戻してください。<strong>窓口のコードに <code>ProductDAO</code> という名前が出てきたら、それが飛ばしている印です。</strong></div>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>DTO・DAO・Serviceの役割は？</h2><p>商品データの入れ物、データベースとの通信、業務ルールを、それぞれどのクラスに分ける？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>データの入れ物は <code>DTO</code>、保存・取得は <code>DAO</code>、価格や在庫の確認などの業務ルールは <code>Service</code> に置く。<code>Main</code> から直接SQLを書かない設計を目指す。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
