@@ -324,9 +324,12 @@ public class Main {
 50%オフ : 1280円 → 640円</div>
 <p>実行するのは <code>Main</code> のほうです。<code>register</code> の中は1行だけなのに、券ごとに違う金額が出ています。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　インタフェースに約束を書く（①②）</h2>
+<p class="explain-brief"><code>interface</code>は「このメソッドが使える」という約束だけを決める。</p>
+<p class="explain-mini"><code>interface Coupon { int apply(int p); }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p><code>Coupon.java</code> から抜き出しています。</p>
 <pre class="code" id="c5">public interface Coupon {                 <span class="cm">// <span class="cn">①</span> インタフェース</span>
     String getName();                     <span class="cm">// <span class="cn">②</span> 約束（中身は書かない）</span>
@@ -334,7 +337,11 @@ public class Main {
 }</pre>
 <p><code>class</code> の代わりに <code>interface</code> と書いたものが<strong>インタフェース</strong>です。「<code>Coupon</code> を名乗るなら、このメソッドを持つこと」という約束だけを書く場所です。このコードでは、レジ（<code>Main</code>）は <code>Coupon</code> という約束だけを見ていて、券が何の種類かは知りません。レジが頼りにするのは「<code>Coupon</code> なら <code>getName</code> と <code>apply</code> がある」という約束だけです。</p>
 <p>2行とも、中身の <code>{ }</code> が無く、<code>;</code> で終わるメソッドです。名前・引数・戻り値の型だけを決めています。<strong>なぜ中身を書かないのか。</strong>値引きの計算は券ごとに違うので、ここでは決められないからです。中身を決めるのは、約束を守る側の各クラスです。<code>public</code> を書かなくても、<code>public</code> として扱われます。</p>
+</div></details>
 <h2>2　約束を守るクラスを作る（③④）</h2>
+<p class="explain-brief"><code>implements</code>したクラスは約束したメソッドを実装する。</p>
+<p class="explain-mini"><code>class YenCoupon implements Coupon { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p><code>PercentCoupon.java</code> から抜き出しています。</p>
 <pre class="code" id="c6">public class PercentCoupon implements Coupon {    <span class="cm">// <span class="cn">③</span> implements</span>
     <span class="cm">// （中略）</span>
@@ -401,7 +408,11 @@ public class YenCoupon implements Coupon {
 <p>インタフェースに書いたメソッドは、<code>public</code> を書かなくても <code>public</code>（どこからでも呼べる）です。守る側で <code>public</code> を外すと、「同じパッケージからしか呼べない」に狭まってしまいます。約束より狭くすることはできないので、エラーになります。</p>
 <div class="words"><b>ここで出た言葉</b><span><b>可視性</b>　そのメソッドを、どこから呼べるかの範囲。<code>public</code> や <code>private</code> で決まります</span></div>
 <div class="trap">インタフェース側では <code>public</code> を省いて書き、守る側では必ず付けます。書く場所によって扱いが違うので、いちばん迷いやすい所です。</div>
+</div></details>
 <h2>3　親の型で受ける（⑤⑥）</h2>
+<p class="explain-brief">インタフェース型の変数に違う実体を入れられる。同じ呼び方で違う処理が動く。</p>
+<p class="explain-mini"><code>Coupon c = new YenCoupon(...);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p><code>Main.java</code> から抜き出しています。</p>
 <pre class="code" id="c9">public static void main(String[] args) {
     Coupon[] coupons = {                           <span class="cm">// <span class="cn">⑤</span> Coupon 型で受ける</span>
@@ -514,7 +525,11 @@ public class Main {
 <text fill="#b91c1c" font-size="13" text-anchor="start" x="400" y="166">PercentCoupon の apply が動く</text>
 </svg><p class="figcap">呼べるかどうかは変数の型、どう動くかは中身で決まる</p><p>中身は確かに <code>PercentCoupon</code> です。それでも Java は、<strong>呼べるかどうかを変数の型（<code>Coupon</code>）で決めます。</strong><code>Coupon</code> の約束には <code>getRate</code> がありません。300円引き券が入っているかもしれない変数なので、呼べないのです。</p>
 <p>割引率を聞きたいのが10%オフ券だけなら、<code>PercentCoupon p = new PercentCoupon(10);</code> のように子の型の変数で受けます。すべての券に聞きたいことなら、<code>Coupon</code> の約束に1行足します。そうすれば、どの券も書く義務を負い、<code>Coupon</code> 型のまま呼べます。</p>
+</div></details>
 <h2>4　new できない親クラス　抽象クラス</h2>
+<p class="explain-brief"><code>abstract</code>クラスは共通処理を持てるが、そのまま<code>new</code>できない。</p>
+<p class="explain-mini"><code>abstract class Sale { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p>インタフェースに近いものに、<strong>抽象クラス</strong>があります。親クラスに <code>abstract</code> を付け、中身を書かないメソッドを混ぜたものです。「値引きのしかたは子に任せ、表示の手順は親に1回だけ書く」という例です。今日は見て違いを知るだけで、④では使いません。</p>
 <p class="fname">Sale.java　親（抽象クラス）</p>
 <pre class="code" id="c13">package lesson07;
@@ -535,6 +550,7 @@ public abstract class Sale {                      <span class="cm">// abstract �
 <p>子の側は <code>public class TimeSale extends Sale</code> のように <code>extends</code> で引き継ぎ、<code>apply</code> の中身だけを書きます。<code>show</code> は親に1回書くだけで、中の <code>apply(price)</code> は中身（子）の <code>apply</code> が呼ばれます。ここでもポリモーフィズムが働いています。</p>
 <table><tr><th></th><th>インタフェース</th><th>抽象クラス</th></tr><tr><td>書き方</td><td><code>public interface Coupon</code></td><td><code>public abstract class Sale</code></td></tr><tr><td>子の側</td><td><code>implements Coupon</code></td><td><code>extends Sale</code></td></tr><tr><td>いくつ親にできるか</td><td><strong>いくつでも</strong>（カンマで並べる）</td><td><strong>1つだけ</strong></td></tr><tr><td>書けるもの</td><td>約束（中身の無いメソッド）が中心</td><td>約束に加えて、フィールド・コンストラクタ・中身のあるメソッド</td></tr><tr><td>向いている場面</td><td>「〜できる」ものを、種類を問わず集めたい</td><td>共通の中身があり、「〜の一種」と言える</td></tr></table>
 <p>インタフェースと抽象クラスは、どちらも <code>new</code> できません。<code>new Sale("特売")</code> と書くと「型 Sale のインスタンスを生成できません」というエラーになります。インタフェースと抽象クラスは、<strong>変数・配列・引数の型として使うためのもの</strong>です。</p>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>インタフェースの役割</h2><p><code>Coupon c = new YenCoupon(...);</code> として <code>c.apply(price)</code> を呼べるのはなぜ？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>YenCouponがCouponの約束を実装しているため。呼ぶ側は具体的な券の種類を知らなくても、同じメソッドを呼べる。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
