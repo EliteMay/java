@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>第12回｜PreparedStatement で追加・更新・削除</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>
+.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}
+</style>
+<link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader-ux.css">
+<script defer src="reader.js"></script>
+<script defer src="reader-ux.js"></script>
+</head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container"><nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson11.html">前の講義</a><a href="lesson13.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
+
+<header><span class="badge">第 12 回 ／ 全 22 回</span><h1>PreparedStatement で追加・更新・削除</h1><p>第15章 と 第17章 17-3　? で値を渡す ／ 追加・更新・削除 ／ 変わった行数</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">PreparedStatement</span>　<span class="term">追加・更新・削除（INSERT・UPDATE・DELETE）</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li><code>?</code> と <code>setInt</code>・<code>setString</code> で、値を SQL に渡せる</li><li><code>ProductDao</code> に、1つ探す・追加・更新・削除のメソッドを書ける</li><li><code>executeUpdate()</code> の戻り値（変わった行数）で、うまくいったかを確かめられる</li></ul></div>
+</div>
+<aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/preparedstatement.html">PreparedStatementと更新処理を詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>PreparedStatement</td><td>値を入れる所を <code>?</code> にした SQL を先に用意し、あとから <code>setInt</code>・<code>setString</code> などで値を入れて実行するための仕組み（<code>java.sql</code>）。入れた値は SQL の文ではなく値として扱われます。<code class="ex">String sql = "DELETE FROM products WHERE id = ?";
+PreparedStatement ps = con.prepareStatement(sql);
+ps.setInt(1, id);</code></td></tr><tr><td>追加・更新・削除（INSERT・UPDATE・DELETE）</td><td>表に行を足す <code>INSERT</code>、行の値を変える <code>UPDATE</code>、行を消す <code>DELETE</code> の3つの SQL です。Java からは <code>executeUpdate()</code> で実行し、変わった行の数が返ります。<code class="ex">INSERT INTO products (name, price, stock) VALUES (?, ?, ?)
+UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?
+DELETE FROM products WHERE id = ?</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>PreparedStatement は「空欄のある注文書」</h3><p class="lead">注文書の形は先に決まっていて、空欄には値だけを書き込みます。</p><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 275" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="20" y="28" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">注文書（SQL の形）を先に用意する</text>
+<text x="40" y="62" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">INSERT INTO products (name, price, stock)</text>
+<text x="40" y="101" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">VALUES (</text>
+<rect x="120" y="80" width="56" height="30" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+<text x="148" y="101" font-size="17" text-anchor="middle" fill="#1f2933" font-weight="bold">?</text>
+<text x="148" y="128" font-size="12" text-anchor="middle" fill="#64748b">1つ目</text>
+<text x="181" y="101" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">,</text>
+<rect x="200" y="80" width="56" height="30" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+<text x="228" y="101" font-size="17" text-anchor="middle" fill="#1f2933" font-weight="bold">?</text>
+<text x="228" y="128" font-size="12" text-anchor="middle" fill="#64748b">2つ目</text>
+<text x="261" y="101" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">,</text>
+<rect x="280" y="80" width="56" height="30" rx="4" fill="#fef9c3" stroke="#ca8a04" stroke-width="1.5"/>
+<text x="308" y="101" font-size="17" text-anchor="middle" fill="#1f2933" font-weight="bold">?</text>
+<text x="308" y="128" font-size="12" text-anchor="middle" fill="#64748b">3つ目</text>
+<text x="342" y="101" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">)</text>
+<text x="420" y="62" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">形は先に決まっている</text>
+<text x="420" y="88" font-size="13" text-anchor="start" fill="#64748b">? の所には、あとから値だけが入る</text>
+<rect x="30" y="178" width="200" height="40" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="40" y="198" font-size="14" fill="#1f2933">setString(1, "定規")</text>
+<rect x="260" y="178" width="170" height="40" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="270" y="198" font-size="14" fill="#1f2933">setInt(2, 180)</text>
+<rect x="460" y="178" width="170" height="40" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="470" y="198" font-size="14" fill="#1f2933">setInt(3, 20)</text>
+<line x1="130" y1="178" x2="146" y2="140" stroke="#334155" stroke-width="1.8" marker-end="url(#ar1)"/>
+<line x1="345" y1="178" x2="230" y2="140" stroke="#334155" stroke-width="1.8" marker-end="url(#ar1)"/>
+<line x1="545" y1="178" x2="310" y2="140" stroke="#334155" stroke-width="1.8" marker-end="url(#ar1)"/>
+<text x="20" y="252" font-size="13" text-anchor="start" fill="#047857" font-weight="bold">名前が「Jim's Pen」でも、' は値の中のただの文字として入る。SQL の形は崩れない</text>
+</svg><p class="figcap">PreparedStatement は「空欄のある注文書」。空欄に入るのは値だけ</p><p>第11回で、SQL を「倉庫への注文書」にたとえました。今日の注文書には空欄があります。形は先に印刷されていて、書く人は空欄を埋めるだけです。注文書の形そのものは変えられません。</p>
+<p><strong>PreparedStatement</strong> は、この空欄のある注文書です。SQL の形を先に決め、値を入れる所を <code>?</code> で空けておきます。あとから <code>setString</code> や <code>setInt</code> で、1つ目の空欄、2つ目の空欄…と値を入れて送ります。第11回の7つの手順で飛ばした「<code>?</code> に値を入れる」が、これです。</p>
+<p><strong>空欄に入るのは値だけです。</strong>名前に <code>'</code> が入っていても、注文書の形は崩れません。今日は空欄を使って、1つ探す・追加・更新・削除をします。</p>
+</div><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 286" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="20" y="24" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">注文書には3つの種類がある</text>
+<rect x="20" y="36" width="216" height="160" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="20" y="36" width="216" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="21" y="55" width="214" height="8" fill="#fff3e6"/>
+<text x="128" y="54" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">入荷の注文書</text>
+<text x="128" y="88" font-size="13" text-anchor="middle" fill="#64748b">棚に新しく入れる</text>
+<line x1="32" y1="102" x2="224" y2="102" stroke="#cbd5e1" stroke-width="1"/>
+<text x="128" y="126" font-size="14" text-anchor="middle" fill="#1d4ed8" font-weight="bold">追加　INSERT</text>
+<text x="34" y="152" font-size="13" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">INSERT INTO products</text>
+<text x="34" y="174" font-size="13" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">VALUES (?, ?, ?)</text>
+<line x1="128" y1="198" x2="302" y2="234" stroke="#334155" stroke-width="1.8" marker-end="url(#ar6)"/>
+<rect x="252" y="36" width="216" height="160" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="252" y="36" width="216" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="253" y="55" width="214" height="8" fill="#fff3e6"/>
+<text x="360" y="54" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">変更の注文書</text>
+<text x="360" y="88" font-size="13" text-anchor="middle" fill="#64748b">値札を書き換える</text>
+<line x1="264" y1="102" x2="456" y2="102" stroke="#cbd5e1" stroke-width="1"/>
+<text x="360" y="126" font-size="14" text-anchor="middle" fill="#1d4ed8" font-weight="bold">更新　UPDATE</text>
+<text x="266" y="152" font-size="13" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">UPDATE products SET …</text>
+<text x="266" y="174" font-size="13" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">WHERE id = ?</text>
+<line x1="360" y1="198" x2="360" y2="234" stroke="#334155" stroke-width="1.8" marker-end="url(#ar6)"/>
+<rect x="484" y="36" width="216" height="160" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="484" y="36" width="216" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="485" y="55" width="214" height="8" fill="#fff3e6"/>
+<text x="592" y="54" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">撤去の注文書</text>
+<text x="592" y="88" font-size="13" text-anchor="middle" fill="#64748b">棚から下げる</text>
+<line x1="496" y1="102" x2="688" y2="102" stroke="#cbd5e1" stroke-width="1"/>
+<text x="592" y="126" font-size="14" text-anchor="middle" fill="#1d4ed8" font-weight="bold">削除　DELETE</text>
+<text x="498" y="152" font-size="13" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">DELETE FROM products</text>
+<text x="498" y="174" font-size="13" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">WHERE id = ?</text>
+<line x1="592" y1="198" x2="418" y2="234" stroke="#334155" stroke-width="1.8" marker-end="url(#ar6)"/>
+<rect x="230" y="236" width="260" height="36" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="290" y="259" font-size="14" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">ps.executeUpdate()</text>
+<text x="506" y="259" font-size="13" text-anchor="start" fill="#047857" font-weight="bold">→ 控えは、変わった行数</text>
+</svg><p class="figcap">入荷・変更・撤去の3種類の注文書。どれも executeUpdate() で出し、変わった行数が返る</p><p>注文書には種類があります。棚に新しく入れる「入荷の注文書」（追加 <code>INSERT</code>）、値札を書き換える「変更の注文書」（更新 <code>UPDATE</code>）、棚から下げる「撤去の注文書」（削除 <code>DELETE</code>）です。</p>
+</div></div>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>PreparedStatement</td><td>値を安全に SQL へ入れるためです。値を文字列でつなぐと、<code>'</code> などで SQL が壊れたり、SQL インジェクションで悪用されたりします。</td></tr><tr><td>追加・更新・削除（INSERT・UPDATE・DELETE）</td><td>表のデータを読むだけでなく、アプリから書き換えるためです。</td></tr></table>
+<p>今日のゴールは、この注文書を使って、商品を追加・更新・削除できるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各箇所の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は新しいプロジェクト <code>lesson12</code> に、クラスを3つ作ります。</p>
+<p>始める前に、MySQL が動いているかを確かめます。Windows キーを押して「サービス」と入力して開き、<code>MySQL80</code>（8.4 を入れた PC は <code>MySQL84</code>）の状態が「実行中」なら、そのまま進みます。空欄なら、右クリック →［開始］を押します。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson12</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson12</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］。講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーに［参照ライブラリー］ができ、その中に jar が入ったことを確かめる</td></tr><tr><td>⑤</td><td><code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑥</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson12</code> と入っていることを確かめて［完了］（空なら <code>lesson12</code> と入力する）</td></tr><tr><td>⑦</td><td>⑤⑥をもう2回行い、名前 <code>ProductDao</code> と <code>Main</code> のクラスを作る</td></tr><tr><td>⑧</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑨</td><td>コマンド プロンプトを開き、<code>mysql -u root -p</code> と入力して <code>Enter</code>。パスワードを入れ、<code>mysql&gt;</code> と出たら、下の全体像の「mysql に貼る SQL」を貼って <code>Enter</code> を押す。最後に3行の表が出れば準備ができている</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<p>⑨の SQL は、<code>products</code> 表を作り直して、最初の3件を入れます。何度実行しても同じ3件に戻ります。このあと試すたびに表の中身が変わるので、そのつど実行して戻します。</p>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の3つの Java ファイルです。どれも1行目は <code>package lesson12;</code> です。<code>ProductDao</code> には、<code>findAll</code>（全部読む）・<code>findById</code>（1つ探す）・<code>insert</code>（追加）・<code>update</code>（更新）・<code>delete</code>（削除）の5つのメソッドがあります。</p>
+<p><code>ProductDao</code> の <code>PASSWORD</code> は、授業で使うパスワードに合わせて変えてください。</p>
+<p>下が、SQL と3つのファイルの中身の全部です。行の右にある ①〜⑧ は、③解説の番号です。</p>
+<svg class="fig" viewBox="0 0 720 315" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="40" y="30" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">lesson12</text>
+<line x1="48" y1="38" x2="48" y2="238" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="48" y1="66" x2="66" y2="66" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="48" y1="238" x2="66" y2="238" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="72" y="71" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">src</text>
+<line x1="80" y1="78" x2="80" y2="100" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="80" y1="100" x2="98" y2="100" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="104" y="105" font-size="14" text-anchor="start" fill="#1f2933">lesson12（パッケージ）</text>
+<line x1="118" y1="112" x2="118" y2="208" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="136" x2="136" y2="136" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="172" x2="136" y2="172" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="208" x2="136" y2="208" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="140" y="120" width="170" height="32" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="152" y="141" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">Product.java</text>
+<text x="328" y="141" font-size="13" text-anchor="start" fill="#475569">商品。第5回と同じ</text>
+<rect x="140" y="156" width="170" height="32" rx="6" fill="#fef9c3" stroke="#334155" stroke-width="1.5"/>
+<text x="152" y="177" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">ProductDao.java</text>
+<text x="328" y="177" font-size="13" text-anchor="start" fill="#475569">表の出し入れ。今日はここに4つ足す</text>
+<rect x="140" y="192" width="170" height="32" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<text x="152" y="213" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">Main.java</text>
+<text x="328" y="213" font-size="13" text-anchor="start" fill="#475569">使う側。main があり、ここから実行する</text>
+<text x="72" y="243" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">参照ライブラリー</text>
+<line x1="80" y1="250" x2="80" y2="272" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="80" y1="272" x2="98" y2="272" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="104" y="277" font-size="14" text-anchor="start" fill="#1f2933">mysql-connector-j-8.4.0.jar</text>
+<text x="328" y="277" font-size="13" text-anchor="start" fill="#475569">MySQL とつなぐ道具（手順④で足す）</text>
+</svg><p class="figcap">プロジェクトの中身。Java のファイルはこの3つです</p><p class="fname">mysql に貼る SQL　最初の3件に戻す</p>
+<pre class="code" id="c1">CREATE DATABASE IF NOT EXISTS stock DEFAULT CHARACTER SET utf8mb4;
+USE stock;
+
+DROP TABLE IF EXISTS products;
+CREATE TABLE products (
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(100) NOT NULL,
+    price  INT NOT NULL,
+    stock  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO products (name, price, stock) VALUES
+    ('ボールペン', 150, 30), ('ノート', 220, 10), ('消しゴム', 100, 50);
+
+SELECT id, name, price, stock FROM products ORDER BY id;</pre>
+<p class="fname">Product.java　商品（第5回と同じ）</p>
+<pre class="code" id="c2">package lesson12;
+
+public class Product {
+    private static int count = 0;   <span class="cm">// 作った商品の数（全体で1つ）</span>
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="fname">ProductDao.java　表の出し入れ（今日はここに4つ足す）</p>
+<pre class="code" id="c3">package lesson12;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                     rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public Product findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";   <span class="cm">// <span class="cn">①</span> ?</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);   <span class="cm">// <span class="cn">②</span> 1つ目の ? に入れる</span>
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Product(rs.getInt("id"), rs.getString("name"),
+                                       rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;   <span class="cm">// <span class="cn">③</span> 無かった</span>
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(Product p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";   <span class="cm">// <span class="cn">④</span> id は書かない</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());   <span class="cm">// <span class="cn">②</span> 文字列は setString</span>
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();   <span class="cm">// <span class="cn">⑤</span> 変わった行数</span>
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(Product p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";   <span class="cm">// <span class="cn">⑥</span> WHERE</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());   <span class="cm">// <span class="cn">⑥</span> 4つ目は WHERE の ?</span>
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";   <span class="cm">// <span class="cn">⑥</span> WHERE</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+}</pre>
+<p class="fname">Main.java　使うほう</p>
+<pre class="code" id="c4">package lesson12;
+
+import java.sql.SQLException;
+
+public class Main {
+    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+
+        try {
+            int n = dao.insert(new Product(0, "定規", 180, 20));   <span class="cm">// <span class="cn">④</span> id は 0 のまま</span>
+            System.out.println("追加: " + n + "件");
+
+            int noteId = 2;                        <span class="cm">// <span class="cn">⑦</span> ノートの ID</span>
+            Product note = dao.findById(noteId);   <span class="cm">// <span class="cn">⑦</span> 読んで</span>
+            note.setStock(5);                      <span class="cm">// <span class="cn">⑦</span> 在庫を5個に変えて</span>
+            n = dao.update(note);                  <span class="cm">// <span class="cn">⑦</span> 書き戻す</span>
+            System.out.println("更新: " + n + "件");
+
+            n = dao.delete(3);
+            System.out.println("削除: " + n + "件");
+
+            System.out.println("--- いまの商品 ---");
+            for (Product p : dao.findAll()) {
+                p.show();
+            }
+        } catch (SQLException e) {   <span class="cm">// <span class="cn">⑧</span> 受け止める</span>
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">追加: 1件
+更新: 1件
+削除: 1件
+--- いまの商品 ---
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り5個
+4 / 定規 / 180円 / 残り20個</div>
+<p><code>Main</code> を実行すると、MySQL の表の中身が書き換わります。最後の「いまの商品」は、書き換えたあとの表を <code>findAll</code> で読み直したものです。定規の id は 4 で、消した消しゴム（ID 3）は表示されていません。</p>
+</div>
+<div class="card"><div class="card-title">③ 解説</div>
+<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<p>間違いの形の実行結果は、どれも最初の3件から始めたときのものです。試すときは、その前に②の SQL を実行して、最初の3件に戻してください。</p>
+<h2>1　? に値を入れて、1つ探す（①②③）</h2>
+<p class="fname">ProductDao.java（抜き出し）</p>
+<pre class="code" id="c5">    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public Product findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";   <span class="cm">// <span class="cn">①</span> ?</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);   <span class="cm">// <span class="cn">②</span> 1つ目の ? に入れる</span>
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Product(rs.getInt("id"), rs.getString("name"),
+                                       rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;   <span class="cm">// <span class="cn">③</span> 無かった</span>
+    }</pre>
+<div class="line-block"><pre class="code" id="c6">public Product findById(int id) throws SQLException {</pre>
+<p><code>findById</code> というメソッドの宣言です。引数の <code>int id</code> は、探したい商品の ID です。戻り値の型は <code>Product</code> で、見つけた商品を1つ返します。<code>throws SQLException</code> は、中で起きた失敗を、呼んだ側に任せるという宣言です。受け止めるのは⑧です。</p>
+</div>
+<div class="line-block"><pre class="code" id="c7">String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";   <span class="cm">// <span class="cn">①</span> ?</span></pre>
+<p><code>WHERE id = ?</code> は、「<code>id</code> が <code>?</code> の行だけ」という条件です。<code>?</code> は、「ここに値が入る」という空欄です。たとえの、注文書の空欄に当たります。どの ID を探すかは、あとから入れます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c8">try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+     PreparedStatement ps = con.prepareStatement(sql)) {
+    ps.setInt(1, id);   <span class="cm">// <span class="cn">②</span> 1つ目の ? に入れる</span></pre>
+<p>MySQL につないで <code>con</code> に入れ、①の SQL を持った送る道具 <code>ps</code> を作ります。<code>URL</code> <code>USER</code> <code>PASSWORD</code> は、<code>ProductDao</code> の頭に書いた定数です。丸括弧の中で作ったものは、<code>try</code> が終わると自動で閉じます（try-with-resources）。</p>
+<p>②の <code>ps.setInt(1, id);</code> で、1つ目の <code>?</code> に <code>id</code> を入れます。<code>1</code> は何番目の <code>?</code> か、<code>id</code> は入れる値です。番号は1から数えます。配列の添え字（0から）とは違います。文字列を入れるときは <code>setString</code> を使います。</p>
+<p><strong>なぜ ? を使うのか。</strong>SQL の形を先に決めておき、値はあとから別に渡すためです。値の中に <code>'</code> などの記号があっても、SQL の形は崩れません（解説2）。</p>
+</div>
+<div class="line-block"><pre class="code" id="c9">try (ResultSet rs = ps.executeQuery()) {
+    if (rs.next()) {
+        return new Product(rs.getInt("id"), rs.getString("name"),
+                           rs.getInt("price"), rs.getInt("stock"));
+    }
+}</pre>
+<p>SQL を実行し、返ってきた表を <code>rs</code> に受け取ります。<code>try</code> が2重なのは、<code>?</code> に値を入れてから実行するためです。</p>
+<p><code>if (rs.next())</code> で1行目に進み、行があれば、その行の4つの列から <code>Product</code> を作って返します。<code>id</code> の列は主キー（同じ値が2つ無い列）なので、当てはまる行は多くても1つです。そのため、<code>while</code> ではなく <code>if</code> で1行だけ読みます。</p>
+<p><code>return</code> で途中から抜けても、<code>rs</code> <code>ps</code> <code>con</code> は自動で閉じます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c10">return null;   <span class="cm">// <span class="cn">③</span> 無かった</span></pre>
+<p>当てはまる行が無かったときは、<code>if</code> の中に入らず、ここへ来ます。<code>null</code> は「何も指していない」という値で、「無かった」ことを呼んだ側に伝えます。呼んだ側は、<code>null</code> かどうかを確かめてから使います。</p>
+</div>
+<p><strong>よくある間違い：null を確かめずに使う。</strong><code>Main</code> の探す ID を、無い 9 に変えた形です。本番では、ID は利用者が入力した値や、別の表から取った値になります。無い ID が来ることは、必ずあります。</p>
+<p class="fname">Main.java の⑦の所（間違いあり）</p>
+<pre class="code" id="c11">            int noteId = 9;     <span class="cm">// 無い ID</span>
+            Product note = dao.findById(noteId);
+            note.setStock(5);   <span class="cm">// ここで止まる</span></pre>
+<p><code>noteId</code> の <code>9</code> は探す ID で、この時点の表に ID 9 の商品はありません。<code>findById</code> で探した結果を <code>note</code> に入れ、在庫を5個に変えようとしています。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">追加: 1件</div>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">Exception in thread "main" java.lang.NullPointerException: Cannot invoke "lesson12.Product.setStock(int)" because "note" is null
+	at lesson12.Main.main(Main.java:15)</div>
+<svg class="fig" viewBox="0 0 720 170" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="30" y="30" width="160" height="32" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<text x="40" y="50" font-size="14" fill="#1f2933">findById(2)</text>
+<line x1="190" y1="46" x2="250" y2="46" stroke="#334155" stroke-width="1.8" marker-end="url(#ar5)"/>
+<rect x="252" y="30" width="170" height="32" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="262" y="50" font-size="14" fill="#1f2933">Product「ノート」</text>
+<text x="450" y="51" font-size="14" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">note.setStock(5)</text>
+<text x="585" y="51" font-size="14" text-anchor="start" fill="#047857" font-weight="bold">→ 変えられる</text>
+<rect x="30" y="104" width="160" height="32" rx="6" fill="#fef2f2" stroke="#b91c1c" stroke-width="1.5"/>
+<text x="40" y="124" font-size="14" fill="#1f2933">findById(9)</text>
+<line x1="190" y1="120" x2="250" y2="120" stroke="#94a3b8" stroke-width="1.8" marker-end="url(#ar5)" stroke-dasharray="6 4"/>
+<rect x="252" y="104" width="170" height="32" rx="6" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="262" y="124" font-size="14" fill="#1f2933">null（何も無い）</text>
+<text x="450" y="125" font-size="14" font-family="Consolas,monospace" fill="#b91c1c" xml:space="preserve">note.setStock(5)</text>
+<text x="585" y="125" font-size="14" text-anchor="start" fill="#b91c1c" font-weight="bold">→ 止まる</text>
+</svg><p class="figcap">findById は、無ければ null を返す。確かめずに使うと止まる</p><p><code>because "note" is null</code> が理由です。ID 9 の商品は無いので、<code>findById</code> は <code>null</code> を返しました。<code>note</code> は、何も指していません。<code>null</code> に対してメソッドを呼んだので、第9回と同じ <code>NullPointerException</code> になりました。<code>Main.java:15</code> は、15行目で止まったという意味です。そのあとの更新・削除・一覧は、実行されていません。使う前に、<code>null</code> かどうかを <code>==</code> で確かめます。</p>
+<p class="fname">Main.java の⑦の所（直したもの）</p>
+<pre class="code" id="c12">            int noteId = 9;                                                   <span class="cm">// 無い ID</span>
+            Product note = dao.findById(noteId);
+            if (note == null) {                                               <span class="cm">// 足した行</span>
+                System.out.println("ID " + noteId + " の商品はありません");   <span class="cm">// 足した行</span>
+            } else {                                                          <span class="cm">// 足した行</span>
+                note.setStock(5);
+                n = dao.update(note);
+                System.out.println("更新: " + n + "件");
+            }   <span class="cm">// 足した行</span></pre>
+<p><code>dao.findById(noteId)</code> の結果を <code>note</code> に入れるまでは、間違いの形と同じです。足した <code>if (note == null)</code> で、<code>note</code> が <code>null</code> かを確かめます。<code>null</code> なら、<code>System.out.println</code> で、無かった ID を表示します。表示する ID は、数字を直接書かずに <code>noteId</code> から組み立てます。直接書くと、探す ID を変えたときに、表示が事実と合わなくなります。<code>else</code> から下は、<code>null</code> でないときだけ動きます。<code>note.setStock(5)</code> で在庫を5個に変え、<code>dao.update(note)</code> で表に書き戻します。<code>n</code> は、④の行で作った、変わった行数を入れる変数です。最後に、「更新: 1件」の形で件数を表示します。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">追加: 1件
+ID 9 の商品はありません
+削除: 1件
+--- いまの商品 ---
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+4 / 定規 / 180円 / 残り20個</div>
+<h2>2　追加する（④⑤）</h2>
+<p class="fname">ProductDao.java（抜き出し）</p>
+<pre class="code" id="c13">    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(Product p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";   <span class="cm">// <span class="cn">④</span> id は書かない</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());   <span class="cm">// <span class="cn">②</span> 文字列は setString</span>
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();   <span class="cm">// <span class="cn">⑤</span> 変わった行数</span>
+        }
+    }</pre>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c14">            int n = dao.insert(new Product(0, "定規", 180, 20));   <span class="cm">// <span class="cn">④</span> id は 0 のまま</span>
+            System.out.println("追加: " + n + "件");</pre>
+<div class="line-block"><pre class="code" id="c15">public int insert(Product p) throws SQLException {</pre>
+<p><code>insert</code> は、商品を1つ追加して、変わった行数を返すメソッドです。引数の <code>Product p</code> は、追加する商品です。戻り値の型 <code>int</code> が、変わった行数です。</p>
+</div>
+<div class="line-block"><pre class="code" id="c16">String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";   <span class="cm">// <span class="cn">④</span> id は書かない</span></pre>
+<p>④の SQL は、<code>products</code> の表に行を足す INSERT です。<code>(name, price, stock)</code> は、値を入れる3つの列です。<code>VALUES (?, ?, ?)</code> の3つの <code>?</code> は、順に名前・価格・在庫の空欄です。<code>id</code> の列は書いていません。<code>id</code> は、MySQL が 1, 2, 3… と自動で振ります（<code>AUTO_INCREMENT</code>）。<strong>なぜ id を書かないのか。</strong>Java の側で決めると、すでにある <code>id</code> と同じ番号を付けてしまうおそれがあるからです。</p>
+</div>
+<div class="line-block"><pre class="code" id="c17">try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+     PreparedStatement ps = con.prepareStatement(sql)) {
+    ps.setString(1, p.getName());   <span class="cm">// <span class="cn">②</span> 文字列は setString</span>
+    ps.setInt(2, p.getPrice());
+    ps.setInt(3, p.getStock());</pre>
+<p><code>try</code> の2行で、MySQL につないで <code>con</code> に入れ、④の SQL を持った送る道具 <code>ps</code> を作ります。解説1と同じです。</p>
+<p>続く3行で、1つ目の <code>?</code> に名前、2つ目に価格、3つ目に在庫を入れます。名前は文字列なので <code>setString</code>、価格と在庫は数なので <code>setInt</code> です。行の右の②は、解説1の②を指しています。</p>
+</div>
+<div class="line-block"><pre class="code" id="c18">return ps.executeUpdate();   <span class="cm">// <span class="cn">⑤</span> 変わった行数</span></pre>
+<p>⑤の <code>executeUpdate()</code> は、INSERT・UPDATE・DELETE を実行するメソッドです。戻り値は、<strong>変わった行数</strong>です。1件追加できれば、<code>1</code> が返ります。SELECT の <code>executeQuery()</code> と違い、結果の表は返りません。<code>return</code> で、その行数をそのまま呼んだ側に返します。</p>
+</div>
+<div class="line-block"><pre class="code" id="c19">int n = dao.insert(new Product(0, "定規", 180, 20));   <span class="cm">// <span class="cn">④</span> id は 0 のまま</span>
+System.out.println("追加: " + n + "件");</pre>
+<p><code>Main</code> の④の行では、<code>new Product(0, "定規", 180, 20)</code> で、追加する商品を作ります。<code>0</code> は <code>id</code> です。SQL に <code>id</code> を書いていないので、この <code>0</code> は使われません。<code>"定規"</code> は名前、<code>180</code> は価格（円）、<code>20</code> は在庫（個）です。</p>
+<p>作った商品を <code>dao.insert(...)</code> に渡し、返ってきた行数を <code>n</code> に入れます。次の行で、「追加: 1件」と表示します。返ってきた数で、うまくいったかを確かめられます（解説3）。</p>
+</div>
+<p>MySQL に入れたものは、プログラムが終わっても残ります。もう一度 <code>Main</code> を実行すると、定規がもう1つ増えて、<code>id</code> は 5 になります。消した 3 の番号は、使い回されません。</p>
+<p><strong>よくある間違い：SQL を + でつないで作る。</strong>値を <code>?</code> で空けておかずに、<code>+</code> で SQL の文字列に直接つないだ形です。違うのは <code>insert</code> の中の SQL の作り方だけなので、写したコードと並べます。</p>
+<p class="fname">写したコードの insert（正しい形）</p>
+<pre class="code" id="c20">        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";   <span class="cm">// <span class="cn">④</span> id は書かない</span>
+            <span class="cm">// （中略）</span>
+            ps.setString(1, p.getName());                                            <span class="cm">// <span class="cn">②</span> 文字列は setString</span>
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());</pre>
+<p>写したコードでは、④の SQL の値の所を <code>?</code> で空けておきます。（中略）は、つないで、送る道具を作る2行です。そのあと、<code>setString</code> で1つ目の <code>?</code> に名前を入れます。<code>setInt</code> で、2つ目に価格、3つ目に在庫を入れます。</p>
+<p class="fname">+ でつないだ insert（間違いあり）</p>
+<pre class="code" id="c21">        String sql = "INSERT INTO products (name, price, stock) VALUES ('"             <span class="cm">// ここが問題</span>
+                   + p.getName() + "', " + p.getPrice() + ", " + p.getStock() + ")";   <span class="cm">// ここが問題</span>
+            <span class="cm">// （中略）</span>
+            <span class="cm">// setString・setInt の3行が無い</span></pre>
+<p>間違いのほうは、SQL の文字列を <code>VALUES ('</code> まで書いています。最後の <code>'</code> は、名前を囲む始まりの印です。その後ろに、<code>+</code> で次のものを順につないでいます。<code>p.getName()</code> は商品の名前、<code>p.getPrice()</code> は価格、<code>p.getStock()</code> は在庫です。<code>"', "</code> は、名前を閉じる <code>'</code> と、区切りの <code>,</code> です。その次の <code>", "</code> は、区切りの <code>,</code> です。最後の <code>")"</code> で、<code>VALUES</code> の丸括弧を閉じます。名前が「定規」なら、<code>VALUES ('定規', 180, 20)</code> という SQL ができあがります。（中略）は、写したコードと同じ2行です。値はもう SQL の中に入っているので、<code>setString</code>・<code>setInt</code> の3行はありません。</p>
+<p><code>Main</code> の④の行の名前を <code>"定規"</code> から <code>"Jim's Pen"</code> に変えて実行します。すると、間違いのほうは次のエラーになります。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">データベースのエラー: You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 's Pen', 180, 20)' at line 1</div>
+<svg class="fig" viewBox="0 0 720 235" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="20" y="28" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">+ でつないだとき（組み上がった SQL）</text>
+<text x="40" y="60" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">INSERT INTO products (name, price, stock)</text>
+<text x="40" y="90" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">VALUES ('Jim's Pen', 180, 20)</text>
+<rect x="106" y="96" width="41" height="5" fill="#047857"/>
+<rect x="149" y="96" width="130" height="5" fill="#b91c1c"/>
+<text x="400" y="72" font-size="13" text-anchor="start" fill="#047857" font-weight="bold">'Jim' までが名前（文字列）と読まれる</text>
+<text x="400" y="94" font-size="13" text-anchor="start" fill="#b91c1c" font-weight="bold">s Pen', 180, 20) が SQL の続きとして読まれる</text>
+<text x="400" y="116" font-size="13" text-anchor="start" fill="#b91c1c">→ 意味が通らず、エラー</text>
+<line x1="20" y1="148" x2="700" y2="148" stroke="#cbd5e1" stroke-width="1"/>
+<text x="20" y="176" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">? を使ったとき</text>
+<text x="40" y="206" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">VALUES (?, ?, ?)</text>
+<text x="215" y="206" font-size="13" text-anchor="start" fill="#047857" font-weight="bold">setString(1, "Jim's Pen") の ' は、値の中のただの文字</text>
+</svg><p class="figcap">+ でつなぐと、値の中の ' が SQL の一部になってしまう</p><p>組み上がる SQL は、<code>VALUES ('Jim's Pen', 180, 20)</code> です。MySQL は、名前の中の <code>'</code> を、文字列の終わりだと読みました。<code>near 's Pen', 180, 20)'</code> は、「このあたりが SQL として読めない」という意味です。名前が「定規」のときは、エラーが出ません。<strong><code>'</code> を含む名前が来た日に、初めて壊れます。</strong></p>
+<p><code>'</code> を含む文字をわざと入れて、SQL の形を書き換える攻撃があります。これを、<strong>SQLインジェクション</strong>と言います。写したコードのとおり <code>?</code> と <code>setString</code> で渡せば、<code>Jim's Pen</code> もそのまま入ります。</p>
+<div class="words"><b>ここで出た言葉</b><span><b>SQLインジェクション</b>　入力欄に <code>'</code> などを含む文字を入れて、SQL の形を書き換えてしまう攻撃。SQL を <code>+</code> でつないで作ると、この穴ができます</span></div>
+<div class="trap"><strong>SQL を <code>+</code> でつないで作りません。</strong>値は必ず <code>?</code> で渡します。</div>
+<h2>3　更新する・削除する（⑥）</h2>
+<p class="fname">ProductDao.java（抜き出し）</p>
+<pre class="code" id="c22">    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(Product p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";   <span class="cm">// <span class="cn">⑥</span> WHERE</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());   <span class="cm">// <span class="cn">⑥</span> 4つ目は WHERE の ?</span>
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";   <span class="cm">// <span class="cn">⑥</span> WHERE</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }</pre>
+<div class="line-block"><pre class="code" id="c23">public int update(Product p) throws SQLException {</pre>
+<p><code>update</code> は、商品を書き換えて、変わった行数を返すメソッドです。引数の <code>Product p</code> は、書き換えたあとの商品です。どの行を変えるかは、<code>p</code> の <code>id</code> で決めます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c24">String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";   <span class="cm">// <span class="cn">⑥</span> WHERE</span></pre>
+<p>⑥の SQL の <code>UPDATE products</code> は、「<code>products</code> の表の行を書き換える」という意味です。<code>SET name = ?, price = ?, stock = ?</code> は、書き換える列と、その新しい値の空欄です。<code>WHERE id = ?</code> は、どの行を変えるかを決める条件です。<code>?</code> は、<code>SET</code> に3つ、<code>WHERE</code> に1つで、合わせて4つです。</p>
+</div>
+<svg class="fig" viewBox="0 0 720 140" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="20" y="34" font-size="15" font-family="Consolas,monospace" fill="#1f2933" xml:space="preserve">UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?</text>
+<text x="246" y="62" font-size="15" text-anchor="middle" fill="#1d4ed8" font-weight="bold">1</text>
+<text x="337" y="62" font-size="15" text-anchor="middle" fill="#1d4ed8" font-weight="bold">2</text>
+<text x="428" y="62" font-size="15" text-anchor="middle" fill="#1d4ed8" font-weight="bold">3</text>
+<text x="535" y="62" font-size="15" text-anchor="middle" fill="#b91c1c" font-weight="bold">4</text>
+<text x="246" y="82" font-size="12" text-anchor="middle" fill="#64748b">name</text>
+<text x="337" y="82" font-size="12" text-anchor="middle" fill="#64748b">price</text>
+<text x="428" y="82" font-size="12" text-anchor="middle" fill="#64748b">stock</text>
+<text x="535" y="82" font-size="12" text-anchor="middle" fill="#b91c1c">id</text>
+<text x="20" y="118" font-size="13" text-anchor="start" fill="#1f2933">SET に3つ、WHERE に1つで、? は4つ。番号は SQL に出てくる順に1から数える</text>
+</svg><p class="figcap">4つ目は WHERE の ?。ps.setInt(4, p.getId()) で入れる</p><div class="line-block"><pre class="code" id="c25">try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+     PreparedStatement ps = con.prepareStatement(sql)) {
+    ps.setString(1, p.getName());
+    ps.setInt(2, p.getPrice());
+    ps.setInt(3, p.getStock());</pre>
+<p><code>try</code> の2行で、つないで <code>con</code> に入れ、⑥の <code>sql</code> を持った <code>ps</code> を作ります。解説1と同じです。続く3行で、1つ目に名前、2つ目に価格、3つ目に在庫を入れます。ここまでは <code>insert</code> と同じ形です。</p>
+</div>
+<div class="line-block"><pre class="code" id="c26">ps.setInt(4, p.getId());   <span class="cm">// <span class="cn">⑥</span> 4つ目は WHERE の ?</span>
+return ps.executeUpdate();</pre>
+<p>⑥の <code>ps.setInt(4, p.getId());</code> で、4つ目の <code>?</code> に <code>id</code> を入れます。4つ目は、<code>WHERE</code> の <code>?</code> です。<code>return ps.executeUpdate();</code> で実行し、変わった行数を返します。</p>
+</div>
+<div class="line-block"><pre class="code" id="c27">public int delete(int id) throws SQLException {</pre>
+<p><code>delete</code> は、商品を1つ消して、変わった行数を返すメソッドです。引数の <code>int id</code> は、消す商品の ID です。</p>
+</div>
+<div class="line-block"><pre class="code" id="c28">String sql = "DELETE FROM products WHERE id = ?";   <span class="cm">// <span class="cn">⑥</span> WHERE</span></pre>
+<p>⑥の <code>DELETE FROM products</code> は、「<code>products</code> の表から行を消す」という意味です。<code>WHERE id = ?</code> で、どの行を消すかを決めます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c29">try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+     PreparedStatement ps = con.prepareStatement(sql)) {
+    ps.setInt(1, id);
+    return ps.executeUpdate();
+}</pre>
+<p><code>try</code> の2行は、解説1と同じです。<code>ps.setInt(1, id);</code> で、1つだけの <code>?</code> に、消す商品の ID を入れます。<code>return ps.executeUpdate();</code> で実行し、消えた行数を返します。</p>
+</div>
+<p><strong>よくある間違い：WHERE を書き忘れる。</strong><code>update</code> の SQL から <code>WHERE id = ?</code> を消した形です。<code>?</code> が3つになったので、4つ目を入れる行も消しています。</p>
+<p class="fname">ProductDao.java の update（間違いあり）</p>
+<pre class="code" id="c30">        String sql = "UPDATE products SET name = ?, price = ?, stock = ?";   <span class="cm">// WHERE が無い</span>
+            <span class="cm">// （中略）</span>
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            <span class="cm">// 4つ目の ? に id を入れる行は消した</span></pre>
+<p><code>sql</code> の <code>SET</code> のあとに、<code>WHERE id = ?</code> がありません。（中略）は、つないで、送る道具を作る2行で、写したコードと同じです。<code>setString</code> と <code>setInt</code> の3行で、1つ目に名前、2つ目に価格、3つ目に在庫を入れます。最後のメモの所に、<code>ps.setInt(4, p.getId());</code> の行がありました。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">追加: 1件
+更新: 4件
+削除: 1件
+--- いまの商品 ---
+1 / ノート / 220円 / 残り5個
+2 / ノート / 220円 / 残り5個
+4 / ノート / 220円 / 残り5個</div>
+<p>エラーは出ません。<strong>WHERE の無い UPDATE は、表の全部の行が対象</strong>になります。「更新: 4件」は、そのときの表の4行が、すべて書き換わったという意味です。どの商品も、ノートの名前・価格・在庫で上書きされました。元の値はこのプログラムのどこにも残っていないので、プログラムからは戻せません。DELETE で WHERE を忘れると、全部の行が消えます。UPDATE と DELETE を書いたら、実行する前に WHERE があるかを目で確かめます。</p>
+<div class="trap">WHERE を戻して、<code>ps.setInt(4, p.getId());</code> を書き忘れた場合です。「データベースのエラー: No value specified for parameter 4」と表示されます。4つ目の <code>?</code> に値が入っていない、という意味です。そこから先は実行されません。</div>
+<p><strong>よくある間違い：戻り値を見ない。</strong><code>delete</code> の戻り値を受け取らずに、「削除しました」と表示した形です。消す ID は、無い 9 にしています。</p>
+<p class="fname">Main.java の削除の所（間違いあり）</p>
+<pre class="code" id="c31">            dao.delete(9);   <span class="cm">// 戻り値を見ていない</span>
+            System.out.println("削除しました");</pre>
+<p><code>dao.delete(9);</code> の <code>9</code> は、表に無い ID です。戻り値（消えた行数）は、受け取っていません。次の行は、どんなときでも「削除しました」と表示します。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">追加: 1件
+更新: 1件
+削除しました
+--- いまの商品 ---
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り5個
+3 / 消しゴム / 100円 / 残り50個
+4 / 定規 / 180円 / 残り20個</div>
+<p>「削除しました」と出たのに、一覧は4件のままです。<strong>当てはまる行が無くても、エラーにはなりません。</strong><code>executeUpdate()</code> が <code>0</code> を返すだけです。戻り値を受け取って、<code>0</code> かどうかで分けます。</p>
+<p class="fname">Main.java の削除の所（直したもの）</p>
+<pre class="code" id="c32">            int deleteId = 9;                                                   <span class="cm">// 足した行</span>
+            n = dao.delete(deleteId);                                           <span class="cm">// 変えた行</span>
+            if (n == 0) {                                                       <span class="cm">// 足した行</span>
+                System.out.println("ID " + deleteId + " の商品はありません");   <span class="cm">// 足した行</span>
+            } else {                                                            <span class="cm">// 足した行</span>
+                System.out.println("削除: " + n + "件");                        <span class="cm">// 足した行</span>
+            }                                                                   <span class="cm">// 足した行</span></pre>
+<p><code>int deleteId = 9;</code> で、消す ID の 9 を <code>deleteId</code> に入れます。<code>dao.delete(deleteId)</code> を呼び、戻り値（消えた行数）を <code>n</code> で受け取ります。<code>if (n == 0)</code> は、1行も消えなかったときで、無かった ID を表示します。<code>else</code> から下は消えたときで、「削除: 1件」の形で件数を表示します。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">追加: 1件
+更新: 1件
+ID 9 の商品はありません
+--- いまの商品 ---
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り5個
+3 / 消しゴム / 100円 / 残り50個
+4 / 定規 / 180円 / 残り20個</div>
+<h2>4　読んで、変えて、書き戻す（⑦⑧）</h2>
+<p class="fname">Main.java（抜き出し）</p>
+<pre class="code" id="c33">    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+
+        try {
+            <span class="cm">// （中略）</span>
+            int noteId = 2;                        <span class="cm">// <span class="cn">⑦</span> ノートの ID</span>
+            Product note = dao.findById(noteId);   <span class="cm">// <span class="cn">⑦</span> 読んで</span>
+            note.setStock(5);                      <span class="cm">// <span class="cn">⑦</span> 在庫を5個に変えて</span>
+            n = dao.update(note);                  <span class="cm">// <span class="cn">⑦</span> 書き戻す</span>
+            System.out.println("更新: " + n + "件");
+            <span class="cm">// （中略）</span>
+        } catch (SQLException e) {   <span class="cm">// <span class="cn">⑧</span> 受け止める</span>
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }</pre>
+<div class="line-block"><pre class="code" id="c34">public static void main(String[] args) {
+    ProductDao dao = new ProductDao();</pre>
+<p><code>main</code> は、実行したときに最初に動くメソッドです。最初に <code>new ProductDao()</code> で <code>ProductDao</code> の実物を作り、<code>dao</code> に入れます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c35">try {
+    <span class="cm">// （中略）</span>
+    int noteId = 2;                        <span class="cm">// <span class="cn">⑦</span> ノートの ID</span>
+    Product note = dao.findById(noteId);   <span class="cm">// <span class="cn">⑦</span> 読んで</span>
+    note.setStock(5);                      <span class="cm">// <span class="cn">⑦</span> 在庫を5個に変えて</span>
+    n = dao.update(note);                  <span class="cm">// <span class="cn">⑦</span> 書き戻す</span>
+    System.out.println("更新: " + n + "件");</pre>
+<p><code>try</code> の中で <code>SQLException</code> が起きると、⑧の <code>catch</code> に飛びます。最初の（中略）は、④の追加の2行です。</p>
+<p>⑦は、今の値を読んで、在庫だけを変えて、書き戻す所です。<code>noteId</code> の <code>2</code> は、ノートの ID です。②の SQL で入れた3件は、1 がボールペン、2 がノート、3 が消しゴムです。<code>dao.findById(noteId)</code> で ID 2 の商品を読み、<code>note</code> に入れます。</p>
+<p><code>note.setStock(5);</code> の <code>5</code> は、ノートの新しい在庫数です。今の10個を、5個に変えます。<code>setStock</code> が変えるのは Java の中の <code>note</code> だけで、表はまだ変わっていません。</p>
+<p><code>dao.update(note)</code> で、変えた <code>note</code> を表に書き戻し、行数を <code>n</code> に入れます。次の行で、「更新: 1件」と表示します。実行結果の「2 / ノート / 220円 / 残り5個」が、この書き換えの結果です。</p>
+<p><strong>なぜ先に読むのか。</strong><code>update</code> は <code>Product</code> を丸ごと受け取り、名前・価格・在庫の全部を書くからです。先に読んでおけば、変えたくない所は今の値のまま書き戻せます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c36">    <span class="cm">// （中略）</span>
+} catch (SQLException e) {   <span class="cm">// <span class="cn">⑧</span> 受け止める</span>
+    System.out.println("データベースのエラー: " + e.getMessage());
+}</pre>
+<p>2つ目の（中略）は、削除と、いまの商品の一覧を表示する所です。</p>
+<p>⑧の <code>catch (SQLException e)</code> で、MySQL とのやりとりで起きた失敗を受け止めます。<code>e.getMessage()</code> で理由の文を取り出し、「データベースのエラー: 」の後ろにつないで表示します。</p>
+<p><code>ProductDao</code> のメソッドは、失敗を <code>throws SQLException</code> で呼んだ側に任せています。それを、<code>Main</code> が受け止めます。<code>ProductDao</code> の中で受け止めて何もしないと、呼んだ側は失敗に気づけません（第9回の握りつぶし）。失敗をどう伝えるかは、使う側が決めます。</p>
+</div>
+</div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>PreparedStatementはどこに値を渡す？</h2><p>SQLの <code>?</code> は何のために使う？ また <code>executeUpdate()</code> は何を返す？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>SQLの <code>?</code> に <code>setInt</code> や <code>setString</code> で値を安全に渡す。<code>executeUpdate()</code> は追加・更新・削除などで影響を受けた行数を返す。</p></details></div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①で在庫の少ない商品が表示できたら、今日の目的は達成です。</strong></p>
+<p>始める前に、②の SQL を実行して、最初の3件に戻してください。</p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　<code>ProductDao</code> に、在庫が <code>max</code> 個以下の商品を ID の順に返す <code>findByMaxStock(int max)</code> を足す。<code>LowStockMain</code> で、在庫が30個以下の商品を表示する。第11回の自力①では 30 を SQL に直接書きました。今日は <code>?</code> で受け取ります。</li><li>②　<code>DeleteMain</code> で、キーボードから受け取った ID の商品を削除する。先に <code>findById</code> で探し、無ければ知らせる。あれば表示してから削除し、変わった行数を表示する。</li></ul>
+<h2>骨組み</h2>
+<p>3つのファイルの全体です。<code>// ここに…</code> の所を書きます。<code>ProductDao</code> は、②で写したものの最後に <code>findByMaxStock</code> を足します。</p>
+<p><code>LowStockMain</code>・<code>DeleteMain</code> は、貼った直後は <code>catch</code> の行に赤い印が出ます（「SQLException の到達不可能な catch ブロック。この例外は、try ステートメント本文からはスローされません」）。<code>try</code> の中にメソッドを呼ぶ行を書くと消えます。</p>
+<p class="fname">ProductDao.java（findByMaxStock を足す）</p>
+<pre class="code" id="c37">package lesson12;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                     rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public Product findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Product(rs.getInt("id"), rs.getString("name"),
+                                       rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(Product p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(Product p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 在庫が max 個以下の商品を、ID の順に返す（自力<span class="cn">①</span>で足す）</span>
+    public List&lt;Product&gt; findByMaxStock(int max) throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        <span class="cm">// ここに SQL を書く（在庫が ? 以下、ID の順）</span>
+        <span class="cm">// ここに try-with-resources を書き、? に max を入れて実行し、1行ずつ list に足す</span>
+        return list;
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c37">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c38">package lesson12;
+
+import java.sql.SQLException;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+
+        try {
+            System.out.println("在庫が30個以下の商品");
+            <span class="cm">// ここで findByMaxStock(30) を呼び、拡張for文で1つずつ show() する</span>
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c38">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">DeleteMain.java</p>
+<pre class="code" id="c39">package lesson12;
+
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class DeleteMain {
+    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+        Scanner sc = new Scanner(System.in);
+        System.out.println("削除する商品の ID を入力してください");
+        int id = Integer.parseInt(sc.nextLine());
+
+        try {
+            <span class="cm">// ここで findById(id) を呼ぶ</span>
+            <span class="cm">// 無ければ「ID 9 の商品はありません」の形で表示する</span>
+            <span class="cm">// あれば show() で表示してから delete(id) を呼び、「1件削除しました」の形で表示する</span>
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+        sc.close();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c39">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">在庫が30個以下の商品
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+
+削除する商品の ID を入力してください
+3 / 消しゴム / 100円 / 残り50個
+1件削除しました
+
+削除する商品の ID を入力してください
+ID 9 の商品はありません</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①の SQL は、<code>findById</code> の SQL の <code>WHERE id = ?</code> を <code>WHERE stock &lt;= ?</code> に変え、最後に <code>ORDER BY id</code> を付けます。組み立ても <code>findById</code> と同じ形です。<code>if (rs.next())</code> を <code>while (rs.next())</code> にして、<code>return</code> する代わりに <code>list.add(...)</code> します。</li><li>②　②は、解説1と同じく、<code>findById</code> の戻り値が <code>null</code> かどうかを <code>==</code> で確かめてから使います。</li><li>③　②の実行結果は、上が <code>3</code>、下が <code>9</code> を入力したときのものです。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第12回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　findByMaxStock</summary><div class="sol">
+<p class="fname">ProductDao.java</p>
+<pre class="code" id="c40">package lesson12;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDao {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;Product&gt; findAll() throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                     rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public Product findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Product(rs.getInt("id"), rs.getString("name"),
+                                       rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(Product p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(Product p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 在庫が max 個以下の商品を、ID の順に返す（自力<span class="cn">①</span>で足す）</span>
+    public List&lt;Product&gt; findByMaxStock(int max) throws SQLException {
+        List&lt;Product&gt; list = new ArrayList&lt;&gt;();
+        <span class="cm">// ここに SQL を書く（在庫が ? 以下、ID の順）</span>
+        String sql = "SELECT id, name, price, stock FROM products WHERE stock &lt;= ? ORDER BY id";
+        <span class="cm">// ここに try-with-resources を書き、? に max を入れて実行し、1行ずつ list に足す</span>
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, max);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Product(rs.getInt("id"), rs.getString("name"),
+                                         rs.getInt("price"), rs.getInt("stock")));
+                }
+            }
+        }
+        return list;
+    }
+}</pre>
+<p class="fname">LowStockMain.java</p>
+<pre class="code" id="c41">package lesson12;
+
+import java.sql.SQLException;
+
+public class LowStockMain {
+    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+
+        try {
+            System.out.println("在庫が30個以下の商品");
+            <span class="cm">// ここで findByMaxStock(30) を呼び、拡張for文で1つずつ show() する</span>
+            for (Product p : dao.findByMaxStock(30)) {
+                p.show();
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">在庫が30個以下の商品
+1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個</div>
+<div class="note">在庫がちょうど30個のボールペンも入っています。<code>&lt;=</code> は「以下」で、その数も含みます。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　入力した ID の商品を削除する</summary><div class="sol">
+<p class="fname">DeleteMain.java</p>
+<pre class="code" id="c42">package lesson12;
+
+import java.sql.SQLException;
+import java.util.Scanner;
+
+public class DeleteMain {
+    public static void main(String[] args) {
+        ProductDao dao = new ProductDao();
+        Scanner sc = new Scanner(System.in);
+        System.out.println("削除する商品の ID を入力してください");
+        int id = Integer.parseInt(sc.nextLine());
+
+        try {
+            <span class="cm">// ここで findById(id) を呼ぶ</span>
+            Product p = dao.findById(id);
+            if (p == null) {
+                System.out.println("ID " + id + " の商品はありません");
+            } else {
+                p.show();
+                int n = dao.delete(id);
+                System.out.println(n + "件削除しました");
+            }
+        } catch (SQLException e) {
+            System.out.println("データベースのエラー: " + e.getMessage());
+        }
+        sc.close();
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">削除する商品の ID を入力してください
+3 / 消しゴム / 100円 / 残り50個
+1件削除しました
+
+削除する商品の ID を入力してください
+ID 9 の商品はありません</div>
+<div class="note">先に <code>findById</code> で確かめているので、無い ID のときは <code>delete</code> を呼んでいません。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li><code>?</code> を使う理由を、空欄のある注文書のたとえで説明できる</li><li><code>ps.setInt(4, p.getId())</code> の 4 が何を表すか、UPDATE の SQL を指して説明できる</li><li><code>executeUpdate()</code> が <code>0</code> を返すのはどんなときか説明できる</li><li>UPDATE と DELETE に WHERE を書かないと何が起きるか説明できる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、DTO・DAO・3層です。</strong>今日の <code>ProductDao</code> と <code>Main</code> の間に、値の検査を受け持つ <code>ProductService</code> を置きます。あわせて、<code>Product</code> を <code>ProductDTO</code>、<code>ProductDao</code> を <code>ProductDAO</code> という名前に変えます。</p></div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>PreparedStatement</td><td>ぷりぺあど すてーとめんと</td><td>SQL の形を先に決め、値を入れる所を <code>?</code> で空けておいて送る道具。<code>con.prepareStatement(sql)</code> で作ります</td></tr><tr><td>?（プレースホルダ）</td><td>ぷれーすほるだ</td><td>SQL の中の「ここに値が入る」という空欄。番号は SQL に出てくる順に1から数えます</td></tr><tr><td>setInt / setString</td><td>せっといんと / せっとすとりんぐ</td><td><code>?</code> に値を入れるメソッド。<code>ps.setInt(1, id)</code> は「1つ目の <code>?</code> に <code>id</code> を入れる」</td></tr><tr><td>executeUpdate()</td><td>えぐぜきゅーと あっぷでーと</td><td>INSERT・UPDATE・DELETE を実行するメソッド。変わった行数を <code>int</code> で返します</td></tr><tr><td>executeQuery()</td><td>えぐぜきゅーと くえり</td><td>SELECT を実行するメソッド。結果の表（<code>ResultSet</code>）を返します（第11回）</td></tr><tr><td>ResultSet</td><td>りざるとせっと</td><td>SELECT の結果の表。<code>rs.next()</code> で1行ずつ進みます（第11回）</td></tr><tr><td>INSERT</td><td>いんさーと</td><td>表に行を追加する SQL。<code>INSERT INTO products (name, price, stock) VALUES (?, ?, ?)</code></td></tr><tr><td>UPDATE</td><td>あっぷでーと</td><td>表の行を書き換える SQL。<code>UPDATE products SET stock = ? WHERE id = ?</code></td></tr><tr><td>DELETE</td><td>でりーと</td><td>表の行を消す SQL。<code>DELETE FROM products WHERE id = ?</code></td></tr><tr><td>WHERE</td><td>うぇあ</td><td>SQL で、対象にする行の条件。書かないと全部の行が対象になります</td></tr><tr><td>AUTO_INCREMENT</td><td>おーと いんくりめんと</td><td>行を追加するたびに、MySQL が <code>id</code> を 1, 2, 3… と自動で振る設定。消した番号は使い回されません</td></tr><tr><td>変わった行数</td><td>かわったぎょうすう</td><td><code>executeUpdate()</code> の戻り値。当てはまる行が無ければ <code>0</code> で、エラーにはなりません</td></tr><tr><td>SQLインジェクション</td><td>えすきゅーえる いんじぇくしょん</td><td>入力に <code>'</code> などを含めて、SQL の形を書き換えてしまう攻撃。<code>?</code> で値を渡せば防げます</td></tr><tr><td>SQLException</td><td>えすきゅーえる えくせぷしょん</td><td>MySQL とのやり取りで失敗したときの例外。検査例外です（第10回）</td></tr><tr><td>try-with-resources</td><td>とらい うぃず りそーしず</td><td><code>try (...)</code> の丸括弧の中で開いたものを、終わったときに自動で閉じる書き方</td></tr><tr><td>null</td><td>ぬる</td><td>「どの実物も指していない」ことを表す値。<code>findById</code> は、無ければこれを返します</td></tr><tr><td>NullPointerException</td><td>ぬる ぽいんたー えくせぷしょん</td><td><code>null</code> に対してメソッドを呼んだときの例外（第9回）</td></tr><tr><td>Connector/J</td><td>こねくた じぇい</td><td>Java から MySQL につなぐための部品。<code>mysql-connector-j-8.4.0.jar</code> をビルド・パスに入れて使います</td></tr></table></details>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 12 回 ／ 全 22 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
