@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Javaが初めての人へ | Java学習教材</title>
+<style>
+:root{--accent:#e76f00;--ink:#1e293b;--muted:#5b687a}*{box-sizing:border-box}
+html{scroll-behavior:smooth}body{background:#f1f5f9;color:var(--ink);font:16px/1.85 "Segoe UI",Meiryo,sans-serif;margin:0}
+.wrap{max-width:900px;padding:0 18px;margin:0 auto}
+header{background:#fff;border-bottom:4px solid var(--accent);padding:24px 0}
+nav a{color:#a44f0a;font-weight:750}nav{font-size:.87rem}
+h1{font-size:clamp(1.6rem,4vw,2.25rem);line-height:1.4;margin:12px 0}
+header p{color:var(--muted);margin:0;max-width:720px}
+main{padding-top:24px;padding-bottom:45px}
+.card{border:1px solid #dce3ed;background:#fff;border-radius:12px;padding:22px;margin-bottom:17px;box-shadow:0 1px 4px #1f293714}
+.card h2{font-size:1.13rem;border-left:6px solid #c95400;background:#fff4e5;padding:7px 12px;margin:0 0 14px}
+.note{background:#fff6e9;border-left:5px solid var(--accent);padding:14px 17px;border-radius:8px}
+pre{background:#1e1e2e;color:#f8fafc;line-height:1.7;padding:16px;white-space:pre;overflow-x:auto;border-radius:9px;font-size:14px;font-family:Consolas,monospace;max-width:100%}
+code{background:#f1f5f9;border-radius:4px;padding:2px 5px;font-family:Consolas,monospace;overflow-wrap:anywhere}
+pre code{background:none;padding:0;color:inherit}
+details{border:1px solid #dae2ec;border-radius:9px;margin:9px 0;background:#f9fbff}
+summary{cursor:pointer;padding:11px 13px;font-weight:750;color:#28517e}
+details p,details ol{padding:0 14px 8px;margin-top:0}
+a:focus-visible,summary:focus-visible{outline:3px solid #b25b09;outline-offset:3px}
+.btn{display:inline-block;background:#b45204;color:#fff;border-radius:9px;padding:12px 20px;text-decoration:none;font-weight:750}
+.btn:hover{background:#853e07}
+.diagram{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:17px 0}
+.diagram span{display:inline-block;background:#fff4de;border:1px solid #edc18b;border-radius:9px;padding:9px 13px;font-size:.87rem;font-weight:700}
+.diagram b{color:#a24c09}
+.muted{color:var(--muted)}
+@media(max-width:550px){.wrap{padding:0 11px}.card{padding:15px}pre{font-size:12px;padding:12px}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style></head><body>
+<header><div class="wrap"><nav><a href="index.html">← 講義一覧</a>　/　初めてのJava</nav>
+<h1>Javaを初めて学ぶ人へ</h1><p>第2回へ進む前に知っておくと困らない、最小限の知識だけ。すでに分かる項目は読み飛ばして大丈夫です。</p></div></header>
+<main class="wrap">
+<div class="note"><strong>ここでのゴール</strong>：Javaのプログラムを1つ動かし、<code>main</code>、<code>System.out.println</code>、<code>{ }</code>、<code>;</code> の役割を説明できるようになる。</div>
+<section class="card"><h2>① Javaのプログラムはどう動く？</h2>
+<p>Javaは、書いた命令をそのまま文章として読むのではなく、コンピュータが実行できる形に変換してから動かします。</p>
+<div class="diagram" aria-label="実行の流れ"><span>Javaを書く</span><b>→</b><span>コンパイルする</span><b>→</b><span>実行する</span><b>→</b><span>結果が出る</span></div>
+<p>最初は「命令を書く → 実行する → 結果を確かめる」の繰り返しだと考えれば十分。JVMなど細かな仕組みは必要になってから覚えよう。</p></section>
+<section class="card"><h2>② まずこのコードだけ読めればOK</h2>
+<p>Eclipseで<code>Main</code>というJavaクラスを作り、次のコードを入力します。</p>
+<pre><code>public class Main {
+    public static void main(String[] args) {
+        System.out.println("こんにちは");
+    }
+}</code></pre>
+<p>実行結果：<strong>こんにちは</strong></p>
+<details><summary>public class Main は何？</summary><p><code>Main</code>はクラスの名前。クラスは処理やデータをまとめる単位です。今は「このファイルにMainというJavaのプログラムを置いている」と思えばOK。ファイル名は<code>Main.java</code>にします。</p></details>
+<details><summary>public static void main(String[] args) は何？</summary><p>Javaの実行を始める入口となるメソッド（処理）です。最初は形を覚えるだけで大丈夫。引数・戻り値・staticは後の講義で理由を学びます。</p></details>
+<details><summary>System.out.println は何？</summary><p>カッコ内に書いた文字や数値をコンソールに表示します。文字列は<code>" "</code>で囲みます。表示したら自動で改行されます。</p></details>
+<details><summary>{ } と ; は何？</summary><p><code>{ }</code>は処理のまとまりを囲みます。<code>;</code>は命令文の終わりに付ける印です。最初はカッコやセミコロンの付け忘れでエラーになりやすいので、同じ場所にあるか確認しましょう。</p></details>
+</section>
+<section class="card"><h2>③ Eclipseで動かす最短の手順</h2>
+<ol><li>Javaプロジェクトを作成する。</li><li><code>src</code>を右クリックして新規クラス<code>Main</code>を作る。パッケージを指定している場合は、その設定を維持してOK。</li><li><code>Main.java</code>に上のコードを入力して保存。</li><li>実行ボタンまたは<code>Ctrl+F11</code>で実行。コンソールに<strong>こんにちは</strong>が表示されたら成功。</li></ol>
+<p class="muted">クラスにすでに<code>package ...;</code>の行がある場合は、削除せずその下へ書きます。学校のEclipse設定によってメニュー名は少し異なります。</p>
+</section>
+<section class="card"><h2>④ 最初によくあるエラー</h2>
+<details><summary>「; が必要です」と出る</summary><p><code>System.out.println("こんにちは")</code>の最後に<code>;</code>があるか確認。エラーは原因の行の近くで表示されることがあります。</p></details>
+<details><summary>Mainとファイル名が合わない</summary><p><code>public class Main</code>は<code>Main.java</code>に保存します。クラス名とファイル名の大文字・小文字を合わせます。</p></details>
+<details><summary>画面に結果が出ない</summary><p>コンソールを確認します。実行したい<code>Main</code>を選択できているか、赤いエラー表示がないかも見ます。</p></details>
+</section>
+<section class="card"><h2>⑤ 分かったか試そう</h2>
+<p>次のコードにすると、何が表示されるでしょう？</p>
+<pre><code>System.out.println(1 + 2);</code></pre>
+<details><summary>答えと理由を見る</summary><p><strong>3</strong>。整数どうしの<code>+</code>は足し算。<code>System.out.println</code>が計算結果を表示します。</p></details>
+<p>ここまで理解できれば第2回へ進めます。分からなくても、第2回の「基礎から理解」から必要な説明を見られます。</p>
+<a class="btn" href="lesson02.html?learn=guided">第2回を基礎から学ぶ →</a>
+</section></main></body></html>
