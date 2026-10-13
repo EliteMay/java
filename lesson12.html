@@ -142,6 +142,7 @@
 <div class="card"><div class="card-title">今日できるようになること</div><ul><li><code>?</code> と <code>setInt</code>・<code>setString</code> で、値を SQL に渡せる</li><li><code>ProductDao</code> に、1つ探す・追加・更新・削除のメソッドを書ける</li><li><code>executeUpdate()</code> の戻り値（変わった行数）で、うまくいったかを確かめられる</li></ul></div>
 </div>
 <aside class="card concept-guide" aria-label="関連するつまずき解説"><div class="card-title">ここで迷ったら</div><p><a href="concepts/preparedstatement.html">PreparedStatementと更新処理を詳しく読む →</a></p><p class="concept-small">コードの動きと間違えやすい点を別ページで確認できます。分かる場合は飛ばしてOK。</p></aside>
+<aside class="card mysql-class-settings"><div class="card-title">授業PCのMySQL接続設定</div><p><strong>ポート：<code>65534</code> ／ ユーザー：<code>root</code> ／ 学習用パスワード：<code>pass</code></strong></p><p>接続先：<code>jdbc:mysql://localhost:65534/stock</code>。コマンドから接続する場合は <code>mysql --protocol=TCP -h 127.0.0.1 -P 65534 -u root -p</code>（入力するパスワードは <code>pass</code>）。</p><p class="config-note">この値は授業用の例です。実際のサービスでは公開コードにパスワードを保存しないでください。接続前にMySQL起動とJDBCドライバの追加も必要です。</p></aside>
 <div class="card"><div class="card-title">① 今日の主役</div>
 <h2>Java での意味</h2>
 <table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>PreparedStatement</td><td>値を入れる所を <code>?</code> にした SQL を先に用意し、あとから <code>setInt</code>・<code>setString</code> などで値を入れて実行するための仕組み（<code>java.sql</code>）。入れた値は SQL の文ではなく値として扱われます。<code class="ex">String sql = "DELETE FROM products WHERE id = ?";
@@ -229,11 +230,11 @@ DELETE FROM products WHERE id = ?</code></td></tr></table>
 <p>今日は新しいプロジェクト <code>lesson12</code> に、クラスを3つ作ります。</p>
 <p>始める前に、MySQL が動いているかを確かめます。Windows キーを押して「サービス」と入力して開き、<code>MySQL80</code>（8.4 を入れた PC は <code>MySQL84</code>）の状態が「実行中」なら、そのまま進みます。空欄なら、右クリック →［開始］を押します。</p>
 <h2>Eclipse の手順</h2>
-<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson12</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson12</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］。講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーに［参照ライブラリー］ができ、その中に jar が入ったことを確かめる</td></tr><tr><td>⑤</td><td><code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑥</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson12</code> と入っていることを確かめて［完了］（空なら <code>lesson12</code> と入力する）</td></tr><tr><td>⑦</td><td>⑤⑥をもう2回行い、名前 <code>ProductDao</code> と <code>Main</code> のクラスを作る</td></tr><tr><td>⑧</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑨</td><td>コマンド プロンプトを開き、<code>mysql -u root -p</code> と入力して <code>Enter</code>。パスワードを入れ、<code>mysql&gt;</code> と出たら、下の全体像の「mysql に貼る SQL」を貼って <code>Enter</code> を押す。最後に3行の表が出れば準備ができている</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson12</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson12</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］。講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーに［参照ライブラリー］ができ、その中に jar が入ったことを確かめる</td></tr><tr><td>⑤</td><td><code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑥</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson12</code> と入っていることを確かめて［完了］（空なら <code>lesson12</code> と入力する）</td></tr><tr><td>⑦</td><td>⑤⑥をもう2回行い、名前 <code>ProductDao</code> と <code>Main</code> のクラスを作る</td></tr><tr><td>⑧</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑨</td><td>コマンド プロンプトを開き、<code>mysql --protocol=TCP -h 127.0.0.1 -P 65534 -u root -p</code> と入力して <code>Enter</code>。パスワードを入れ、<code>mysql&gt;</code> と出たら、下の全体像の「mysql に貼る SQL」を貼って <code>Enter</code> を押す。最後に3行の表が出れば準備ができている</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
 <p>⑨の SQL は、<code>products</code> 表を作り直して、最初の3件を入れます。何度実行しても同じ3件に戻ります。このあと試すたびに表の中身が変わるので、そのつど実行して戻します。</p>
 <h2>全体像</h2>
 <p>プロジェクトの中は、次の3つの Java ファイルです。どれも1行目は <code>package lesson12;</code> です。<code>ProductDao</code> には、<code>findAll</code>（全部読む）・<code>findById</code>（1つ探す）・<code>insert</code>（追加）・<code>update</code>（更新）・<code>delete</code>（削除）の5つのメソッドがあります。</p>
-<p><code>ProductDao</code> の <code>PASSWORD</code> は、授業で使うパスワードに合わせて変えてください。</p>
+<p><code>ProductDao</code> の <code>PASSWORD</code> は、この授業PCでは <code>pass</code> です（別のPCでは自分の設定値を使ってください）。</p>
 <p>下が、SQL と3つのファイルの中身の全部です。行の右にある ①〜⑧ は、③解説の番号です。</p>
 <svg class="fig" viewBox="0 0 720 315" role="img" xmlns="http://www.w3.org/2000/svg">
 <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
@@ -337,9 +338,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;Product&gt; findAll() throws SQLException {
@@ -797,9 +798,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;Product&gt; findAll() throws SQLException {
@@ -949,9 +950,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;Product&gt; findAll() throws SQLException {
