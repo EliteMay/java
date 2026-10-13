@@ -1614,9 +1614,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MemberDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     public List&lt;Member&gt; findAll() throws SQLException {
         List&lt;Member&gt; list = new ArrayList&lt;&gt;();
@@ -1665,9 +1665,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class CountDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     public int countAll() throws SQLException {
         String sql = "SELECT COUNT(*) AS cnt FROM products";
@@ -1761,9 +1761,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class PriceDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     public List&lt;Product&gt; findCheaper(int max) throws SQLException {
         List&lt;Product&gt; list = new ArrayList&lt;&gt;();
@@ -1809,7 +1809,7 @@ public class PriceMain {
 </div>
 </div>
 <div class="card" id="q12"><div class="card-title">第 12 回　PreparedStatement で追加・更新・削除</div>
-<p>新しいプロジェクト <code>quiz12</code> を作って解きます（授業の <code>lesson12</code> にも <code>Product</code> や <code>ProductDao</code> があるため、分けます）。授業の②の手順④と同じく、<code>mysql-connector-j-8.4.0.jar</code> をビルド・パスに追加してください。どのファイルも1行目は <code>package quiz12;</code> です。<code>PASSWORD</code> は、授業で使うパスワードに合わせて変えてください。</p>
+<p>新しいプロジェクト <code>quiz12</code> を作って解きます（授業の <code>lesson12</code> にも <code>Product</code> や <code>ProductDao</code> があるため、分けます）。授業の②の手順④と同じく、<code>mysql-connector-j-8.4.0.jar</code> をビルド・パスに追加してください。どのファイルも1行目は <code>package quiz12;</code> です。<code>PASSWORD</code> は、この授業PCでは <code>pass</code> です。</p>
 <div class="step"><span class="step-id">12-1</span><h3>会員を追加し、ポイントを足す MemberDao</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
 <p>会員の表 <code>members</code> を使って、会員を追加する <code>insert</code> と、ポイントを足す <code>addPoint</code> を持つ <code>MemberDao</code> を作ります。授業の <code>ProductDao</code> と同じ形です。</p>
 <p>まず MySQL で次の SQL を実行して、会員の表を作ります。</p>
@@ -1860,9 +1860,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MemberDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の会員を読む</span>
     public List&lt;Member&gt; findAll() throws SQLException {
@@ -1988,9 +1988,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDao {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;Product&gt; findAll() throws SQLException {
@@ -2237,9 +2237,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDAO {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;ProductDTO&gt; findAll() throws SQLException {
@@ -2878,9 +2878,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProductDAO {
-    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
     private static final String USER = "root";
-    private static final String PASSWORD = "password";
+    private static final String PASSWORD = "pass";
 
     <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
     public List&lt;ProductDTO&gt; findAll() throws SQLException {
