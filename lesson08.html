@@ -320,9 +320,12 @@ public class Main {
 ID 2 : ノート</div>
 <p>この <code>Main</code> は、<code>List</code> と <code>Map</code> を両方使っています。<strong>順番に並べて全部見るときは <code>List</code>、名札で1つ引くときは <code>Map</code></strong> と、役割を分けています。</p>
 </div>
-<div class="card"><div class="card-title">③ 解説</div>
-<p>写したコードを、行の右の番号の順に説明します。説明する所のコードを、それぞれの頭に抜き出しています。よくある間違いも一緒に見ます。</p>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。迷った部分だけ「詳しく見る」を開いてください。</p>
 <h2>1　import（①）</h2>
+<p class="explain-brief"><code>List</code>や<code>Map</code>を使うには、必要な型を<code>import</code>する。</p>
+<p class="explain-mini"><code>import java.util.List;</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c3">import java.util.ArrayList;                                   <span class="cm">// <span class="cn">①</span> import</span>
 import java.util.HashMap;                                     <span class="cm">// <span class="cn">①</span> import</span>
@@ -330,7 +333,11 @@ import java.util.List;                                        <span class="cm">/
 import java.util.Map;                                         <span class="cm">// <span class="cn">①</span> import</span></pre>
 <p><strong>import</strong> は、「<code>java.util</code> という場所にある <code>ArrayList</code> を使います」という宣言です。</p>
 <p><strong>なぜ import が要るのか。</strong><code>List</code> や <code>Map</code> は Java に最初から用意されている部品ですが、<code>java.util</code> という別のパッケージにあります。宣言しないと Eclipse が見つけられず、赤い波線が出ます。［ソース］→［インポートの編成］（<code>Ctrl</code> + <code>Shift</code> + <code>O</code>）で自動で足せます。</p>
+</div></details>
 <h2>2　List を作って、商品を足す（②③）</h2>
+<p class="explain-brief"><code>ArrayList</code>は後から要素を追加できる。<code>add</code>で追加する。</p>
+<p class="explain-mini"><code>list.add(product);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c4">public static void main(String[] args) {
     List&lt;Product&gt; products = new ArrayList&lt;&gt;();           <span class="cm">// <span class="cn">②</span> List を作る</span>
@@ -364,7 +371,11 @@ public class Main {
 	at lesson08.Main.main(Main.java:9)</div>
 <p><code>new Product[3]</code> で作った配列には、<code>[0]</code> <code>[1]</code> <code>[2]</code> の3つしか場所がありません。<code>products[3]</code> に入れようとした9行目で、プログラムが止まります。エラー文の <code>Index 3 out of bounds for length 3</code> は「長さ3の配列に、3番は無い」という意味です。写経のコードのとおり <code>List</code> にすれば、4つ目も <code>add</code> を1行足すだけで入ります。</p>
 <div class="words"><b>ここで出た言葉</b><span><b><code>ArrayIndexOutOfBoundsException</code></b>　配列の範囲の外の番号を使ったときに出るエラー。このように実行中に止まるエラーの扱いは、次回扱います</span></div>
+</div></details>
 <h2>3　数える・取り出す・全部回す（④⑤）</h2>
+<p class="explain-brief"><code>size()</code>は件数、<code>get(0)</code>は先頭。順番に読むなら拡張for。</p>
+<p class="explain-mini"><code>for (Product p : list) { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c6">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
@@ -378,7 +389,11 @@ public class Main {
 <p><code>size()</code> は入っている数、<code>get(0)</code> は0番目を取り出します。配列の <code>length</code> と <code>[0]</code> に当たる操作です。<code>List</code> には <code>[ ]</code> が使えないので、メソッドで書きます。番号は配列と同じく0から始まり、最後は <code>size() - 1</code> 番です。</p>
 <p><code>products.get(0).getName()</code> は左から読み、<code>get(0)</code> で取り出した商品の <code>getName()</code> を呼んでいます。</p>
 <p>拡張for文は、第2回の配列と同じ書き方で、入れた順に1つずつ取り出します。<code>List</code> は入れた順番を覚えているので、表示も入れた順になります。</p>
+</div></details>
 <h2>4　Map を作る（⑥）</h2>
+<p class="explain-brief"><code>Map</code>はキーと値の組み合わせ。「ID → 商品」を保存できる。</p>
+<p class="explain-mini"><code>Map&lt;Integer, Product&gt; products;</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c7">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
@@ -450,7 +465,11 @@ public class Main {
 </svg><p class="figcap">名札の int は、包んだ形の Integer で書く</p><table><tr><th>基本データ型</th><th>包んだクラス（ラッパークラス）</th></tr><tr><td><code>int</code></td><td><code>Integer</code></td></tr><tr><td><code>double</code></td><td><code>Double</code></td></tr><tr><td><code>boolean</code></td><td><code>Boolean</code></td></tr><tr><td><code>char</code></td><td><code>Character</code></td></tr></table>
 <p>⑦の <code>byId.put(p.getId(), p)</code> では、<code>getId()</code> が返す <code>int</code> が自動で <code>Integer</code> に包まれます。<code>byId.get(2)</code> の <code>2</code> も同じです。この仕組みを<strong>オートボクシング</strong>と言います。</p>
 <div class="words"><b>ここで出た言葉</b><span><b>オートボクシング</b>　<code>int</code> と <code>Integer</code> を、Java が自動で包んだり戻したりする仕組み</span></div>
+</div></details>
 <h2>5　名札を付けて入れ、名札で引く（⑦）</h2>
+<p class="explain-brief"><code>put</code>はキーで登録・上書き。<code>get</code>で対応する値を取り出す。</p>
+<p class="explain-mini"><code>map.put(1, product); map.get(1);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">Main.java（抜き出し）</p>
 <pre class="code" id="c9">public static void main(String[] args) {
     <span class="cm">// （中略）</span>
@@ -492,6 +511,7 @@ public class StockMap {
 定規 : 残り20個</div>
 <p>5番目に入れたのりが、3番目に出ています。<code>HashMap</code> は名札で1つ引くための入れ物で、<strong>中の並び順は約束していません。</strong>エラーにはならないので、「たまたまこの順」を正しい順だと思い込みやすい所です。写経のコードが一覧表示に <code>List</code> を使っているのは、このためです。</p>
 <table><tr><th>やりたいこと</th><th>使うもの</th></tr><tr><td>入れた順に並べて、全部を見る</td><td><code>List</code></td></tr><tr><td>番号（何番目）で取り出す</td><td><code>List</code></td></tr><tr><td>名札（IDや商品名）で1つ引く</td><td><code>Map</code></td></tr></table>
+</div></details>
 </div>
 <div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>HashMapで数える</h2><p><code>count.put(item, +1);</code> を繰り返すと、件数が増える？</p><details class="quick-answer"><summary>答えと理由を見る</summary><p>増えない。毎回「1」で上書きされる。<code>count.getOrDefault(item, 0) + 1</code> など、今の件数に1を足す必要がある。</p></details></div>
 <div class="card"><div class="card-title">④ 自力で書く</div>
