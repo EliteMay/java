@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第15回｜UML とユースケース</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
+    table.symtab td { vertical-align:middle; }   /* UML の記号の表（2026-10-14） */
+    table.symtab td.sym-cell { width:176px; text-align:center; background:#fff; }
+    table.symtab td.sym-name { white-space:nowrap; font-weight:bold; }
+    svg.sym { display:block; margin:0 auto; width:164px; max-width:100%; height:auto; }   /* 絵の中の文字を本文に近い大きさにする */
+    .card h2.sym-h { border-left-color:#0f766e; }
+    table.mini { width:auto; margin:0 auto; font-size:.72rem; }
+    table.mini th, table.mini td { padding:.15rem .35rem; }
+    code.symcode { display:inline-block; text-align:left; white-space:pre; background:#f8fafc; font-size:.82rem; line-height:1.6; padding:.3em .5em; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}</style>
+<link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader-ux.css">
+<script defer src="reader.js"></script>
+<script defer src="reader-ux.js"></script>
+<link rel="stylesheet" href="learning-support.css">
+<script defer src="learning-support-data.js"></script>
+<script defer src="learning-support.js"></script>
+<link rel="stylesheet" href="concise-explanations.css">
+</head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container">
+<nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson14.html">前の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
+<header><span class="badge">第 15 回 ／ 全 22 回</span><h1>UML とユースケース</h1><p>第18章　開発の流れと UML ／ 第19章　ユースケース図 ／ ユースケース記述 ／ シナリオ</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">UML</span>　<span class="term">ユースケース</span>　<span class="term">ユースケース記述</span>　<span class="term">シナリオ</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>UML が、設計を図で表すための共通の描き方だと説明できる</li><li>商品在庫管理アプリのユースケース図を、4つの記号で描ける</li><li>1つのユースケースを、ユースケース記述とシナリオに書ける</li></ul></div>
+</div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>UML での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>UML</td><td>Unified Modeling Language（統一モデリング言語）。ソフトウェアの構造や動きを図で表すための、世界共通の描き方。クラス図・ユースケース図・シーケンス図など、目的ごとに図の種類が決められています。</td></tr><tr><td>ユースケース</td><td>システムを使う人（アクター）から見た、システムでできること1つ1つ。「商品を登録する」のように「〜を〜する」で表し、ユースケース図では楕円で描きます。</td></tr><tr><td>ユースケース記述</td><td>1つのユースケースについて、主アクター・事前条件・事後条件・基本フロー・代替フローを文章で書いたものです。</td></tr><tr><td>シナリオ</td><td>ユースケースの流れを、具体的な人や値を入れた「ある1回分」の話として書いたものです。</td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>ユースケースは「メニューの1品」、UML は「世界共通の描き方」</h3><p class="lead">メニューには、お客が頼めることだけを書きます。厨房の手順は書きません。</p><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 250" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="8" width="340" height="234" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="180" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#64748b">喫茶店</text>
+<circle cx="52" cy="76" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="52" y1="85" x2="52" y2="110" stroke="#334155" stroke-width="1.8"/>
+<line x1="37" y1="94" x2="67" y2="94" stroke="#334155" stroke-width="1.8"/>
+<line x1="52" y1="110" x2="40" y2="130" stroke="#334155" stroke-width="1.8"/>
+<line x1="52" y1="110" x2="64" y2="130" stroke="#334155" stroke-width="1.8"/>
+<text x="52" y="150" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">お客</text>
+<line x1="70" y1="98" x2="110" y2="112" stroke="#334155" stroke-width="1.6"/>
+<rect x="110" y="45" width="222" height="150" rx="8" fill="#fffbeb" stroke="#334155" stroke-width="1.5"/>
+<text x="221" y="72" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">メニュー</text>
+<text x="132" y="104" font-size="14" text-anchor="start" fill="#1f2933">ブレンドコーヒー</text>
+<text x="132" y="132" font-size="14" text-anchor="start" fill="#1f2933">ケーキセット</text>
+<text x="132" y="160" font-size="14" text-anchor="start" fill="#1f2933">コーヒー豆（持ち帰り）</text>
+<text x="180" y="225" font-size="13" text-anchor="middle" fill="#64748b">豆の挽き方や、厨房の手順は書かない</text>
+<rect x="370" y="8" width="340" height="234" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="540" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#64748b">ユースケース図（UML）</text>
+<circle cx="410" cy="76" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="410" y1="85" x2="410" y2="110" stroke="#334155" stroke-width="1.8"/>
+<line x1="395" y1="94" x2="425" y2="94" stroke="#334155" stroke-width="1.8"/>
+<line x1="410" y1="110" x2="398" y2="130" stroke="#334155" stroke-width="1.8"/>
+<line x1="410" y1="110" x2="422" y2="130" stroke="#334155" stroke-width="1.8"/>
+<text x="410" y="150" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">担当者</text>
+<text x="410" y="170" font-size="12" text-anchor="middle" fill="#64748b">（アクター）</text>
+<rect x="458" y="42" width="242" height="164" fill="#fcfcfd" stroke="#334155" stroke-width="1.6"/>
+<text x="579" y="68" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ</text>
+<line x1="428" y1="98" x2="490" y2="92" stroke="#334155" stroke-width="1.6"/>
+<line x1="428" y1="98" x2="490" y2="134" stroke="#334155" stroke-width="1.6"/>
+<line x1="428" y1="98" x2="490" y2="176" stroke="#334155" stroke-width="1.6"/>
+<ellipse cx="580" cy="92" rx="90" ry="16" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="580" y="97" font-size="14" text-anchor="middle" fill="#1f2933">商品を登録する</text>
+<ellipse cx="580" cy="134" rx="90" ry="16" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="580" y="139" font-size="14" text-anchor="middle" fill="#1f2933">商品を売る</text>
+<ellipse cx="580" cy="176" rx="90" ry="16" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="580" y="181" font-size="14" text-anchor="middle" fill="#1f2933">商品を一覧する</text>
+<text x="540" y="228" font-size="13" text-anchor="middle" fill="#64748b">棒人間・楕円・四角の描き方が UML の決まり</text>
+</svg><p class="figcap">メニューには、お客が頼めることだけを書く。ユースケース図も同じ</p><p>喫茶店のメニューには「ブレンドコーヒー」「ケーキセット」と、お客が頼めることが並んでいます。<strong>豆の挽き方や、厨房の手順は書いてありません。</strong></p>
+<p>アプリも同じです。使う人（担当者）から見て「このアプリでできること」を1つずつ書き出したものが<strong>ユースケース</strong>です。商品在庫管理アプリなら「商品を登録する」「商品を売る」などです。中でどんなクラスが動くかは書きません。</p>
+<p>描き方も決まっています。使う人は棒人間、できることは楕円、作る範囲は四角です。こうした図の描き方を世界共通に決めたものが <strong>UML</strong>（Unified Modeling Language、統一モデリング言語）です。会社や国が違っても、同じ図が同じ意味に読めます。</p>
+<p>第10〜14回は、コードを書いてアプリを作りました。今日から第19回までは、そのアプリを UML の図で描きます。</p>
+</div><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 238" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="8" width="340" height="222" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="180" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#64748b">喫茶店</text>
+<rect x="28" y="42" width="304" height="84" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="28" y="42" width="304" height="26" rx="6" fill="#fffbeb" stroke="#334155" stroke-width="1.5"/>
+<rect x="29" y="61" width="302" height="8" fill="#fffbeb"/>
+<text x="180" y="60" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">作り方のカード（ブレンドコーヒー）</text>
+<text x="38" y="88" font-size="14" fill="#1f2933">手順　注文を受けてから出すまで</text>
+<text x="38" y="108" font-size="14" fill="#1f2933">品切れのとき　どう対応するか</text>
+<rect x="28" y="146" width="304" height="64" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="28" y="146" width="304" height="26" rx="6" fill="#fffbeb" stroke="#334155" stroke-width="1.5"/>
+<rect x="29" y="165" width="302" height="8" fill="#fffbeb"/>
+<text x="180" y="164" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">ある日の1回分</text>
+<text x="38" y="192" font-size="14" fill="#1f2933">ある日、お客がブレンドを1杯頼んだ</text>
+<rect x="370" y="8" width="340" height="222" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="540" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#64748b">商品在庫管理アプリ（UML）</text>
+<rect x="388" y="42" width="304" height="84" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="388" y="42" width="304" height="26" rx="6" fill="#fff7ed" stroke="#334155" stroke-width="1.5"/>
+<rect x="389" y="61" width="302" height="8" fill="#fff7ed"/>
+<text x="540" y="60" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">ユースケース記述「商品を登録する」</text>
+<text x="398" y="88" font-size="14" fill="#1f2933">基本フロー　登録するまでの手順</text>
+<text x="398" y="108" font-size="14" fill="#1f2933">代替フロー　商品名が空のときなど</text>
+<rect x="388" y="146" width="304" height="64" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="388" y="146" width="304" height="26" rx="6" fill="#fff7ed" stroke="#334155" stroke-width="1.5"/>
+<rect x="389" y="165" width="302" height="8" fill="#fff7ed"/>
+<text x="540" y="164" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">シナリオ</text>
+<text x="398" y="192" font-size="14" fill="#1f2933">月曜の朝、山田さんがボールペンを登録した</text>
+</svg><p class="figcap">1品ごとの作り方のカードがユースケース記述、ある日の1回分の流れがシナリオ</p><p>メニューの1品ごとに、作り方のカードがあります。注文を受けてから出すまでの手順と、品切れのときの対応が書いてあります。アプリでは、これが<strong>ユースケース記述</strong>です。</p>
+<p>「ある日、お客がブレンドを1杯頼んだ」のように、実際の1回分の流れを書いたものが<strong>シナリオ</strong>です。</p>
+</div></div>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>UML</td><td>プログラムの形や動きを、言葉より正確に、誰が見ても同じ意味で伝えるためです。</td></tr><tr><td>ユースケース</td><td>作る前に「このアプリで何ができればよいか」を、使う人の目線で漏れなく決めるためです。</td></tr><tr><td>ユースケース記述</td><td>図の楕円1つでは分からない、操作の手順と、うまくいかない場合の動きを決めておくためです。</td></tr><tr><td>シナリオ</td><td>手順を具体的な例で確かめ、抜けや食い違いを見つけるためです。</td></tr></table>
+<p>今日のゴールは、このアプリのメニュー（ユースケース図）と、そのうち1品の手順書（ユースケース記述とシナリオ）を描けるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して描く</div>
+<p><strong>まずは自分で写して描いてみましょう。</strong>各部品の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は Eclipse を使いません。ノートと鉛筆を用意して、図と文章を手で写します。定規は無くて構いません。</p>
+<h2>全体像</h2>
+<p>今日写すのは、第10〜14回で作った商品在庫管理アプリの、図が1枚と文章が2つです。</p>
+<p>図の中の ①〜④ と、文章の行の右の ⑤〜⑨ は、③解説の番号です。<code>// ⑤</code> などの印は、ノートには写さなくて構いません。</p>
+<p>「商品を検索する」「商品を売る」は、第14回の画面にはまだボタンがありません。ユースケース図は作る前に描く図なので、これから作りたいことも描きます。</p>
+<p>線は、担当者から6つの楕円すべてに引きます。</p>
+<svg class="fig" style="max-width:580px" viewBox="0 0 580 450" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="150" y="14" width="410" height="424" fill="#fcfcfd" stroke="#334155" stroke-width="1.6"/>
+<text x="355" y="40" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ</text>
+<circle cx="70" cy="213" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="70" y1="222" x2="70" y2="247" stroke="#334155" stroke-width="1.8"/>
+<line x1="55" y1="231" x2="85" y2="231" stroke="#334155" stroke-width="1.8"/>
+<line x1="70" y1="247" x2="58" y2="267" stroke="#334155" stroke-width="1.8"/>
+<line x1="70" y1="247" x2="82" y2="267" stroke="#334155" stroke-width="1.8"/>
+<text x="70" y="287" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">担当者</text>
+<line x1="88" y1="235" x2="235" y2="85" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="145" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="205" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="265" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="325" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="385" stroke="#334155" stroke-width="1.6"/>
+<ellipse cx="330" cy="85" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="90" font-size="14" text-anchor="middle" fill="#1f2933">商品を一覧する</text>
+<ellipse cx="330" cy="145" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="150" font-size="14" text-anchor="middle" fill="#1f2933">商品を登録する</text>
+<ellipse cx="330" cy="205" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="210" font-size="14" text-anchor="middle" fill="#1f2933">商品を更新する</text>
+<ellipse cx="330" cy="265" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="270" font-size="14" text-anchor="middle" fill="#1f2933">商品を削除する</text>
+<ellipse cx="330" cy="325" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="330" font-size="14" text-anchor="middle" fill="#1f2933">商品を検索する</text>
+<ellipse cx="330" cy="385" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="390" font-size="14" text-anchor="middle" fill="#1f2933">商品を売る</text>
+<text x="26" y="225" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">①</text>
+<line x1="109" y1="334" x2="160" y2="308.5" stroke="#c2410c" stroke-width="1.2"/>
+<text x="100" y="340" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">②</text>
+<text x="160" y="42" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">③</text>
+<text x="434" y="92" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">④</text>
+</svg><p class="fname">ユースケース記述「商品を登録する」　楕円1つの手順書</p>
+<pre class="code" id="c1">ユースケース名 : 商品を登録する                    <span class="cm">// <span class="cn">⑤</span></span>
+主アクター     : 担当者                            <span class="cm">// <span class="cn">⑤</span></span>
+関係者と関心事 : 担当者 … 商品をすぐ売れる状態にしたい
+                 管理者 … 在庫数が実物と合っていてほしい
+事前条件       : アプリが起動していること                  <span class="cm">// <span class="cn">⑥</span></span>
+事後条件       : 商品が1件登録され、一覧に表示されている   <span class="cm">// <span class="cn">⑥</span></span>
+トリガー       : 担当者が「追加」ボタンを押す
+
+基本フロー                                         <span class="cm">// <span class="cn">⑦</span></span>
+  1. 担当者は、商品名・価格・在庫数を入力する
+  2. 担当者は、「追加」ボタンを押す
+  3. システムは、入力内容を検査する
+  4. システムは、商品を登録する
+  5. システムは、一覧を再表示する
+  6. システムは、「登録しました」と表示する
+
+代替フロー                                         <span class="cm">// <span class="cn">⑧</span></span>
+  3a. 商品名が空のとき
+      3a-1. システムは「商品名を入力してください」と表示する
+      3a-2. 基本フローの 1 に戻る
+  3b. 価格または在庫数が数値でないとき
+      3b-1. システムは「数値で入力してください」と表示する
+      3b-2. 基本フローの 1 に戻る
+  4a. データベースに接続できないとき
+      4a-1. システムは「登録できませんでした」と表示する
+      4a-2. ユースケースを終了する</pre>
+<p class="fname">シナリオ「新しく入荷したボールペンを登録する」　ある1回分の話</p>
+<pre class="code" id="c2">シナリオ名 : 新しく入荷したボールペンを登録する
+種別       : 正常シナリオ
+登場人物   : 山田さん（商品担当・入社2年目）   <span class="cm">// <span class="cn">⑨</span> 名前を付ける</span>
+状況       : 月曜の朝。ボールペンが30本入荷した。
+             一覧には、まだ2件しか登録されていない。
+
+  山田さんは、アプリを起動する。
+  一覧に「ノート」「消しゴム」の2件が表示される。
+
+  山田さんは、商品名の欄に「ボールペン」と入力する。   <span class="cm">// <span class="cn">⑨</span> 値を具体的に</span>
+  価格の欄に「150」、在庫の欄に「30」と入力する。
+
+  山田さんは、「追加」ボタンを押す。
+
+  「登録しました」と表示される。
+  一覧が3件になり、いちばん下に
+  「3 ボールペン 150 30」の行が増えている。
+
+  山田さんは、入力欄が空に戻っていることを確かめて、次の商品に移る。</pre>
+<p>「登録しました」と表示する所と、入力欄が空に戻る所も、第14回の画面にはまだありません。ユースケース図と同じく、これから作りたいことも書いています。</p>
+</div>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。図や詳しい説明は必要な項目だけ開いてください。</p>
+<h2 class="sym-h">どの図でも使う書き方</h2>
+<p class="explain-brief">UMLの「ノート」は図の補足。<code>«include»</code>などの文字は関係や種類を表す。</p>
+<p class="explain-mini"><code>«include» / «extend»</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<table class="symtab"><tr><th>記号・書き方</th><th>名前</th><th>意味と書き方</th></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 50" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s1o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s1f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s1t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><path d="M10,6 L96,6 L108,18 L108,44 L10,44 z" fill="#fffbeb" stroke="#334155" stroke-width="1.5"/><path d="M96,6 L96,18 L108,18" fill="none" stroke="#334155" stroke-width="1.5"/><text x="58" y="30" font-size="11" text-anchor="middle" fill="#1f2933">補足を書く</text><polyline points="108,30 126,30" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4"/></svg></td><td class="sym-name">ノート</td><td>右上の角を折った四角です。図だけでは書けない補足・前提・決まりを書き、説明したい所と破線で結びます。</td></tr><tr><td class="sym-cell"><code class="symcode">«include»
+«interface»
+«create»</code></td><td class="sym-name">ステレオタイプ</td><td>« » で囲んだ言葉です。線や箱の種類を言葉で書き足す印で、どの図にも出てきます。手で書くときは &lt;&lt;include&gt;&gt; でも構いません。</td></tr><tr><td class="sym-cell"><code class="symcode">{readOnly}
+{ordered}</code></td><td class="sym-name">制約</td><td>{ } で囲んだ決まりです。{readOnly} は書き換えない（Java の final）、{ordered} は順番がある、という意味です。</td></tr></table>
+</div></details>
+<h2 class="sym-h">ユースケース図で使う記号と書き方</h2>
+<p class="explain-brief">棒人間がアクター、楕円がユースケース、四角がシステム境界、線が関連。</p>
+<p class="explain-mini"><code>担当者 ── (商品を登録する)</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<table class="symtab"><tr><th>記号・書き方</th><th>名前</th><th>意味と書き方</th></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 66" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s2o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s2f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s2t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><circle cx="65" cy="9" r="6" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="65,15 65,33" fill="none" stroke="#334155" stroke-width="1.5"/><polyline points="53,22 77,22" fill="none" stroke="#334155" stroke-width="1.5"/><polyline points="65,33 56,46" fill="none" stroke="#334155" stroke-width="1.5"/><polyline points="65,33 74,46" fill="none" stroke="#334155" stroke-width="1.5"/><text x="65" y="61" font-size="12" text-anchor="middle" fill="#1f2933">担当者</text></svg></td><td class="sym-name">アクター</td><td>システムの外にいて、システムを使う相手です。棒人間で描き、下に役割の名前を書きます。山田さんのような人の名前ではなく、役割を書きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 50" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s3o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s3f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s3t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="10" y="4" width="110" height="42" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="65" y="21" font-size="10" text-anchor="middle" fill="#1f2933">«actor»</text><text x="65" y="38" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">決済サービス</text></svg></td><td class="sym-name">外部システムのアクター</td><td>人ではないアクターです。決済サービスやほかのシステム、月末に動く処理などです。四角に «actor» と書いて表すこともあります。業務システムでは、ほぼ必ず出てきます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 44" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s4o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s4f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s4t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><ellipse cx="65" cy="22" rx="62" ry="18" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="65" y="26" font-size="12" text-anchor="middle" fill="#1f2933">商品を登録する</text></svg></td><td class="sym-name">ユースケース</td><td>システムでできること1つです。楕円の中に「〜を〜する」と、使う人から見た言葉で書きます。画面やボタンの名前は書きません。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 60" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s5o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s5f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s5t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="52" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="65" y="21" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ</text></svg></td><td class="sym-name">システム境界</td><td>作る範囲です。四角の上にシステムの名前を書き、ユースケースを中に、アクターを外に置きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s6o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s6f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s6t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,12 122,12" fill="none" stroke="#334155" stroke-width="1.5"/></svg></td><td class="sym-name">関連</td><td>アクターとユースケースを結ぶ実線です。「この人が、このユースケースを使う」という意味です。矢印は付けません。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 34" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s7o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s7f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s7t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,24 120,24" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#s7o)"/><text x="64" y="15" font-size="11" text-anchor="middle" fill="#1f2933">«include»</text></svg></td><td class="sym-name">include</td><td>破線と開いた矢じりで、«include» と書き添えます。必ず呼ぶユースケースへ引きます。例は「登録するとき、必ず検査を呼ぶ」です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 34" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s8o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s8f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s8t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,24 120,24" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#s8o)"/><text x="64" y="15" font-size="11" text-anchor="middle" fill="#1f2933">«extend»</text></svg></td><td class="sym-name">extend</td><td>線は include と同じで、«extend» と書き添えます。ときどき割り込むユースケースから、割り込まれる側へ引きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s9o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s9f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s9t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,12 120,12" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s9t)"/></svg></td><td class="sym-name">汎化</td><td>アクターどうしの親子の関係です。子から親へ実線を引き、親の側に白抜きの三角を付けます。会員とゲストのように、できることが違う人を描くときに使います。</td></tr></table>
+</div></details>
+<h2 class="sym-h">ユースケース記述とシナリオの書き方</h2>
+<p class="explain-brief">ユースケース記述は手順を整理し、シナリオは具体的な一回の出来事を書く。</p>
+<p class="explain-mini"><code>基本フロー / 代替フロー</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<table class="symtab"><tr><th>記号・書き方</th><th>名前</th><th>意味と書き方</th></tr><tr><td class="sym-cell"><code class="symcode">ユースケース名 :
+概要           :
+主アクター     :</code></td><td class="sym-name">名前・概要・主アクター</td><td>ユースケース図の楕円と同じ名前、このユースケースで何をするかの1〜2文、主に使う人を書きます。</td></tr><tr><td class="sym-cell"><code class="symcode">副アクター :</code></td><td class="sym-name">副アクター</td><td>主アクターのほかに関わるものです。外部システムなどを書きます。</td></tr><tr><td class="sym-cell"><code class="symcode">事前条件 :
+事後条件 :</code></td><td class="sym-name">事前条件・事後条件</td><td>事前条件は、始める前に成り立っていることです。事後条件は、うまく終わったあとに成り立っていることです。</td></tr><tr><td class="sym-cell"><code class="symcode">トリガー : 「追加」を押す</code></td><td class="sym-name">トリガー</td><td>ユースケースが始まるきっかけです。ボタンを押す、月末の0時になる、ファイルが届く、などです。</td></tr><tr><td class="sym-cell"><code class="symcode">1. 担当者は、…
+2. システムは、…</code></td><td class="sym-name">基本フロー</td><td>うまくいくときの手順です。番号を振り、1行に「誰は、何をする」を1つ書きます。</td></tr><tr><td class="sym-cell"><code class="symcode">3a. 商品名が空のとき
+  3a-1. …と表示する
+  3a-2. 1 に戻る</code></td><td class="sym-name">代替フロー</td><td>別の道を通って、最後は完了する手順です。分かれる基本フローの番号に a・b を付け、最後に戻る先を書きます。</td></tr><tr><td class="sym-cell"><code class="symcode">4a. 接続できないとき
+  4a-1. …と表示する
+  4a-2. 終了する</code></td><td class="sym-name">例外フロー</td><td>途中で失敗して、完了できずに終わる手順です。代替フローと分けて書く書式が多くあります。Java では、例外の処理（try-catch）に当たります。</td></tr><tr><td class="sym-cell"><code class="symcode">登場人物 : 山田さん
+（値も具体的に）</code></td><td class="sym-name">シナリオ</td><td>ユースケースを1回通ったときの、具体的な1本の道筋です。基本フローを通れば正常シナリオ、代替・例外フローを通ればそのほかのシナリオです。名前のある人と具体的な値で書きます。</td></tr></table>
+</div></details>
+<h2>1　アクターと関連（①②）</h2>
+<p class="explain-brief">アクターは操作する『人や外部システムの役割』。線でできることと結ぶ。</p>
+<p class="explain-mini"><code>担当者 ── (商品を検索する)</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<svg class="fig" style="max-width:430px" viewBox="0 0 430 350" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<g transform="translate(0,-58)">
+<rect x="150" y="14" width="410" height="424" fill="#fcfcfd" stroke="#334155" stroke-width="1.6"/>
+<text x="355" y="40" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ</text>
+<circle cx="70" cy="213" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="70" y1="222" x2="70" y2="247" stroke="#334155" stroke-width="1.8"/>
+<line x1="55" y1="231" x2="85" y2="231" stroke="#334155" stroke-width="1.8"/>
+<line x1="70" y1="247" x2="58" y2="267" stroke="#334155" stroke-width="1.8"/>
+<line x1="70" y1="247" x2="82" y2="267" stroke="#334155" stroke-width="1.8"/>
+<text x="70" y="287" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">担当者</text>
+<line x1="88" y1="235" x2="235" y2="85" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="145" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="205" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="265" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="325" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="385" stroke="#334155" stroke-width="1.6"/>
+<ellipse cx="330" cy="85" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="90" font-size="14" text-anchor="middle" fill="#1f2933">商品を一覧する</text>
+<ellipse cx="330" cy="145" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="150" font-size="14" text-anchor="middle" fill="#1f2933">商品を登録する</text>
+<ellipse cx="330" cy="205" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="210" font-size="14" text-anchor="middle" fill="#1f2933">商品を更新する</text>
+<ellipse cx="330" cy="265" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="270" font-size="14" text-anchor="middle" fill="#1f2933">商品を削除する</text>
+<ellipse cx="330" cy="325" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="330" font-size="14" text-anchor="middle" fill="#1f2933">商品を検索する</text>
+<ellipse cx="330" cy="385" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="390" font-size="14" text-anchor="middle" fill="#1f2933">商品を売る</text>
+<text x="26" y="225" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">①</text>
+<line x1="109" y1="334" x2="160" y2="308.5" stroke="#c2410c" stroke-width="1.2"/>
+<text x="100" y="340" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">②</text>
+</g>
+</svg><div class="line-block"><p class="item-label">① 棒人間（アクター）</p>
+<p>①の棒人間が<strong>アクター</strong>です。アクターは、システムの外にいて、システムを使う相手のことです。</p>
+<p>棒人間の下の「担当者」は、役割の名前です。山田さんのような人の名前ではなく、役割を書きます。人だけでなく、会計システムのような外のシステムもアクターになります。「毎月末」のような時間もアクターになります。</p>
+<p><strong>なぜ描くのか。</strong>誰のために作るのかを、はっきりさせるためです。</p>
+</div>
+<div class="line-block"><p class="item-label">② 担当者から楕円への実線（関連）</p>
+<p>②は、担当者の手元から楕円へ伸びる実線です。これが<strong>関連</strong>です。関連は「この人が、これを使う」という意味です。</p>
+<p>線は、6つの楕円すべてに引いてあります。担当者は6つとも使える、ということです。関連の線には、矢印を付けません。線の無い楕円は、誰も使わない機能ということになります。</p>
+<p>線が横切る縦の線は③のシステム境界、右の楕円は④のユースケースです。</p>
+</div>
+<p><strong>よくある間違い：MySQL をアクターにする。</strong>「データは MySQL にしまうから、MySQL もアプリを使う相手だ」と考えた形です。四角の外に、MySQL の棒人間を描いてしまいます。四角の外にあるのは「作らないもの」です。これでは、MySQL がアプリの範囲の外にいる相手だ、と言っていることになります。</p>
+<svg class="fig" viewBox="0 0 720 250" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="170" y="16" width="380" height="222" fill="#fcfcfd" stroke="#334155" stroke-width="1.6"/>
+<text x="360" y="42" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ（自分たちが作るもの）</text>
+<rect x="190" y="62" width="160" height="50" rx="6" fill="#f0f9ff" stroke="#334155" stroke-width="1.5"/>
+<text x="200" y="82" font-size="14" fill="#1f2933">ProductFrame</text>
+<text x="200" y="102" font-size="14" fill="#1f2933">（画面）</text>
+<rect x="370" y="62" width="160" height="50" rx="6" fill="#f0f9ff" stroke="#334155" stroke-width="1.5"/>
+<text x="380" y="82" font-size="14" fill="#1f2933">ProductService</text>
+<rect x="190" y="142" width="160" height="50" rx="6" fill="#f0f9ff" stroke="#334155" stroke-width="1.5"/>
+<text x="200" y="162" font-size="14" fill="#1f2933">ProductDAO</text>
+<rect x="370" y="142" width="160" height="50" rx="6" fill="#f0f9ff" stroke="#334155" stroke-width="1.5"/>
+<text x="380" y="162" font-size="14" fill="#1f2933">MySQL</text>
+<text x="380" y="182" font-size="14" fill="#1f2933">（products 表）</text>
+<text x="360" y="222" font-size="13" text-anchor="middle" fill="#64748b">中身は、ユースケース図には描かない</text>
+<circle cx="80" cy="70" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="79" x2="80" y2="104" stroke="#334155" stroke-width="1.8"/>
+<line x1="65" y1="88" x2="95" y2="88" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="104" x2="68" y2="124" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="104" x2="92" y2="124" stroke="#334155" stroke-width="1.8"/>
+<text x="80" y="144" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">担当者</text>
+<text x="80" y="176" font-size="13" text-anchor="middle" fill="#64748b">使う人</text>
+<text x="80" y="196" font-size="13" text-anchor="middle" fill="#1d4ed8" font-weight="bold">→ アクター</text>
+<circle cx="635" cy="70" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="635" y1="79" x2="635" y2="104" stroke="#334155" stroke-width="1.8"/>
+<line x1="620" y1="88" x2="650" y2="88" stroke="#334155" stroke-width="1.8"/>
+<line x1="635" y1="104" x2="623" y2="124" stroke="#334155" stroke-width="1.8"/>
+<line x1="635" y1="104" x2="647" y2="124" stroke="#334155" stroke-width="1.8"/>
+<text x="635" y="144" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">会計システム</text>
+<text x="635" y="176" font-size="13" text-anchor="middle" fill="#64748b">相手の持ち物</text>
+<text x="635" y="196" font-size="13" text-anchor="middle" fill="#1d4ed8" font-weight="bold">→ アクター</text>
+</svg><p class="figcap">自分たちが用意したものは四角の中。外にいて、やりとりする相手だけがアクター</p><p>上の図の四角の中には、第13回・第14回で作った画面とクラス、MySQL を並べました。<code>ProductFrame</code> は画面、<code>ProductService</code> は入力の検査をするクラスです。<code>ProductDAO</code> は、データベースとの出し入れをするクラスです。MySQL の <code>products</code> 表には、商品のデータが入っています。このアプリでは、MySQL は自分たちが用意した、アプリの一部です。四角の中のものなので、四角の下に書いたとおり、ユースケース図には描きません。</p>
+<p>図の左の担当者は、アプリを使う人なので、アクターです。右の会計システムは、よその持ち物で、このアプリとやりとりする相手です。だから、これもアクターです。反対に、担当者を四角の中に描くのも間違いです。<strong>アクターは必ず四角の外</strong>です。</p>
+<table><tr><th>見分け方</th><th>置く場所</th><th>例</th></tr><tr><td>自分たちが作る・用意するもの</td><td>四角の中（図には描かない）</td><td>画面、クラス、MySQL</td></tr><tr><td>外にいて、アプリとやりとりする相手</td><td>四角の外にアクターとして描く</td><td>担当者、会計システム、毎月末</td></tr></table>
+<p>アクターどうしは、<strong>汎化</strong>という線でつなぐことがあります。汎化は「店長は、店員の一種」のような関係です。子のアクター（店長）は、親のアクター（店員）のできることを全部できます。下の図では、子の店長から親の店員へ実線を引き、親の側の端に白抜きの三角を付けています。</p>
+<svg class="fig" viewBox="0 0 720 140" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<circle cx="90" cy="30" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="90" y1="39" x2="90" y2="64" stroke="#334155" stroke-width="1.8"/>
+<line x1="75" y1="48" x2="105" y2="48" stroke="#334155" stroke-width="1.8"/>
+<line x1="90" y1="64" x2="78" y2="84" stroke="#334155" stroke-width="1.8"/>
+<line x1="90" y1="64" x2="102" y2="84" stroke="#334155" stroke-width="1.8"/>
+<text x="90" y="104" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">店長</text>
+<circle cx="300" cy="30" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="300" y1="39" x2="300" y2="64" stroke="#334155" stroke-width="1.8"/>
+<line x1="285" y1="48" x2="315" y2="48" stroke="#334155" stroke-width="1.8"/>
+<line x1="300" y1="64" x2="288" y2="84" stroke="#334155" stroke-width="1.8"/>
+<line x1="300" y1="64" x2="312" y2="84" stroke="#334155" stroke-width="1.8"/>
+<text x="300" y="104" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">店員</text>
+<line x1="110" y1="48" x2="265" y2="48" stroke="#334155" stroke-width="1.6"/>
+<polygon points="280,48 265,57 265,39" fill="#fff" stroke="#334155" stroke-width="1.6"/>
+<text x="195" y="36" font-size="13" text-anchor="middle" fill="#475569" font-weight="bold">汎化</text>
+<text x="390" y="44" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">子（店長）→ 親（店員）</text>
+<text x="390" y="70" font-size="13" text-anchor="start" fill="#475569">白抜きの三角の付いた実線。三角が付くほうが親</text>
+<text x="390" y="94" font-size="13" text-anchor="start" fill="#475569">店長は、店員の一種</text>
+<text x="390" y="118" font-size="13" text-anchor="start" fill="#475569">店員ができることは、店長も全部できる</text>
+</svg><p class="figcap">アクターどうしの汎化</p></div></details>
+<h2>2　システム境界（③）</h2>
+<p class="explain-brief">システム境界は、作るシステムの範囲を四角で示す。</p>
+<p class="explain-mini"><code>[商品在庫管理アプリ]</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<svg class="fig" style="max-width:430px" viewBox="0 0 430 58" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<g transform="translate(-140,-4)">
+<rect x="150" y="14" width="410" height="424" fill="#fcfcfd" stroke="#334155" stroke-width="1.6"/>
+<text x="355" y="40" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ</text>
+<text x="160" y="42" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">③</text>
+</g>
+</svg><div class="line-block"><p class="item-label">③ 四角（システム境界）</p>
+<p>③の四角が<strong>システム境界</strong>です。四角の中が、これから作る範囲です。</p>
+<p>四角の中の上には、作るシステムの名前「商品在庫管理アプリ」を書きます。</p>
+<p><strong>なぜ描くのか。</strong>何を作り、何を作らないかを決めるためです。</p>
+</div>
+<p>この図は、開発のいちばん最初に描きます。プログラムは、いきなり書き始めず、次の順で進みます。</p>
+<svg class="fig" viewBox="0 0 720 185" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="18" width="100" height="44" rx="6" fill="#fff3e6" stroke="#c2410c" stroke-width="2.2"/>
+<text x="60" y="45" font-size="13" text-anchor="middle" fill="#1f2933" font-weight="bold">① 要件定義</text>
+<line x1="110" y1="40" x2="128" y2="40" stroke="#334155" stroke-width="1.6"/>
+<polyline points="117.2,34.8 128,40 117.2,45.2" fill="none" stroke="#334155" stroke-width="1.6"/>
+<text x="60" y="90" font-size="13" text-anchor="middle" fill="#1f2933">ユースケース図</text>
+<text x="60" y="111" font-size="13" text-anchor="middle" fill="#1f2933">ユースケース記述</text>
+<text x="60" y="132" font-size="13" text-anchor="middle" fill="#1f2933">シナリオ</text>
+<text x="60" y="153" font-size="13" text-anchor="middle" fill="#c2410c" font-weight="bold">第15回（今日）</text>
+<rect x="130" y="18" width="100" height="44" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<text x="180" y="45" font-size="13" text-anchor="middle" fill="#1f2933" font-weight="bold">② 分析</text>
+<line x1="230" y1="40" x2="248" y2="40" stroke="#334155" stroke-width="1.6"/>
+<polyline points="237.2,34.8 248,40 237.2,45.2" fill="none" stroke="#334155" stroke-width="1.6"/>
+<text x="180" y="90" font-size="13" text-anchor="middle" fill="#1f2933">クラス図</text>
+<text x="180" y="111" font-size="13" text-anchor="middle" fill="#1f2933">オブジェクト図</text>
+<text x="180" y="132" font-size="13" text-anchor="middle" fill="#64748b">第16回</text>
+<rect x="250" y="18" width="100" height="44" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<text x="300" y="45" font-size="13" text-anchor="middle" fill="#1f2933" font-weight="bold">③ 設計</text>
+<line x1="350" y1="40" x2="368" y2="40" stroke="#334155" stroke-width="1.6"/>
+<polyline points="357.2,34.8 368,40 357.2,45.2" fill="none" stroke="#334155" stroke-width="1.6"/>
+<text x="300" y="90" font-size="13" text-anchor="middle" fill="#1f2933">シーケンス図</text>
+<text x="300" y="111" font-size="13" text-anchor="middle" fill="#64748b">第17回</text>
+<text x="300" y="132" font-size="13" text-anchor="middle" fill="#1f2933">ほか3つの図</text>
+<text x="300" y="153" font-size="13" text-anchor="middle" fill="#64748b">第18・19回</text>
+<rect x="370" y="18" width="100" height="44" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<text x="420" y="45" font-size="13" text-anchor="middle" fill="#1f2933" font-weight="bold">④ 実装</text>
+<line x1="470" y1="40" x2="488" y2="40" stroke="#334155" stroke-width="1.6"/>
+<polyline points="477.2,34.8 488,40 477.2,45.2" fill="none" stroke="#334155" stroke-width="1.6"/>
+<text x="420" y="90" font-size="13" text-anchor="middle" fill="#64748b">第1〜14回の</text>
+<text x="420" y="111" font-size="13" text-anchor="middle" fill="#1f2933">コード</text>
+<rect x="490" y="18" width="100" height="44" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<text x="540" y="45" font-size="13" text-anchor="middle" fill="#1f2933" font-weight="bold">⑤ テスト</text>
+<line x1="590" y1="40" x2="608" y2="40" stroke="#334155" stroke-width="1.6"/>
+<polyline points="597.2,34.8 608,40 597.2,45.2" fill="none" stroke="#334155" stroke-width="1.6"/>
+<rect x="610" y="18" width="100" height="44" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<text x="660" y="45" font-size="13" text-anchor="middle" fill="#1f2933" font-weight="bold">⑥ 運用・保守</text>
+</svg><p class="figcap">プログラムは、①から順に進める。今日の図は①で描く</p><div class="line-block"><p class="item-label">① 要件定義</p>
+<p>①の<strong>要件定義</strong>は、何を作るか（と、何を作らないか）を決める工程です。今日の3つ（ユースケース図・ユースケース記述・シナリオ）は、ここで描きます。</p>
+</div>
+<div class="line-block"><p class="item-label">②〜⑥ 分析・設計・実装・テスト・運用・保守</p>
+<p>②の分析では、クラス図とオブジェクト図（第16回）を描きます。③の設計では、シーケンス図（第17回）と、ほか3つの図（第18・19回）を描きます。</p>
+<p>④の実装は、コードを書く工程です。第1〜14回でやってきたのは、ここです。⑤のテストでは、作ったものが決めたとおりに動くかを確かめます。⑥の運用・保守では、使い始めたあとの手直しをします。</p>
+</div>
+<p>作ったアプリがあるほうが図の意味が分かるので、この講座では実装を先にやりました。</p>
+<p>要件定義でいちばん大事なのは、<strong>何を作らないか</strong>を決めることです。システム境界は、それを目に見える形にしたものです。</p>
+<p>UML の図は、全部で14種類あります。「どうなっているか」を表す<strong>構造図</strong>と、「どう動くか」を表す<strong>振る舞い図</strong>に分かれます。この講座では、よく使われる7つを扱います。</p>
+<table><tr><th>図</th><th>ひとことで言うと</th><th>種類</th><th>回</th></tr><tr><td>ユースケース図</td><td>誰が、何をできるか</td><td>振る舞い図</td><td>第15回（今日）</td></tr><tr><td>クラス図</td><td>登場するクラスと、そのつながり</td><td>構造図</td><td>第16回</td></tr><tr><td>オブジェクト図</td><td>ある瞬間の実物（インスタンス）</td><td>構造図</td><td>第16回</td></tr><tr><td>シーケンス図</td><td>やりとりを時間の順に</td><td>振る舞い図</td><td>第17回</td></tr><tr><td>コミュニケーション図</td><td>やりとりを、つながりを中心に</td><td>振る舞い図</td><td>第19回</td></tr><tr><td>ステートマシン図</td><td>1つのものの状態の移り変わり</td><td>振る舞い図</td><td>第18回</td></tr><tr><td>アクティビティ図</td><td>仕事の流れと分かれ道</td><td>振る舞い図</td><td>第19回</td></tr></table>
+<div class="words"><b>ここで出た言葉</b><span><b>要件定義</b>　何を作るか（と、何を作らないか）を決める工程</span><span><b>構造図</b>　「どうなっているか」を表す図。止まった写真のようなもの</span><span><b>振る舞い図</b>　「どう動くか」を表す図。動画のようなもの</span></div>
+</div></details>
+<h2>3　ユースケース（④）</h2>
+<p class="explain-brief">ユースケースは利用者に見える機能。『商品を登録する』など動詞で表す。</p>
+<p class="explain-mini"><code>(商品を登録する)</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<svg class="fig" style="max-width:250px" viewBox="0 0 250 110" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<g transform="translate(-220,-60)">
+<line x1="88" y1="235" x2="235" y2="85" stroke="#334155" stroke-width="1.6"/>
+<line x1="88" y1="235" x2="235" y2="145" stroke="#334155" stroke-width="1.6"/>
+<ellipse cx="330" cy="85" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="90" font-size="14" text-anchor="middle" fill="#1f2933">商品を一覧する</text>
+<ellipse cx="330" cy="145" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="330" y="150" font-size="14" text-anchor="middle" fill="#1f2933">商品を登録する</text>
+<text x="434" y="92" font-size="18" text-anchor="start" fill="#c2410c" font-weight="bold">④</text>
+</g>
+</svg><div class="line-block"><p class="item-label">④ 楕円（ユースケース）</p>
+<p>④の楕円が<strong>ユースケース</strong>です。ユースケースは、アクターから見た「このアプリでできること」1つです。名前は「商品を一覧する」「商品を登録する」のように、「〜を〜する」の形にします。楕円の左の端に付いている線は、②の関連の線の先です。</p>
+<p><strong>なぜ使う人の言葉で書くのか。</strong>依頼した人と「これができるようになります」を確かめる図だからです。</p>
+</div>
+<p><strong>よくある間違い：画面・操作・SQL の言葉で名前を付ける。</strong>名前は、<strong>使う人が「よし終わった」と思える単位</strong>で書きます。下の表の左の列が、よくない名前の例です。楕円どうしを矢印でつないで、画面の順番を描くのも間違いです。ユースケース図に、順番はありません。</p>
+<table><tr><th>よくない名前</th><th>理由</th><th>直した名前</th></tr><tr><td>商品一覧画面</td><td>画面の名前</td><td>商品を一覧する</td></tr><tr><td>登録ボタンを押す</td><td>操作であって、目的ではない</td><td>商品を登録する</td></tr><tr><td>INSERT する</td><td>中の仕組み（SQL）の言葉</td><td>商品を登録する</td></tr><tr><td>商品名を入力する</td><td>細かすぎる。入力しただけでは用が済まない</td><td>商品を登録する（その中の1手順）</td></tr><tr><td>商品管理</td><td>名詞で、何をするのか分からない</td><td>商品を登録する・商品を更新する など</td></tr></table>
+<p>楕円どうしの関係には、<strong>include</strong> と <strong>extend</strong> の2つがあります。「商品を登録する」と「商品を更新する」は、どちらも<strong>必ず</strong>入力内容を検査します。この共通の手順を、楕円1つにくくり出すのが include です。「商品を売る」とき、残りが0個になったら、売り切れを知らせるとします。このように<strong>ときどき</strong>起きることを付け足すのが extend です。</p>
+<svg class="fig" viewBox="0 0 720 200" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<ellipse cx="150" cy="55" rx="90" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="150" y="60" font-size="14" text-anchor="middle" fill="#1f2933">商品を登録する</text>
+<ellipse cx="420" cy="55" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="420" y="60" font-size="14" text-anchor="middle" fill="#1f2933">入力内容を検査する</text>
+<line x1="240" y1="55" x2="325" y2="55" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5"/>
+<polyline points="314.2,49.8 325,55 314.2,60.2" fill="none" stroke="#334155" stroke-width="1.6"/>
+<text x="286" y="46" font-size="14" text-anchor="middle" fill="#334155">«include»</text>
+<text x="540" y="50" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">必ず起きる</text>
+<text x="540" y="72" font-size="13" text-anchor="start" fill="#475569">登録が、検査を呼ぶ</text>
+<ellipse cx="150" cy="145" rx="90" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="150" y="150" font-size="14" text-anchor="middle" fill="#1f2933">売り切れを知らせる</text>
+<ellipse cx="420" cy="145" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="420" y="150" font-size="14" text-anchor="middle" fill="#1f2933">商品を売る</text>
+<line x1="240" y1="145" x2="325" y2="145" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5"/>
+<polyline points="314.2,139.8 325,145 314.2,150.2" fill="none" stroke="#334155" stroke-width="1.6"/>
+<text x="286" y="136" font-size="14" text-anchor="middle" fill="#334155">«extend»</text>
+<text x="540" y="140" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">ときどき起きる</text>
+<text x="540" y="162" font-size="13" text-anchor="start" fill="#475569">知らせるが、売るに割り込む</text>
+</svg><p class="figcap">include は呼ぶ側からくくり出した側へ、extend は付け足す側から元の楕円へ</p><div class="line-block"><p class="item-label">上の段の «include»</p>
+<p>上の段では、「商品を登録する」から「入力内容を検査する」へ、破線の矢印を引いています。破線と開いた矢じり（V の形）で描きます。「登録するとき、必ず検査を呼ぶ」と読みます。</p>
+<p>矢印の上の <code>«include»</code> のように、« » で囲んで書き添えた言葉を<strong>ステレオタイプ</strong>と言います。ステレオタイプは、線や箱の種類を言葉で書き足す印です。手で書くときは、&lt;&lt;include&gt;&gt; でも構いません。</p>
+</div>
+<div class="line-block"><p class="item-label">下の段の «extend»</p>
+<p>下の段では、「売り切れを知らせる」から「商品を売る」へ、破線の矢印を引いています。線と矢じりは include と同じで、上に <code>«extend»</code> と書きます。「売るときに、知らせる処理がときどき割り込む」と読みます。</p>
+</div>
+<table><tr><th></th><th>include</th><th>extend</th></tr><tr><td>起きるのは</td><td><strong>必ず</strong></td><td><strong>ときどき</strong>（条件が成り立ったとき）</td></tr><tr><td>矢印の向き</td><td>呼ぶ側 → くくり出した側</td><td>付け足す側 → 元のユースケース</td></tr><tr><td>例</td><td>登録するとき、必ず入力内容を検査する</td><td>売るとき、残りが0個になったら売り切れを知らせる</td></tr></table>
+<p><strong>よくある間違い：extend の矢印を、include と同じ向きに描く。</strong>「商品を売る」から「売り切れを知らせる」へ向けた形です。これでは「売るときは、必ず知らせる処理を呼ぶ」と読めてしまいます。迷ったときは、<strong>「それは必ず起きますか」</strong>と自分に聞いてください。必ずなら include、ときどきなら extend です。</p>
+</div></details>
+<h2>4　ユースケース名と、事前条件・事後条件（⑤⑥）</h2>
+<p class="explain-brief">事前条件は開始前に必要なこと、事後条件は完了後の状態。</p>
+<p class="explain-mini"><code>事前: ログイン済み / 事後: 登録済み</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<pre class="code" id="c3">ユースケース名 : 商品を登録する                    <span class="cm">// <span class="cn">⑤</span></span>
+主アクター     : 担当者                            <span class="cm">// <span class="cn">⑤</span></span>
+関係者と関心事 : 担当者 … 商品をすぐ売れる状態にしたい
+                 管理者 … 在庫数が実物と合っていてほしい
+事前条件       : アプリが起動していること                  <span class="cm">// <span class="cn">⑥</span></span>
+事後条件       : 商品が1件登録され、一覧に表示されている   <span class="cm">// <span class="cn">⑥</span></span>
+トリガー       : 担当者が「追加」ボタンを押す</pre>
+<p><strong>ユースケース記述</strong>は、楕円1つの手順書です。楕円1つにつき1枚書きます。抜き出したのは、記述の頭の7行です。行の右の <code>// ⑤</code> などは、③解説の番号です。記述の中身ではありません。</p>
+<div class="line-block"><pre class="code" id="c4">ユースケース名 : 商品を登録する                    <span class="cm">// <span class="cn">⑤</span></span>
+主アクター     : 担当者                            <span class="cm">// <span class="cn">⑤</span></span>
+関係者と関心事 : 担当者 … 商品をすぐ売れる状態にしたい
+                 管理者 … 在庫数が実物と合っていてほしい</pre>
+<p>「ユースケース名」には、楕円に書いた名前「商品を登録する」をそのまま書きます。「主アクター」は、このユースケースを使う人で、棒人間と同じ「担当者」にします。名前がずれると、どの楕円の手順なのか分からなくなるからです。</p>
+<p>「関係者と関心事」は、このユースケースで、誰が何を気にしているかです。担当者は、登録した商品をすぐ売れる状態にしたい、と考えています。管理者は、アプリの在庫数が、棚にある実物の数と合っていてほしい、と考えています。管理者は登録を操作しませんが、結果を気にする人なので書いておきます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c5">事前条件       : アプリが起動していること                  <span class="cm">// <span class="cn">⑥</span></span>
+事後条件       : 商品が1件登録され、一覧に表示されている   <span class="cm">// <span class="cn">⑥</span></span>
+トリガー       : 担当者が「追加」ボタンを押す</pre>
+<p>「<strong>事前条件</strong>」は、始める前に成り立っていることです。ここでは、アプリが起動していることです。</p>
+<p>「<strong>事後条件</strong>」は、終わったあとに成り立っていることです。ここでは、商品が1件登録され、一覧に表示されていることです。</p>
+<p><strong>なぜ書くのか。</strong>事後条件が、完成したかどうかの判定になるからです。事前条件より前のことは、このユースケースの責任ではない、と範囲も決まります。アプリが起動しないときのことは、この記述では考えなくてよい、ということです。</p>
+<p>「トリガー」は、このユースケースが始まるきっかけです。ここでは、担当者が「追加」ボタンを押すことです。「関係者と関心事」と「トリガー」は、小さなアプリでは省くこともあります。</p>
+</div>
+</div></details>
+<h2>5　基本フローと代替フロー（⑦⑧）</h2>
+<p class="explain-brief">基本フローは通常手順、代替フローは条件分岐・失敗時などの別の流れ。</p>
+<p class="explain-mini"><code>入力 → チェック → 登録 → 一覧</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<pre class="code" id="c6">基本フロー                                         <span class="cm">// <span class="cn">⑦</span></span>
+  1. 担当者は、商品名・価格・在庫数を入力する
+  2. 担当者は、「追加」ボタンを押す
+  3. システムは、入力内容を検査する
+  4. システムは、商品を登録する
+  5. システムは、一覧を再表示する
+  6. システムは、「登録しました」と表示する
+
+代替フロー                                         <span class="cm">// <span class="cn">⑧</span></span>
+  3a. 商品名が空のとき
+      3a-1. システムは「商品名を入力してください」と表示する
+      3a-2. 基本フローの 1 に戻る
+  3b. 価格または在庫数が数値でないとき
+      3b-1. システムは「数値で入力してください」と表示する
+      3b-2. 基本フローの 1 に戻る
+  4a. データベースに接続できないとき
+      4a-1. システムは「登録できませんでした」と表示する
+      4a-2. ユースケースを終了する</pre>
+<div class="line-block"><pre class="code" id="c7">基本フロー                                         <span class="cm">// <span class="cn">⑦</span></span>
+  1. 担当者は、商品名・価格・在庫数を入力する
+  2. 担当者は、「追加」ボタンを押す
+  3. システムは、入力内容を検査する
+  4. システムは、商品を登録する
+  5. システムは、一覧を再表示する
+  6. システムは、「登録しました」と表示する</pre>
+<p>⑦の<strong>基本フロー</strong>は、うまくいったときの手順です。1行に1つの手順を書き、上から番号を振ります。どの行も「担当者は」「システムは」と、主語から書きます。誰が、何を、どの順でするかを決めるためです。</p>
+<p>1と2は担当者の手順で、商品名・価格・在庫数を入力し、「追加」ボタンを押します。3から6はシステムの手順です。入力内容を検査し、商品を登録し、一覧を表示し直して、「登録しました」と表示します。</p>
+</div>
+<p>担当者とシステムが交互にやりとりする形が、第17回のシーケンス図の矢印になります。</p>
+<div class="line-block"><pre class="code" id="c8">代替フロー                                         <span class="cm">// <span class="cn">⑧</span></span>
+  3a. 商品名が空のとき
+      3a-1. システムは「商品名を入力してください」と表示する
+      3a-2. 基本フローの 1 に戻る
+  3b. 価格または在庫数が数値でないとき
+      3b-1. システムは「数値で入力してください」と表示する
+      3b-2. 基本フローの 1 に戻る
+  4a. データベースに接続できないとき
+      4a-1. システムは「登録できませんでした」と表示する
+      4a-2. ユースケースを終了する</pre>
+<p>⑧の<strong>代替フロー</strong>は、うまくいかなかったときの手順です。番号は、基本フローのどの手順で分かれるかを表します。3a と 3b は基本フローの3（入力の検査）で、4a は4（登録）で分かれる道です。分かれた先の手順には、3a-1、3a-2 のように番号を振ります。</p>
+<p>3a は、商品名が空のときです。「商品名を入力してください」と表示し、基本フローの1に戻ります。担当者は、入力からやり直せます。3b は、価格か在庫数に、数字でないものが入っていたときです。「数値で入力してください」と表示し、3a と同じく1に戻ります。</p>
+<p>4a は、データベースに接続できないときです。「登録できませんでした」と表示し、ユースケースを終了します。入力し直しても登録できないので、1には戻らずに終わります。</p>
+</div>
+<p>このように、代替フローの最後には、2つのどちらかを書きます。<strong>基本フローのどこかに戻る</strong>か、<strong>ユースケースを終了する</strong>かです。代替フロー1つが、コードで書くエラー処理1つに当たります。ユースケース図の <code>«extend»</code> の楕円1つも、記述では代替フロー1つになります。</p>
+<p><strong>よくある間違い：主語と行き先を書き忘れる。</strong>急いで書いた形です。文章はエラーを出してくれないので、自分で見つけるしかありません。下の記述では、行の右に <code>// ここが問題</code> とある所が間違いです。</p>
+<p class="fname">ユースケース記述「商品を登録する」（間違いあり）</p>
+<pre class="code" id="c9">ユースケース名 : 商品を登録する
+主アクター     : 担当者
+
+基本フロー
+  1. 商品名・価格・在庫数を入力する                    <span class="cm">// ここが問題</span>
+  2. 担当者は、「追加」ボタンを押す
+  3. システムは、JTextField の値を取り出して検査する   <span class="cm">// ここが問題</span>
+  4. システムは、INSERT 文を実行する                   <span class="cm">// ここが問題</span>
+  5. 一覧を再表示する                                  <span class="cm">// ここが問題</span>
+
+代替フロー
+  3a. 商品名が空のとき
+      3a-1. システムは「商品名を入力してください」と表示する   <span class="cm">// このあと、どうなる？</span></pre>
+<p>ユースケース名・主アクター・基本フローの2・代替フローの 3a は、写したものと同じです。1と5は、主語がありません。担当者がするのか、システムがするのか分かりません。「1. 担当者は、〜」「5. システムは、〜」と書きます。</p>
+<p>3には、画面の部品の名前（<code>JTextField</code>）が出ています。画面を作り替えると書き直しになります。4には、中の仕組み（SQL の <code>INSERT</code> 文）の言葉が出ています。「3. システムは、入力内容を検査する」「4. システムは、商品を登録する」と書きます。</p>
+<p>最後の 3a-1 の右の <code>// このあと、どうなる？</code> は、次の手順が無いという印です。表示したあと、どうなるかが書いていません。「3a-2. 基本フローの 1 に戻る」を足します。</p>
+</div></details>
+<h2>6　シナリオ（⑨）</h2>
+<p class="explain-brief">シナリオは具体的な人・商品・日時などを入れた『1回分の流れ』。</p>
+<p class="explain-mini"><code>山田さんがボールペン30本を登録</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<pre class="code" id="c10">シナリオ名 : 新しく入荷したボールペンを登録する
+種別       : 正常シナリオ
+登場人物   : 山田さん（商品担当・入社2年目）   <span class="cm">// <span class="cn">⑨</span> 名前を付ける</span>
+状況       : 月曜の朝。ボールペンが30本入荷した。
+             一覧には、まだ2件しか登録されていない。
+  （中略）
+  山田さんは、商品名の欄に「ボールペン」と入力する。   <span class="cm">// <span class="cn">⑨</span> 値を具体的に</span>
+  価格の欄に「150」、在庫の欄に「30」と入力する。</pre>
+<p><strong>シナリオ</strong>は、ユースケースを「ある1回分」の話として書いたものです。人の名前と、具体的な値を入れて書きます。</p>
+<div class="line-block"><pre class="code" id="c11">シナリオ名 : 新しく入荷したボールペンを登録する
+種別       : 正常シナリオ
+登場人物   : 山田さん（商品担当・入社2年目）   <span class="cm">// <span class="cn">⑨</span> 名前を付ける</span>
+状況       : 月曜の朝。ボールペンが30本入荷した。
+             一覧には、まだ2件しか登録されていない。</pre>
+<p>「シナリオ名」は、この1回分の話の題名です。</p>
+<p>「種別」は、シナリオの種類です。種類は、正常・異常・例外の3つです。正常は、うまくいく話です。このシナリオは正常シナリオです。異常は、入力や状態が想定外のときです（在庫が足りない、など）。例外は、システム側の障害のときです（データベースに接続できない、など）。</p>
+<p>⑨の「登場人物」には、役割（担当者）ではなく、山田さんという名前を付けます。かっこの中は、山田さんの仕事と立場です。</p>
+<p>「状況」には、いつ、何が起きたかを書きます。月曜の朝に、ボールペンが30本入荷しました。一覧には、まだ2件しか登録されていません。</p>
+</div>
+<div class="line-block"><pre class="code" id="c12">（中略）
+山田さんは、商品名の欄に「ボールペン」と入力する。   <span class="cm">// <span class="cn">⑨</span> 値を具体的に</span>
+価格の欄に「150」、在庫の欄に「30」と入力する。</pre>
+<p>（中略）の所には、山田さんがアプリを起動し、一覧に2件が表示される行があります。</p>
+<p>⑨の値の行では、商品名の欄に「ボールペン」と入力します。続けて、価格の欄に「150」、在庫の欄に「30」と入力します。150 は1本の値段（円）、30 は入荷した本数です。</p>
+<p>記述で「商品名・価格・在庫数を入力する」と書いた所が、シナリオでは具体的な値になります。</p>
+</div>
+<p><strong>なぜ書くのか。</strong>抜けを見つけるためです。「同じボールペンが、もう登録されていたら？」のような問いは、具体的な値を書いたときに初めて出てきます。依頼した人とも、この話をもとに打ち合わせができます。書いた値は、そのままテストのデータになります。</p>
+</div></details>
+</div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>ユースケース図で「利用者ができること」を表す形は？</h2><details class="quick-answer"><summary>答えと理由を見る</summary><p>楕円です。アクターは棒人間、できることは楕円で表します。</p></details></div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。ノートに描いてください。<strong>①で管理者の線が引けたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　利用者を「担当者」と「管理者」の2種類にする、という要望が来ました。担当者は「一覧・検索・売る」ができ、管理者は<strong>担当者ができること全部に加えて</strong>「登録・更新・削除」ができます。この条件で、②のユースケース図を描き直す。</li><li>②　「商品を削除する」のユースケース記述を書く。主アクターは①の管理者です。代替フローを2つ以上考える。書けたら、同じユースケースの正常シナリオを1本、名前と値を入れて書く。</li></ul>
+<h2>骨組み</h2>
+<p>①の骨組みです。棒人間と楕円は置いてあります。線と、アクターどうしをつなぐ記号を描き足します。</p>
+<p><svg class="fig" viewBox="0 0 720 470" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="170" y="14" width="430" height="440" fill="#fcfcfd" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="40" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ</text>
+<circle cx="80" cy="100" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="109" x2="80" y2="134" stroke="#334155" stroke-width="1.8"/>
+<line x1="65" y1="118" x2="95" y2="118" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="134" x2="68" y2="154" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="134" x2="92" y2="154" stroke="#334155" stroke-width="1.8"/>
+<text x="80" y="174" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">担当者</text>
+<circle cx="80" cy="320" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="329" x2="80" y2="354" stroke="#334155" stroke-width="1.8"/>
+<line x1="65" y1="338" x2="95" y2="338" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="354" x2="68" y2="374" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="354" x2="92" y2="374" stroke="#334155" stroke-width="1.8"/>
+<text x="80" y="394" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">管理者</text>
+<ellipse cx="385" cy="80" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="85" font-size="14" text-anchor="middle" fill="#1f2933">商品を一覧する</text>
+<ellipse cx="385" cy="140" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="145" font-size="14" text-anchor="middle" fill="#1f2933">商品を検索する</text>
+<ellipse cx="385" cy="200" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="205" font-size="14" text-anchor="middle" fill="#1f2933">商品を売る</text>
+<ellipse cx="385" cy="290" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="295" font-size="14" text-anchor="middle" fill="#1f2933">商品を登録する</text>
+<ellipse cx="385" cy="350" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="355" font-size="14" text-anchor="middle" fill="#1f2933">商品を更新する</text>
+<ellipse cx="385" cy="410" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="415" font-size="14" text-anchor="middle" fill="#1f2933">商品を削除する</text>
+</svg></p>
+<p>②の枠です。<code>【　】</code> を埋め、<code>// ここに…</code> の所を書き足します。</p>
+<p class="fname">ユースケース記述「商品を削除する」の枠</p>
+<pre class="code" id="c13">ユースケース名 : 商品を削除する
+主アクター     : 【　　　　】
+事前条件       : 【　　　　　　　　　　　　　　　】
+事後条件       : 【　　　　　　　　　　　　　　　】
+トリガー       : 【　　　　　　　　　　　　　　　】
+
+基本フロー
+  1. 【　　　　　　　　　　　　　　　　　】
+  2. 【　　　　　　　　　　　　　　　　　】
+  <span class="cm">// ここに 3. 4. …と続けて書く</span>
+
+代替フロー
+  <span class="cm">// ここに2つ以上書く。それぞれの最後に行き先を書く</span></pre>
+<div class="btn-row"><button data-copy="c13">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">シナリオの枠</p>
+<pre class="code" id="c14">シナリオ名 : 【　　　　　　　　　　　　　　】
+種別       : 正常シナリオ
+登場人物   : 【　　　　　　　　】
+状況       : 【　　　　　　　　　　　　　　】
+
+  <span class="cm">// ここに、名前と値を入れた話を書く</span></pre>
+<div class="btn-row"><button data-copy="c14">コピーする</button><span class="copy-msg"></span></div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①は、③解説の1で見た<strong>汎化</strong>を使います。管理者から担当者へ白抜きの三角の付いた実線を引けば、管理者から「一覧・検索・売る」へ線を引き直す必要はありません。</li><li>②　②の事前条件は「削除する商品が一覧に表示されていること」のように、始める前に成り立っていることを書きます。</li><li>③　②の代替フローは、「商品を選ばずにボタンを押した」「削除を取り消した」などが考えられます。それぞれの最後に、戻る先か「ユースケースを終了する」を書きます。</li></ul>
+<div class="calm">2問とも解けなくて構いません。描けなかった所は、答えを見て写してから、もう一度自分で描いてください。</div>
+<div class="note">終わった人は <strong>問題集の第15回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　管理者を加えた図</summary><div class="sol">
+<svg class="fig" viewBox="0 0 720 470" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="170" y="14" width="430" height="440" fill="#fcfcfd" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="40" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">商品在庫管理アプリ</text>
+<circle cx="80" cy="100" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="109" x2="80" y2="134" stroke="#334155" stroke-width="1.8"/>
+<line x1="65" y1="118" x2="95" y2="118" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="134" x2="68" y2="154" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="134" x2="92" y2="154" stroke="#334155" stroke-width="1.8"/>
+<text x="80" y="174" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">担当者</text>
+<circle cx="80" cy="320" r="9" fill="#fff" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="329" x2="80" y2="354" stroke="#334155" stroke-width="1.8"/>
+<line x1="65" y1="338" x2="95" y2="338" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="354" x2="68" y2="374" stroke="#334155" stroke-width="1.8"/>
+<line x1="80" y1="354" x2="92" y2="374" stroke="#334155" stroke-width="1.8"/>
+<text x="80" y="394" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">管理者</text>
+<line x1="98" y1="122" x2="290" y2="80" stroke="#334155" stroke-width="1.6"/>
+<line x1="98" y1="122" x2="290" y2="140" stroke="#334155" stroke-width="1.6"/>
+<line x1="98" y1="122" x2="290" y2="200" stroke="#334155" stroke-width="1.6"/>
+<line x1="98" y1="342" x2="290" y2="290" stroke="#334155" stroke-width="1.6"/>
+<line x1="98" y1="342" x2="290" y2="350" stroke="#334155" stroke-width="1.6"/>
+<line x1="98" y1="342" x2="290" y2="410" stroke="#334155" stroke-width="1.6"/>
+<line x1="80" y1="309" x2="80" y2="199" stroke="#334155" stroke-width="1.6"/>
+<polygon points="80,184 89,199 71,199" fill="#fff" stroke="#334155" stroke-width="1.6"/>
+<text x="92" y="250" font-size="13" text-anchor="start" fill="#475569" font-weight="bold">汎化</text>
+<ellipse cx="385" cy="80" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="85" font-size="14" text-anchor="middle" fill="#1f2933">商品を一覧する</text>
+<ellipse cx="385" cy="140" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="145" font-size="14" text-anchor="middle" fill="#1f2933">商品を検索する</text>
+<ellipse cx="385" cy="200" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="205" font-size="14" text-anchor="middle" fill="#1f2933">商品を売る</text>
+<ellipse cx="385" cy="290" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="295" font-size="14" text-anchor="middle" fill="#1f2933">商品を登録する</text>
+<ellipse cx="385" cy="350" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="355" font-size="14" text-anchor="middle" fill="#1f2933">商品を更新する</text>
+<ellipse cx="385" cy="410" rx="95" ry="20" fill="#fff7ed" stroke="#334155" stroke-width="1.6"/>
+<text x="385" y="415" font-size="14" text-anchor="middle" fill="#1f2933">商品を削除する</text>
+</svg><p>担当者からは上の3本、管理者からは下の3本だけを引きます。管理者から担当者へ、白抜きの三角の矢印（汎化）を引きます。三角が付くほうが親（担当者）です。読み方は「管理者は、担当者の一種である」です。</p>
+<p>汎化があるので、管理者は担当者の3つのユースケースも使えます。線を引き直さずに済みます。</p>
+<div class="note">楕円の並べ方や棒人間の位置は、人によって変わって構いません。記号の意味が合っていれば正解です。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　「商品を削除する」の記述とシナリオ</summary><div class="sol">
+<p class="fname">ユースケース記述「商品を削除する」</p>
+<pre class="code" id="c15">ユースケース名 : 商品を削除する
+主アクター     : 管理者
+事前条件       : 削除する商品が一覧に表示されていること
+事後条件       : 選んだ商品が一覧から消えている
+トリガー       : 管理者が「削除」ボタンを押す
+
+基本フロー
+  1. 管理者は、一覧から削除する商品を選ぶ
+  2. 管理者は、「削除」ボタンを押す
+  3. システムは、削除してよいかを確かめる
+  4. 管理者は、削除を確定する
+  5. システムは、商品を削除する
+  6. システムは、一覧を再表示する
+
+代替フロー
+  2a. 商品を選ばずに「削除」ボタンを押したとき
+      2a-1. システムは「削除する商品を選んでください」と表示する
+      2a-2. 基本フローの 1 に戻る
+  4a. 管理者が削除を取り消したとき
+      4a-1. システムは、何も削除しない
+      4a-2. ユースケースを終了する
+  5a. データベースに接続できないとき
+      5a-1. システムは「削除できませんでした」と表示する
+      5a-2. ユースケースを終了する</pre>
+<p class="fname">シナリオ「廃番になった消しゴムを削除する」</p>
+<pre class="code" id="c16">シナリオ名 : 廃番になった消しゴムを削除する
+種別       : 正常シナリオ
+登場人物   : 佐藤さん（店長。アプリでは管理者）
+状況       : 金曜の夕方。消しゴムがメーカーの廃番になった。
+
+  佐藤さんは、アプリを起動する。
+  一覧に「ボールペン」「ノート」「消しゴム」の3件が表示される。
+
+  佐藤さんは、一覧の「消しゴム」の行を選び、「削除」ボタンを押す。
+
+  「消しゴムを削除してよいですか」と聞かれる。
+  佐藤さんは「はい」を選ぶ。
+
+  一覧が2件になり、「消しゴム」の行が消えている。</pre>
+<p>基本フローの3（削除してよいかを確かめる）を入れるかどうかは、決めて書く所です。入れたので、代替フロー 4a（取り消した）が生まれました。<strong>決めていなかったことを見つけて、決めて書く。</strong>これが要件定義の作業です。</p>
+<p>シナリオは、記述の基本フローを、佐藤さんと消しゴムの1回分に置き換えたものです。書いてみると「在庫が残っている商品も消してよいのか」という問いが出てきます。こうした問いを見つけるのが、シナリオを書く目的です。</p>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>UML が何のためのもので、この講座で扱う7つの図を挙げられる</li><li>ユースケース図の4つの記号（アクター・ユースケース・システム境界・関連）を、名前と意味つきで言える</li><li>include と extend を、矢印の向きも含めて使い分けられる</li><li>ユースケース記述とシナリオの違いを説明できる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、クラス図とオブジェクト図です。</strong>今日は、アプリを外から見て「何ができるか」を描きました。次回は<strong>中に入って</strong>、第13回で作った <code>ProductDTO</code>・<code>ProductDAO</code>・<code>ProductService</code> を、3段の箱と線で描きます。</p></div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>UML</td><td>ゆーえむえる</td><td>Unified Modeling Language（統一モデリング言語）。システムの作りを図で表すための、世界共通の描き方の決まり</td></tr><tr><td>ユースケース</td><td>ゆーすけーす</td><td>アクターから見て、そのシステムで「できること」。楕円で描き、「〜を〜する」の形で名前を付けます</td></tr><tr><td>ユースケース図</td><td>ゆーすけーすず</td><td>誰が、何をできるかを1枚に描いた図。要件定義で描きます</td></tr><tr><td>アクター</td><td>あくたー</td><td>システムの外にいて、システムとやりとりする人・外部のシステム・時間。棒人間で描きます</td></tr><tr><td>システム境界</td><td>しすてむきょうかい</td><td>これから作る範囲を表す四角。上にシステムの名前を書きます</td></tr><tr><td>関連</td><td>かんれん</td><td>アクターとユースケースを結ぶ実線。矢印は付けません</td></tr><tr><td>include</td><td>いんくるーど</td><td>必ず起きる共通の手順を、くくり出す関係。呼ぶ側から、くくり出した側へ破線の矢印</td></tr><tr><td>extend</td><td>えくすてんど</td><td>条件が成り立ったときだけ付け足される関係。付け足す側から、元のユースケースへ破線の矢印</td></tr><tr><td>ステレオタイプ</td><td>すてれおたいぷ</td><td>«include» のように « » で囲んで、線や箱の種類を書き添えたもの。手で書くときは &lt;&lt;include&gt;&gt; でも構いません</td></tr><tr><td>汎化</td><td>はんか</td><td>「管理者は、担当者の一種」のような関係。子から親へ、白抜きの三角の矢印を引きます。第6回の継承と同じ考え方</td></tr><tr><td>ユースケース記述</td><td>ゆーすけーすきじゅつ</td><td>1つのユースケースの手順を、決まった項目で文章にしたもの。楕円1つにつき1枚</td></tr><tr><td>主アクター</td><td>しゅあくたー</td><td>そのユースケースを始めるアクター</td></tr><tr><td>関係者と関心事</td><td>かんけいしゃとかんしんじ</td><td>そのユースケースで、誰が何を気にしているか</td></tr><tr><td>事前条件</td><td>じぜんじょうけん</td><td>始める前に成り立っていること。ここでは確かめず、成り立っているものとして進めます</td></tr><tr><td>事後条件</td><td>じごじょうけん</td><td>終わったあとに成り立っていること。完成したかどうかの判定に使います</td></tr><tr><td>トリガー</td><td>とりがー</td><td>ユースケースが始まるきっかけ</td></tr><tr><td>基本フロー</td><td>きほんふろー</td><td>うまくいったときの手順。主語を書き、番号を振ります</td></tr><tr><td>代替フロー</td><td>だいたいふろー</td><td>うまくいかなかったときの手順。3a、3a-1 のように番号を振り、最後に行き先を書きます</td></tr><tr><td>シナリオ</td><td>しなりお</td><td>ユースケースを、名前と具体的な値の入った「ある1回分」の話として書いたもの。正常・異常・例外の3種類があります</td></tr><tr><td>要件定義</td><td>ようけんていぎ</td><td>何を作るか（と、何を作らないか）を決める工程。開発の最初に行います</td></tr><tr><td>分析</td><td>ぶんせき</td><td>登場する「もの」を洗い出す工程</td></tr><tr><td>設計</td><td>せっけい</td><td>どう作るかを決める工程</td></tr><tr><td>構造図</td><td>こうぞうず</td><td>「どうなっているか」を表す UML の図。クラス図・オブジェクト図など</td></tr><tr><td>振る舞い図</td><td>ふるまいず</td><td>「どう動くか」を表す UML の図。ユースケース図・シーケンス図など</td></tr></table></details>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 15 回 ／ 全 22 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
