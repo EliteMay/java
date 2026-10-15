@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-
 <html lang="ja">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>問題集</title>
 <style>
     @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
@@ -33,7 +32,11 @@
     .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
             box-shadow:0 1px 4px rgba(0,0,0,.08); }
     .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
-    .card h2 { font-size:1.1rem; margin:1.4rem 0 .5rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
     .card h2:first-of-type { margin-top:0; }
     .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
     .card p { margin:.4rem 0; }
@@ -118,17 +121,17 @@
       details.ans[open] > summary::before { content:''; }
     }
 </style>
-<style>.course-nav{max-width:920px;margin:0 auto 18px}.course-nav a{padding:9px 15px;border-radius:8px;background:#fff7ed;color:#9a3412;text-decoration:none;border:1px solid #fdba74;font-weight:700}</style><link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader.css">
 <link rel="stylesheet" href="reader-ux.css">
 <script defer src="reader-ux.js"></script>
 <script defer src="reader.js"></script>
 </head>
 <body>
 <button id="bigbtn">文字を大きくする</button>
-<div class="container"><nav class="course-nav"><a href="index.html">← 講義一覧</a></nav>
-<header><span class="badge">Java復習講座</span><h1>問題集</h1><p>自力の演習が早く終わった人のための追加問題。授業の理解を深めるための追加問題集です</p></header>
-<div class="card"><p>各回3問です。1問目は資料と同じ型で別の題、2問目はひねりが1つ入り、3問目は次の回の内容を先取りします。3問目は分からなくて構いません。次の回で扱います。</p><p>この最新版ZIPには別冊の <strong>問題集_解答.html</strong> が含まれていません。問題集には解答を表示せず、演習として利用できます。各講義の「自力で書く」には解答が付いています。</p></div>
-<div class="card"><div class="card-title">目次</div><table><tr><th style="width:5rem">回</th><th>テーマ</th><th>問題</th></tr><tr><td><a href="#q01">第1回</a></td><td>コンパイルと JVM、2種類のエラー</td><td>1-1 赤い印を3つ消す　1-2 エラーは出ないのに、税込が合わない　1-3 商品を配列に入れて一覧にする（次回の先取り）</td></tr><tr><td><a href="#q02">第2回</a></td><td>変数と演算子・条件分岐・配列と繰り返し</td><td>2-1 1週間の売上を集計する　2-2 いちばん売れた商品の名前を出す　2-3 合計を求める処理に名前を付ける（次回の先取り）</td></tr><tr><td><a href="#q03">第3回</a></td><td>メソッド・引数・戻り値と値渡し</td><td>3-1 在庫の少ない商品を数えて補充する　3-2 元の価格を変えずに、セール価格の配列を返す　3-3 商品をまとめて渡す（次回の先取り）</td></tr><tr><td><a href="#q04">第4回</a></td><td>クラスとインスタンス、コンストラクタ</td><td>4-1 Student クラスと平均点　4-2 在庫を減らす sell メソッド　4-3 価格をマイナスにさせない（次回の先取り）</td></tr><tr><td><a href="#q05">第5回</a></td><td>カプセル化と static</td><td>5-1 生徒の点数を守る Student クラス　5-2 全商品の売上合計を数える　5-3 食品クラスを作ってみる（次回の先取り）</td></tr><tr><td><a href="#q06">第6回</a></td><td>継承・オーバーライド・super</td><td>6-1 食品は税率 8%　6-2 セール品は、税込価格から値引き　6-3 3種類を1つの配列に入れる（次回の先取り）</td></tr><tr><td><a href="#q07">第7回</a></td><td>インタフェース・抽象クラスとポリモーフィズム</td><td>7-1 支払い方法ごとのポイント　7-2 1つのクラスに、約束を2つ　7-3 List も親の型（次回の先取り）</td></tr><tr><td><a href="#q08">第8回</a></td><td>コレクションの ArrayList と HashMap</td><td>8-1 英単語帳を List と Map で作る　8-2 Map から取り出して在庫を減らす　8-3 無い ID を受け止める（次回の先取り）</td></tr><tr><td><a href="#q09">第9回</a></td><td>null・例外と try-catch</td><td>9-1 ポイントを足す addPoint に例外を付ける　9-2 見つからないときは null ではなく例外にする　9-3 null を確かめてから使う</td></tr><tr><td><a href="#q10">第10回</a></td><td>ストリームと検査例外、ファイル入出力と CSV</td><td>10-1 点数の CSV を読んで、合格者だけ書き出す　10-2 記録のファイルに、続きを足していく　10-3 ID で1件探す（次回の先取り）</td></tr><tr><td><a href="#q11">第11回</a></td><td>MySQL・SQL・JDBC</td><td>11-1 会員の表を読む　11-2 件数を数える（返ってくる表が1行）　11-3 ? に値を入れて絞り込む（次回の先取り）</td></tr><tr><td><a href="#q12">第12回</a></td><td>PreparedStatement で追加・更新・削除</td><td>12-1 会員を追加し、ポイントを足す MemberDao　12-2 在庫が足りるときだけ売る（条件を SQL に入れる）　12-3 入力の検査を、Service に任せる（次回の先取り）</td></tr><tr><td><a href="#q13">第13回</a></td><td>DTO・DAO・3層</td><td>13-1 値引きを Service に任せる　13-2 同じ名前の商品は登録させない　13-3 画面の表に並べる形を作る（次回の先取り）</td></tr><tr><td><a href="#q14">第14回</a></td><td>Swing の画面とイベント</td><td>14-1 税込み価格を出す画面　14-2 表の行を選んだら、入力欄に入れる　14-3 担当者ができることを書き出す（次回の先取り）</td></tr><tr><td><a href="#q15">第15回</a></td><td>UML とユースケース</td><td>15-1 図書館の貸出システムのユースケース図　15-2 毎月末に、会計システムへ在庫を送る　15-3 記述から、クラスを見つける（次回の先取り）</td></tr><tr><td><a href="#q16">第16回</a></td><td>クラス図とオブジェクト図</td><td>16-1 Book のクラス図とオブジェクト図　16-2 図を見てコードを書く　16-3 findAll() が呼ばれる順番（次回の先取り）</td></tr><tr><td><a href="#q17">第17回</a></td><td>シーケンス図と複合フラグメント</td><td>17-1 商品を更新する　17-2 図からコードを書く　17-3 コミュニケーション図に描き直す（次回の先取り）</td></tr><tr><td><a href="#q18">第18回</a></td><td>ステートマシン図・アクティビティ図・コミュニケーション図と総まとめ</td><td>18-1 「注文」のステートマシン図　18-2 月末の在庫締めのアクティビティ図　18-3 「発注」を図から作る（講座のあとの先取り）</td></tr></table></div>
+<div class="container"><nav aria-label="講義一覧へ戻る" class="course-nav"><a href="index.html">← 講義一覧</a></nav>
+<header><span class="badge">Java復習講座</span><h1>問題集</h1><p>授業の理解を深めるための追加問題集です</p></header>
+<div class="card"><p>各回3問です。1問目は資料と同じ型で別の題、2問目はひねりが1つ入り、3問目は次の回の内容を先取りします。3問目は分からなくて構いません。次の回で扱います。</p><p>解答ファイルは今回提供されていません。問題集は自力練習として利用できます。各講義の「自力で書く」には解答が付いています。</p></div>
+<div class="card"><div class="card-title">目次</div><table><tr><th style="width:5rem">回</th><th>テーマ</th><th>問題</th></tr><tr><td><a href="#q01">第1回</a></td><td>コンパイルと JVM、2種類のエラー</td><td>1-1 赤い印を3つ消す　1-2 エラーは出ないのに、税込が合わない　1-3 商品を配列に入れて一覧にする（次回の先取り）</td></tr><tr><td><a href="#q02">第2回</a></td><td>変数と演算子・条件分岐・配列と繰り返し</td><td>2-1 1週間の売上を集計する　2-2 いちばん売れた商品の名前を出す　2-3 合計を求める処理に名前を付ける（次回の先取り）</td></tr><tr><td><a href="#q03">第3回</a></td><td>メソッド・引数・戻り値と値渡し</td><td>3-1 在庫の少ない商品を数えて補充する　3-2 元の価格を変えずに、セール価格の配列を返す　3-3 商品をまとめて渡す（次回の先取り）</td></tr><tr><td><a href="#q04">第4回</a></td><td>クラスとインスタンス、コンストラクタ</td><td>4-1 Student クラスと平均点　4-2 在庫を減らす sell メソッド　4-3 価格をマイナスにさせない（次回の先取り）</td></tr><tr><td><a href="#q05">第5回</a></td><td>カプセル化と static</td><td>5-1 生徒の点数を守る Student クラス　5-2 全商品の売上合計を数える　5-3 食品クラスを作ってみる（次回の先取り）</td></tr><tr><td><a href="#q06">第6回</a></td><td>継承・オーバーライド・super</td><td>6-1 食品は税率 8%　6-2 セール品は、税込価格から値引き　6-3 3種類を1つの配列に入れる（次回の先取り）</td></tr><tr><td><a href="#q07">第7回</a></td><td>インタフェース・抽象クラスとポリモーフィズム</td><td>7-1 支払い方法ごとのポイント　7-2 1つのクラスに、約束を2つ　7-3 List も親の型（次回の先取り）</td></tr><tr><td><a href="#q08">第8回</a></td><td>コレクションの ArrayList と HashMap</td><td>8-1 英単語帳を List と Map で作る　8-2 Map から取り出して在庫を減らす　8-3 無い ID を受け止める（次回の先取り）</td></tr><tr><td><a href="#q09">第9回</a></td><td>null・例外と try-catch</td><td>9-1 ポイントを足す addPoint に例外を付ける　9-2 見つからないときは null ではなく例外にする　9-3 null を確かめてから使う</td></tr><tr><td><a href="#q10">第10回</a></td><td>ストリームと検査例外、ファイル入出力と CSV</td><td>10-1 点数の CSV を読んで、合格者だけ書き出す　10-2 記録のファイルに、続きを足していく　10-3 ID で1件探す（次回の先取り）</td></tr><tr><td><a href="#q11">第11回</a></td><td>MySQL・SQL・JDBC</td><td>11-1 会員の表を読む　11-2 件数を数える（返ってくる表が1行）　11-3 ? に値を入れて絞り込む（次回の先取り）</td></tr><tr><td><a href="#q12">第12回</a></td><td>PreparedStatement で追加・更新・削除</td><td>12-1 会員を追加し、ポイントを足す MemberDao　12-2 在庫が足りるときだけ売る（条件を SQL に入れる）　12-3 入力の検査を、Service に任せる（次回の先取り）</td></tr><tr><td><a href="#q13">第13回</a></td><td>DTO・DAO・3層</td><td>13-1 値引きを Service に任せる　13-2 同じ名前の商品は登録させない　13-3 画面の表に並べる形を作る（次回の先取り）</td></tr><tr><td><a href="#q14">第14回</a></td><td>Swing の画面とイベント</td><td>14-1 税込み価格を出す画面　14-2 表の行を選んだら、入力欄に入れる　14-3 担当者ができることを書き出す（次回の先取り）</td></tr><tr><td><a href="#q15">第15回</a></td><td>UML とユースケース</td><td>15-1 図書館の貸出システムのユースケース図　15-2 毎月末に、会計システムへ在庫を送る　15-3 記述から、クラスを見つける（次回の先取り）</td></tr><tr><td><a href="#q16">第16回</a></td><td>クラス図とオブジェクト図</td><td>16-1 Book のクラス図とオブジェクト図　16-2 図を見てコードを書く　16-3 findAll() が呼ばれる順番（次回の先取り）</td></tr><tr><td><a href="#q17">第17回</a></td><td>シーケンス図と複合フラグメント</td><td>17-1 商品を更新する　17-2 図からコードを書く　17-3 コミュニケーション図に描き直す（第19回の先取り）</td></tr><tr><td><a href="#q18">第18回</a></td><td>ステートマシン図</td><td>18-1 「注文」のステートマシン図　18-2 ガード条件の重なりと抜けを見つける　18-3 「発注」を図から作る</td></tr><tr><td><a href="#q19">第19回</a></td><td>アクティビティ図とコミュニケーション図</td><td>19-1 月末の在庫締めのアクティビティ図　19-2 商品を登録するやりとりのコミュニケーション図　19-3 コミュニケーション図で3層の向きを確かめる</td></tr></table></div>
 <div class="card" id="q01"><div class="card-title">第 1 回　コンパイルと JVM、2種類のエラー</div>
 <p>新しいプロジェクト <code>quiz01</code> を作って解きます（授業の <code>lesson01</code> とクラスを分けるためです）。クラスを作るときのパッケージ欄は <code>quiz01</code> のままにします。どのファイルも1行目は <code>package quiz01;</code> です。</p>
 <div class="step"><span class="step-id">1-1</span><h3>赤い印を3つ消す</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
@@ -898,8 +901,7 @@ public class PayMain {
 アプリ払い : 2000円 → 60ポイント</div>
 <h3>ヒント</h3>
 <ul class="plain num"><li>①　<code>Payment</code> の約束は、中身の <code>{ }</code> を書かず <code>;</code> で終えます。</li><li>②　1%は <code>price / 100</code>、3%は <code>price * 3 / 100</code> です。</li><li>③　<code>Card</code> と <code>AppPay</code> は、<code>Cash</code> の <code>return</code> の中身を変えるだけで書けます。</li></ul>
-</div>
-<div class="step"><span class="step-id">7-2</span><h3>1つのクラスに、約束を2つ</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+</div><div class="step"><span class="step-id">7-2</span><h3>1つのクラスに、約束を2つ</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
 <p>インタフェースが2つあります。<code>Priced</code> は「値段が言える」、<code>Printable</code> は「表示できる」という約束です。</p>
 <p>商品 <code>Goods</code> は、<strong>両方の約束を守ります。</strong>送料 <code>Fee</code> は値段は言えますが、表示はしません。<code>Goods</code> の <code>【　】</code> と <code>// ここに…</code> の所を書いてください。ほかの4つはこのまま写します。</p>
 <pre class="code" id="c34">package quiz07;
@@ -1798,8 +1800,7 @@ public class PriceMain {
         } catch (SQLException e) {
             System.out.println("データベースのエラー: " + e.getMessage());
         }
-    }
-}</pre>
+    }}</pre>
 <div class="btn-row"><button data-copy="c64">コピーする</button><span class="copy-msg"></span></div>
 <p class="expected-label">実行結果はこうなります</p>
 <div class="expected">3 / 消しゴム / 100円 / 残り50個
@@ -2511,7 +2512,7 @@ public class TaxMain {
 }</pre>
 <div class="btn-row"><button data-copy="c83">コピーする</button><span class="copy-msg"></span></div>
 <p>「150」と入れて［計算］を押すと、次のようになります。</p>
-<p><img alt="価格150、税込み165円と出た画面" src="img/lesson14_quiz1.png" style="max-width:100%"/></p><h3>ヒント</h3>
+<p><img src="img/lesson14_quiz1.png" alt="価格150、税込み165円と出た画面" style="max-width:100%"></p><h3>ヒント</h3>
 <ul class="plain num"><li>①　貼り紙は、授業の③の3（⑥の行）と同じ形です。</li><li>②　結果の表示は、<code>resultLabel.setText("税込み: " + total + "円");</code> のように <code>setText</code> で文字を書き換えます。</li><li>③　<code>calc()</code> は、授業の <code>addProduct()</code> の <code>try-catch</code> と同じ形です。<code>SQLException</code> は出ないので、<code>catch</code> は <code>NumberFormatException</code> の1つです。</li><li>④　<code>150 * 110 / 100</code> は <code>165</code> です。<code>int</code> どうしの割り算なので、小数は切り捨てられます。</li></ul>
 </div>
 <div class="step"><span class="step-id">14-2</span><h3>表の行を選んだら、入力欄に入れる</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
@@ -2578,7 +2579,7 @@ public class PickMain {
 }</pre>
 <div class="btn-row"><button data-copy="c85">コピーする</button><span class="copy-msg"></span></div>
 <p>2行目（ノート）をクリックすると、次のようになります。</p>
-<p><img alt="ノートの行が選ばれ、下の入力欄にノートと220が入った画面" src="img/lesson14_quiz2.png" style="max-width:100%"/></p><h3>ヒント</h3>
+<p><img src="img/lesson14_quiz2.png" alt="ノートの行が選ばれ、下の入力欄にノートと220が入った画面" style="max-width:100%"></p><h3>ヒント</h3>
 <ul class="plain num"><li>①　表の行が選ばれたときの貼り紙は、<code>table.getSelectionModel().addListSelectionListener(e -&gt; pick());</code> と書きます。ボタンの <code>addActionListener</code> と同じく、中身は「選ばれたら <code>pick()</code> を呼ぶ」です。</li><li>②　<code>table.getSelectedRow()</code> は、選ばれた行の番号を 0 から数えて返します。何も選ばれていないときは <code>-1</code> です。</li><li>③　<code>model.getValueAt(行, 列)</code> で表の中身を1つ取り出せます。列も 0 から数えるので、商品名は 1、価格は 2 です。</li><li>④　<code>getValueAt</code> が返すのは <code>Object</code> なので、<code>String.valueOf(...)</code> で文字列にしてから <code>setText</code> に渡します。</li></ul>
 </div>
 <div class="step"><span class="step-id">14-3</span><h3>担当者ができることを書き出す（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
@@ -2674,31 +2675,30 @@ public class BookMain {
 </div>
 <div class="step"><span class="step-id">16-2</span><h3>図を見てコードを書く</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
 <p>次のクラス図のとおりに、<code>Category</code>（分類）クラスを書いてください。<code>Product</code> は第5回と同じものです。</p>
-<svg class="fig" role="img" viewbox="0 0 720 170" xmlns="http://www.w3.org/2000/svg">
-<defs><marker id="ar20" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
-<defs><marker id="q16m2OP" markerheight="12" markerunits="userSpaceOnUse" markerwidth="12" orient="auto" refx="11" refy="6" viewbox="0 0 12 12"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"></path></marker><marker id="q16m2SOL" markerheight="12" markerunits="userSpaceOnUse" markerwidth="12" orient="auto" refx="11" refy="6" viewbox="0 0 12 12"><path d="M1,1 L11,6 L1,11 z" fill="#334155"></path></marker></defs>
-<rect fill="#fff" height="130" width="250" x="40" y="20"></rect>
-<rect fill="#e0f2fe" height="30" width="250" x="40" y="20"></rect>
-<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="middle" x="165" y="41">Category</text>
-<line stroke="#334155" stroke-width="1.5" x1="40" x2="290" y1="50" y2="50"></line>
-<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="70">- name : String</text>
-<line stroke="#334155" stroke-width="1.5" x1="40" x2="290" y1="82" y2="82"></line>
-<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="102">+ Category(name : String)</text>
-<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="120">+ add(p : Product) : void</text>
-<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="50" xml:space="preserve" y="138">+ show() : void</text>
-<rect fill="none" height="130" stroke="#334155" stroke-width="1.5" width="250" x="40" y="20"></rect>
-<rect fill="#fff" height="30" width="220" x="460" y="20"></rect>
-<rect fill="#e0f2fe" height="30" width="220" x="460" y="20"></rect>
-<text fill="#1f2933" font-size="15" font-weight="bold" text-anchor="middle" x="570" y="41">Product</text>
-<rect fill="none" height="30" stroke="#334155" stroke-width="1.5" width="220" x="460" y="20"></rect>
-<text fill="#64748b" font-size="12" text-anchor="middle" x="570" y="72">（第5回と同じ。中身は省略）</text>
-<polyline fill="none" marker-end="url(#q16m2OP)" points="290,35 460,35" stroke="#334155" stroke-width="1.6"></polyline>
-<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="end" x="450" xml:space="preserve" y="27">- products</text>
-<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="end" x="450" xml:space="preserve" y="55">0..*</text>
-<text fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" font-size="13" text-anchor="start" x="300" xml:space="preserve" y="55">1</text>
+<svg class="fig" viewBox="0 0 720 170" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar20" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="q16m2OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="q16m2SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker></defs>
+<rect x="40" y="20" width="250" height="130" fill="#fff"/>
+<rect x="40" y="20" width="250" height="30" fill="#e0f2fe"/>
+<text x="165" y="41" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">Category</text>
+<line x1="40" y1="50" x2="290" y2="50" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="70" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- name : String</text>
+<line x1="40" y1="82" x2="290" y2="82" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="102" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ Category(name : String)</text>
+<text x="50" y="120" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ add(p : Product) : void</text>
+<text x="50" y="138" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ show() : void</text>
+<rect x="40" y="20" width="250" height="130" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="460" y="20" width="220" height="30" fill="#fff"/>
+<rect x="460" y="20" width="220" height="30" fill="#e0f2fe"/>
+<text x="570" y="41" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">Product</text>
+<rect x="460" y="20" width="220" height="30" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="570" y="72" font-size="12" text-anchor="middle" fill="#64748b">（第5回と同じ。中身は省略）</text>
+<polyline points="290,35 460,35" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#q16m2OP)"/>
+<text x="450" y="27" font-size="13" text-anchor="end" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- products</text>
+<text x="450" y="55" font-size="13" text-anchor="end" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">0..&#42;</text>
+<text x="300" y="55" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">1</text>
 </svg><p class="figcap">Category（分類）のクラス図</p><p>3つのファイルの全体です。<code>Product</code> と <code>CategoryMain</code> はこのまま写し、<code>Category</code> の <code>// ここに…</code> の所を書きます。</p>
 <pre class="code" id="c89">package quiz16;
-
 public class Product {
     private static int count = 0;
 
@@ -2794,53 +2794,53 @@ public class CategoryMain {
 </div>
 <div class="step"><span class="step-id">17-2</span><h3>図からコードを書く</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
 <p>次のシーケンス図は、<code>ProductService</code> の <code>sell</code> メソッドを描いたものです。この図のとおりに <code>sell</code> を書いてください。</p>
-<svg class="fig" role="img" viewbox="0 0 770 400" xmlns="http://www.w3.org/2000/svg">
-<defs><marker id="ar36" markerheight="8" markerwidth="8" orient="auto-start-reverse" refx="9" refy="5" viewbox="0 0 10 10"><path d="M0,0 L10,5 L0,10 z" fill="#334155"></path></marker></defs>
-<rect fill="none" height="380" stroke="#334155" stroke-width="1.5" width="750" x="10" y="10"></rect>
-<path d="M10,10 h109 v12 l-7,8 h-102 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"></path>
-<text fill="#1f2933" font-size="13" font-weight="bold" x="16" y="25">sd 商品を売る</text>
-<rect fill="#e0f2fe" height="30" rx="4" stroke="#334155" stroke-width="1.5" width="135" x="98" y="50"></rect>
-<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="165" y="70">:ProductFrame</text>
-<rect fill="#e0f2fe" height="30" rx="4" stroke="#334155" stroke-width="1.5" width="152" x="254" y="50"></rect>
-<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="330" y="70">:ProductService</text>
-<rect fill="#e0f2fe" height="30" rx="4" stroke="#334155" stroke-width="1.5" width="118" x="461" y="50"></rect>
-<text fill="#1f2933" font-size="14" font-weight="bold" text-anchor="middle" x="520" y="70">:ProductDAO</text>
-<line stroke="#64748b" stroke-dasharray="6 4" stroke-width="1.3" x1="165" x2="165" y1="80" y2="394"></line>
-<line stroke="#64748b" stroke-dasharray="6 4" stroke-width="1.3" x1="330" x2="330" y1="80" y2="394"></line>
-<line stroke="#64748b" stroke-dasharray="6 4" stroke-width="1.3" x1="520" x2="520" y1="80" y2="394"></line>
-<rect fill="#fff" height="240" stroke="#334155" stroke-width="1.5" width="12" x="159" y="126"></rect>
-<rect fill="#fff" height="234" stroke="#334155" stroke-width="1.5" width="12" x="324" y="126"></rect>
-<line stroke="#334155" stroke-width="1.5" x1="171" x2="324" y1="126" y2="126"></line>
-<polygon fill="#334155" points="324,126 313,121 313,131"></polygon>
-<text fill="#1f2933" font-size="13" text-anchor="middle" x="247" y="120">sell(1, 3)</text>
-<rect fill="#fff" height="26" stroke="#334155" stroke-width="1.5" width="12" x="514" y="152"></rect>
-<line stroke="#334155" stroke-width="1.5" x1="336" x2="514" y1="152" y2="152"></line>
-<polygon fill="#334155" points="514,152 503,147 503,157"></polygon>
-<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="146">findById(1)</text>
-<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="514" x2="336" y1="178" y2="178"></line>
-<polyline fill="none" points="347,172 336,178 347,184" stroke="#334155" stroke-width="1.5"></polyline>
-<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="172">p</text>
-<rect fill="none" height="180" stroke="#334155" stroke-width="1.5" width="726" x="22" y="194"></rect>
-<path d="M22,194 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"></path>
-<text fill="#1f2933" font-size="13" font-weight="bold" x="28" y="209">alt</text>
-<text fill="#1d4ed8" font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="4" x="75" y="209">[p が null]</text>
-<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="324" x2="171" y1="234" y2="234"></line>
-<polyline fill="none" points="182,228 171,234 182,240" stroke="#334155" stroke-width="1.5"></polyline>
-<text fill="#1f2933" font-size="11" text-anchor="middle" x="247" y="228">IllegalArgumentException</text>
-<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.3" x1="22" x2="748" y1="250" y2="250"></line>
-<text fill="#1d4ed8" font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="4" x="30" y="266">[在庫が足りない]</text>
-<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="324" x2="171" y1="292" y2="292"></line>
-<polyline fill="none" points="182,286 171,292 182,298" stroke="#334155" stroke-width="1.5"></polyline>
-<text fill="#1f2933" font-size="11" text-anchor="middle" x="247" y="286">IllegalArgumentException</text>
-<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.3" x1="22" x2="748" y1="308" y2="308"></line>
-<text fill="#1d4ed8" font-size="13" paint-order="stroke" stroke="#ffffff" stroke-width="4" x="30" y="324">[else]</text>
-<rect fill="#fff" height="24" stroke="#334155" stroke-width="1.5" width="12" x="514" y="336"></rect>
-<line stroke="#334155" stroke-width="1.5" x1="336" x2="514" y1="336" y2="336"></line>
-<polygon fill="#334155" points="514,336 503,331 503,341"></polygon>
-<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="330">update(p)</text>
-<line stroke="#334155" stroke-dasharray="7 4" stroke-width="1.5" x1="514" x2="336" y1="360" y2="360"></line>
-<polyline fill="none" points="347,354 336,360 347,366" stroke="#334155" stroke-width="1.5"></polyline>
-<text fill="#1f2933" font-size="13" text-anchor="middle" x="425" y="354">1</text>
+<svg class="fig" viewBox="0 0 770 400" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar36" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="10" width="750" height="380" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h109 v12 l-7,8 h-102 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を売る</text>
+<rect x="98" y="50" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="165" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<rect x="254" y="50" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="330" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<rect x="461" y="50" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="520" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="165" y1="80" x2="165" y2="394" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="330" y1="80" x2="330" y2="394" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="520" y1="80" x2="520" y2="394" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="159" y="126" width="12" height="240" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="324" y="126" width="12" height="234" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="171" y1="126" x2="324" y2="126" stroke="#334155" stroke-width="1.5"/>
+<polygon points="324,126 313,121 313,131" fill="#334155"/>
+<text x="247" y="120" font-size="13" text-anchor="middle" fill="#1f2933">sell(1, 3)</text>
+<rect x="514" y="152" width="12" height="26" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="152" x2="514" y2="152" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,152 503,147 503,157" fill="#334155"/>
+<text x="425" y="146" font-size="13" text-anchor="middle" fill="#1f2933">findById(1)</text>
+<line x1="514" y1="178" x2="336" y2="178" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,172 336,178 347,184" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="172" font-size="13" text-anchor="middle" fill="#1f2933">p</text>
+<rect x="22" y="194" width="726" height="180" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M22,194 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="28" y="209" font-size="13" font-weight="bold" fill="#1f2933">alt</text>
+<text x="75" y="209" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[p が null]</text>
+<line x1="324" y1="234" x2="171" y2="234" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,228 171,234 182,240" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="228" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="22" y1="250" x2="748" y2="250" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="266" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[在庫が足りない]</text>
+<line x1="324" y1="292" x2="171" y2="292" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,286 171,292 182,298" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="286" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="22" y1="308" x2="748" y2="308" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="324" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[else]</text>
+<rect x="514" y="336" width="12" height="24" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="336" x2="514" y2="336" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,336 503,331 503,341" fill="#334155"/>
+<text x="425" y="330" font-size="13" text-anchor="middle" fill="#1f2933">update(p)</text>
+<line x1="514" y1="360" x2="336" y2="360" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,354 336,360 347,366" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="354" font-size="13" text-anchor="middle" fill="#1f2933">1</text>
 </svg><p class="figcap">商品を売る（ProductService の sell）</p><p>例外の理由の文は、見つからないときが「ID 9 の商品はありません」、在庫が足りないときが「在庫が足りません（残り10個）」の形です。図には描いていませんが、<code>update</code> を呼ぶ前に、在庫を売った個数だけ減らす1行が要ります（setter は図に描かない決まりのため）。</p>
 <p>4つのファイルの全体です。<code>ProductDTO</code> と <code>ProductDAO</code> は第13回と同じもの（1行目だけ <code>quiz17</code>）で、このまま写します。<code>ProductService</code> は第13回のものに <code>sell</code> の枠を足しています。確かめるのは <code>SellMain</code> です。始める前に、第13回の②の手順⑨の SQL で表を最初の3件に戻してください。</p>
 <pre class="code" id="c92">package quiz17;
@@ -3026,15 +3026,15 @@ public class SellMain {
 <h3>ヒント</h3>
 <ul class="plain num"><li>①　図の上から順に、実線の矢印1本がメソッド呼び出し1つ、<code>alt</code> の段1つが <code>if</code> 1つです。</li><li>②　<code>alt</code> の1段目と2段目は、例外を投げて終わる道です。<code>throw new IllegalArgumentException(...)</code> を書けば、そこで終わります。</li><li>③　在庫を減らす1行は <code>p.setStock(p.getStock() - quantity);</code> です。</li></ul>
 </div>
-<div class="step"><span class="step-id">17-3</span><h3>コミュニケーション図に描き直す（次回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
-<p>授業の図1「商品を一覧する」と同じやりとりを、<strong>コミュニケーション図</strong>という別の図で描いてください。次回の主役の1つです。</p>
+<div class="step"><span class="step-id">17-3</span><h3>コミュニケーション図に描き直す（第19回の先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">第19回の先取り</p>
+<p>授業の図1「商品を一覧する」と同じやりとりを、<strong>コミュニケーション図</strong>という別の図で描いてください。第19回の主役の1つです。</p>
 <table><tr><th>決まり</th><th>描き方</th></tr><tr><td>登場するもの</td><td>シーケンス図のヘッダーと同じ四角。ライフラインは描かない。置く場所は自由</td></tr><tr><td>つながり</td><td>呼び合う四角どうしを実線で結ぶ</td></tr><tr><td>メッセージ</td><td>線に沿って短い矢印を描き、「番号: メソッド名」を書く</td></tr><tr><td>順番</td><td>縦の位置ではなく番号で表す。1 の中で起きた呼び出しは 1.1、1.1 の中で起きたものは 1.1.1</td></tr></table>
 <h3>ヒント</h3>
 <ul class="plain num"><li>①　登場するのは <code>:ProductFrame</code>、<code>:ProductService</code>、<code>:ProductDAO</code>、<code>:MySQL</code> の4つです。</li><li>②　戻り（<code>List</code> や「3行」）は描かなくて構いません。</li></ul>
 </div>
 </div>
-<div class="card" id="q18"><div class="card-title">第 18 回　ステートマシン図・アクティビティ図・コミュニケーション図と総まとめ</div>
-<p>図を描く問題です。ノートに描いてから、解答の図と見比べます。3問目だけはコードも書くので、新しいプロジェクト <code>quiz18</code> を作ります（授業の <code>lesson18</code> と分けます）。クラスを作るときのパッケージ欄は <code>quiz18</code> のままにします。どのファイルも1行目は <code>package quiz18;</code> です。</p>
+<div class="card" id="q18"><div class="card-title">第 18 回　ステートマシン図</div>
+<p>ステートマシン図を描く・読む問題です。ノートに描いてから、解答と見比べます。3問目だけはコードも書くので、新しいプロジェクト <code>quiz18</code> を作ります（授業の <code>lesson18</code> と分けます）。クラスを作るときのパッケージ欄は <code>quiz18</code> のままにします。どのファイルも1行目は <code>package quiz18;</code> です。</p>
 <div class="step"><span class="step-id">18-1</span><h3>「注文」のステートマシン図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
 <p>ネットショップの「注文」1件が、どの状態を行き来するかを、ステートマシン図で描いてください。状態は「受付済み」「発送準備中」「発送済み」「受取済み」「キャンセル済み」の5つです。</p>
 <table><tr><th>きっかけ（イベント）</th><th>どこから</th><th>どこへ</th></tr><tr><td>注文する</td><td>始まり</td><td>受付済み</td></tr><tr><td>準備を始める</td><td>受付済み</td><td>発送準備中</td></tr><tr><td>発送する</td><td>発送準備中</td><td>発送済み</td></tr><tr><td>受け取る</td><td>発送済み</td><td>受取済み</td></tr><tr><td>キャンセルする</td><td>受付済み／発送準備中</td><td>キャンセル済み</td></tr></table>
@@ -3042,14 +3042,16 @@ public class SellMain {
 <h3>ヒント</h3>
 <ul class="plain num"><li>①　開始の黒丸は1つ、終了の二重丸は2つ描きます。</li><li>②　「キャンセルする」の矢印は2本です。</li><li>③　四角の中は「〜済み」「〜中」、矢印の上は「〜する」です。</li></ul>
 </div>
-<div class="step"><span class="step-id">18-2</span><h3>月末の在庫締めのアクティビティ図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
-<p>次の業務を、アクティビティ図で描いてください。スイムレーンは「担当者」「システム」の2本です。</p>
-<div class="note">月末に在庫を締める。担当者が棚卸しをして実数を数える。同時に、システムが帳簿上の在庫を集計する。両方そろったら、システムが差があるかを確かめる。差があれば、担当者が原因を調べて修正する。修正したら、または差がなければ、システムが在庫を締める。</div>
+<div class="step"><span class="step-id">18-2</span><h3>ガード条件の重なりと抜けを見つける</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>授業で描いた「商品1件の状態」の、「在庫あり」から出る「売る」の2本の矢印です。ガード条件だけを変えた A〜C の3通りを考えます。</p>
+<table><tr><th></th><th>在庫ありのままの矢印</th><th>売り切れへ移る矢印</th></tr><tr><td>A</td><td>［在庫が売る数より多い］</td><td>［在庫と売る数が同じ］</td></tr><tr><td>B</td><td>［在庫が売る数以上］</td><td>［在庫が売る数以下］</td></tr><tr><td>C</td><td>［在庫が売る数より2個以上多い］</td><td>［在庫と売る数が同じ］</td></tr></table>
+<p>①　在庫が3個のとき、売る数 2・3・4 のそれぞれで、A〜C の行き先を答えてください。行き先は「在庫あり」「売り切れ」「2つ（重なり）」「無し」のどれかです。</p>
+<p>②　A〜C のうち、正しく書けているのはどれですか。正しくないものは、どこがおかしいかも答えてください。</p>
 <h3>ヒント</h3>
-<ul class="plain num"><li>①　「同時に」と「両方そろったら」は、ひし形ではありません。</li><li>②　「差があれば」「差がなければ」はひし形です。［差がある］［差がない］の2本を出します。</li><li>③　どちらの道も最後は「在庫を締める」へ進むので、2本を1本に戻す記号を置きます。</li></ul>
+<ul class="plain num"><li>①　「在庫」は、売る前の個数です。</li><li>②　売る数 2・3・4 は、在庫より1少ない数・同じ数・1多い数です。授業の③の最後で、確かめるときに当てはめるように勧めた数です。</li><li>③　どの［ ］にも当てはまらない「無し」は、それだけでは間違いではありません。売れないと決めてよい場面かどうかで判断します。</li></ul>
 </div>
-<div class="step"><span class="step-id">18-3</span><h3>「発注」を図から作る（講座のあとの先取り）</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">次回の先取り</p>
-<p>講座のあとに商品在庫管理アプリへ足す機能の練習です。仕入れ先に商品を発注し、届いた数を記録する「発注」を考えます。発注1件は、次のように状態が変わります。「合計」は、これまでに届いた数に、今回届いた数を足したものです。</p>
+<div class="step"><span class="step-id">18-3</span><h3>「発注」を図から作る</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">発展　図をコードにする</p>
+<p>商品在庫管理アプリへ足す機能の練習です。仕入れ先に商品を発注し、届いた数を記録する「発注」を考えます。発注1件は、次のように状態が変わります。「合計」は、これまでに届いた数に、今回届いた数を足したものです。</p>
 <table><tr><th>きっかけ（イベント）</th><th>条件</th><th>どこから</th><th>どこへ</th></tr><tr><td>発注する</td><td></td><td>始まり</td><td>発注済み</td></tr><tr><td>入荷する</td><td>合計が発注数より少ない</td><td>発注済み／一部入荷</td><td>一部入荷</td></tr><tr><td>入荷する</td><td>合計が発注数以上</td><td>発注済み／一部入荷</td><td>入荷済み</td></tr><tr><td>取り消す</td><td></td><td>発注済み</td><td>取消済み</td></tr></table>
 <p>「入荷済み」か「取消済み」になったら終わりです。1個でも届いたら、取り消せません。</p>
 <p>①　この決まりを、ステートマシン図に描いてください。</p>
@@ -3110,6 +3112,44 @@ public class OrderMain {
 消しゴム : 取消済みなので入荷できません</div>
 <h3>ヒント</h3>
 <ul class="plain num"><li>①　一部入荷から一部入荷へ戻る矢印は、自己遷移です。</li><li>②　「図に無い矢印」は、メソッドの最初の <code>if</code> で断って <code>return</code> します。授業の②で写した <code>SellMain</code> の1つ目の <code>if</code> と同じ形です。</li><li>③　文字列が同じかどうかは <code>equals</code> で比べます（第2回）。</li></ul>
+</div>
+</div>
+<div class="card" id="q19"><div class="card-title">第 19 回　アクティビティ図とコミュニケーション図</div>
+<p>図を描く・読む問題です。ノートに描いてから、解答の図と見比べます。今日はコードを書きません。</p>
+<div class="step"><span class="step-id">19-1</span><h3>月末の在庫締めのアクティビティ図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">同じ型で別の題</p>
+<p>次の業務を、アクティビティ図で描いてください。スイムレーンは「担当者」「システム」の2本です。</p>
+<div class="note">月末に在庫を締める。担当者が棚卸しをして実数を数える。同時に、システムが帳簿上の在庫を集計する。両方そろったら、システムが差があるかを確かめる。差があれば、担当者が原因を調べて修正する。修正したら、または差がなければ、システムが在庫を締める。</div>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　「同時に」と「両方そろったら」は、ひし形ではありません。</li><li>②　「差があれば」「差がなければ」はひし形です。［差がある］［差がない］の2本を出します。</li><li>③　どちらの道も最後は「在庫を締める」へ進むので、2本を1本に戻す記号を置きます。</li></ul>
+</div>
+<div class="step"><span class="step-id">19-2</span><h3>商品を登録するやりとりのコミュニケーション図</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ</p>
+<p>第17回の図2「商品を登録する」のうち、入力が正しかったときの呼び出しを、コミュニケーション図で描いてください。呼び出しは、上から順に次の6つです（図2の <code>loop</code> の中で <code>ProductDTO</code> を作る所は省きます）。</p>
+<table><tr><th>順</th><th>呼ぶ側</th><th>呼ばれる側</th><th>メソッド</th><th>どこで呼ぶか</th></tr><tr><td>1</td><td>ProductFrame</td><td>ProductService</td><td><code>add(p)</code></td><td>［追加］を押したとき</td></tr><tr><td>2</td><td>ProductService</td><td>ProductService（自分）</td><td><code>check(p)</code></td><td><code>add(p)</code> の中</td></tr><tr><td>3</td><td>ProductService</td><td>ProductDAO</td><td><code>insert(p)</code></td><td><code>add(p)</code> の中</td></tr><tr><td>4</td><td>ProductFrame</td><td>ProductFrame（自分）</td><td><code>showList()</code></td><td><code>add(p)</code> が終わったあと</td></tr><tr><td>5</td><td>ProductFrame</td><td>ProductService</td><td><code>findAll()</code></td><td><code>showList()</code> の中</td></tr><tr><td>6</td><td>ProductService</td><td>ProductDAO</td><td><code>findAll()</code></td><td><code>ProductService</code> の <code>findAll()</code> の中</td></tr></table>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　自分のメソッドを呼ぶときは、四角から出て同じ四角へ戻る線（リンク）を描き、そこに矢印を添えます。</li><li>②　1本のリンクに、矢印を何本書いても構いません。<code>ProductFrame</code> と <code>ProductService</code> の間には、矢印が2本並びます。</li><li>③　番号は、どのメソッドの中で呼んだかで決まります。<code>add(p)</code> の中で呼んだ2つは、1.1 と 1.2 です。</li></ul>
+</div>
+<div class="step"><span class="step-id">19-3</span><h3>コミュニケーション図で3層の向きを確かめる</h3><p style="font-size:.8rem;color:#64748b;margin:.2rem 0 .6rem">ひねりが1つ　第13回の3層とつなげる</p>
+<p>ある受講生が、一覧の表示と商品の登録を、次のコミュニケーション図に描きました。</p>
+<svg class="fig" viewBox="0 0 720 270" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar42" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="q19o3" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.8"/></marker><marker id="q19f3" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="30" y="90" width="160" height="34" fill="#fff" stroke="#334155" stroke-width="1.6"/><text x="110" y="112" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">:ProductFrame</text>
+<rect x="330" y="90" width="170" height="34" fill="#fff" stroke="#334155" stroke-width="1.6"/><text x="415" y="112" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">:ProductService</text>
+<rect x="345" y="220" width="140" height="34" fill="#fff" stroke="#334155" stroke-width="1.6"/><text x="415" y="242" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">:ProductDAO</text>
+<polyline points="190,107 330,107" fill="none" stroke="#334155" stroke-width="1.6"/>
+<polyline points="415,124 415,220" fill="none" stroke="#334155" stroke-width="1.6"/>
+<polyline points="205,96 315,96" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#q19f3)"/>
+<text x="260" y="86" font-size="13" text-anchor="middle" fill="#1f2933">1: findAll()</text>
+<polyline points="401,136 401,208" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#q19f3)"/>
+<text x="391" y="182" font-size="13" text-anchor="end" fill="#1f2933">1.1: findAll()</text>
+<polyline points="150,124 345,237" fill="none" stroke="#334155" stroke-width="1.6"/>
+<polyline points="140,140 300,233" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#q19f3)"/>
+<text x="150" y="210" font-size="13" text-anchor="start" fill="#1f2933">2: insert(p)</text>
+</svg><p class="figcap">一覧の表示と商品の登録（コミュニケーション図）</p><p>①　この図は、第13回の3層の決まりを守っていません。どのリンクが決まりに合わないかを答えてください。</p>
+<p>②　この図のとおりにコードを書くと、価格が -200 の商品を登録しようとしたとき、何が起きますか。</p>
+<p>③　登録の所を直した図を描いてください。</p>
+<h3>ヒント</h3>
+<ul class="plain num"><li>①　第13回の3層では、呼び出しの向きは「画面 → Service → DAO」の一方向です。</li><li>②　値の検査（<code>check(p)</code>）を書いたのは、どのクラスでしたか（第13回）。</li><li>③　直した図では、<code>ProductFrame</code> から出る線は1本になります。</li></ul>
 </div>
 </div>
 <footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 問題集</footer>
