@@ -118,5 +118,28 @@ window.JAVA_SUPPORT_DATA = {
     steps:["画面側がユーザーの操作を受け取る。","Serviceで値のチェックや処理の順番を決める。","DAOがDBへ問い合わせる。DTOは情報を層間で渡すときに使う。"],
     question:"SQLを直接扱う責任は一般にどの層？",choices:["DTO","DAO","画面"],answer:1,
     reason:"DAOがデータの永続化に責任を持つ。DTOはデータを運び、Serviceが業務ルールを扱う。",link:"concepts/dto-dao.html",linkText:"DTO・DAO・3層の理解"
+  },
+  14: {
+    title:"Swingで画面とボタンを動かす",
+    summary:"JFrameで画面を作り、JButtonのクリック時に動く処理を登録する。商品登録はServiceへ任せる。",
+    connects:"第13回のDTO・DAO・Serviceを使い、コンソールのMainをボタンのある画面に置き換える。",
+    basics:[["JFrame","アプリのウィンドウを表すSwingのクラス。"],["JButton","押せるボタンを作る部品。"],["イベント","クリックなどの操作が起きたこと。addActionListenerでそのときの動きを登録する。"]],
+    snippet:"JButton addButton = new JButton(\"追加\");\naddButton.addActionListener(e -> addProduct());\n// クリックしたら addProduct() が呼ばれる",
+    steps:["まず「追加」ボタンを作る。","addActionListenerに、押されたとき実行する処理を登録する。","利用者がボタンを押したときだけaddProduct()が呼ばれる。"],
+    question:"クリックしてもボタンの処理が動かない。まず何を確認する？",
+    choices:["addActionListenerで処理を登録したか","setTextでボタン名を変えたか","SQLのSELECTを実行したか"],answer:0,
+    reason:"操作と処理が結び付いていなければ、ボタンを押しても反応しない。",link:"lesson14.html#lesson-part-3",linkText:"Swingの解説とコード"
+  },
+  15: {
+    title:"ユースケース図で『誰が何をするか』を整理",
+    summary:"UMLは図の共通の描き方。ユースケース図は利用者の役割と、システムでできることを整理する。",
+    connects:"第14回で作った商品在庫管理の画面を、作る前に何が必要か考えるための表現。",
+    basics:[["アクター","システムを使う人や外部システムの役割。棒人間などで表す。"],["ユースケース","利用者がシステムで実現したい機能。楕円で表す。"],["シナリオ","ユースケースの手順を、実際の人物・商品などを入れた1回分の例にする。"]],
+    snippet:"担当者 ── （商品を登録する）\n担当者 ── （商品を検索する）\n※ UMLの関係を簡略化した概念図。Javaコードではありません。",
+    steps:["棒人間に当たる『担当者』がアクター。","楕円の『商品を登録する』『商品を検索する』はユースケース。","線は担当者がその機能を利用する関係。詳しい形は講義のUML図で確認する。"],
+    question:"ユースケース図で『商品を登録する』を表す基本の形は？",
+    choices:["棒人間","楕円","ひし形"],answer:1,
+    reason:"楕円がユースケース、棒人間がアクター、システムの範囲は四角で描く。",link:"lesson15.html#lesson-part-3",linkText:"ユースケース図と記述の解説"
   }
+
 };
