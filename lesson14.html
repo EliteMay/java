@@ -712,8 +712,8 @@ buttons.add(addButton);
 <div class="trap">写経のコードの［更新］と［削除］も、この状態です。押しても何も起きません。④の自力で、この2つに貼り紙を貼ります。</div>
 </div></details>
 <h2>4　一覧を表示し直す（⑦）</h2>
-<p class="explain-brief">登録・更新後は一覧を読み直し、表示に反映する。</p>
-<p class="explain-mini"><code>refreshTable();</code></p>
+<p class="explain-brief">登録・更新後は <code>showList()</code> で商品を再取得し、一覧表を描き直す。</p>
+<p class="explain-mini"><code>showList();</code></p>
 <details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductFrame.java（抜き出し）</p>
 <pre class="code" id="c19">    private void showList() {                               <span class="cm">// <span class="cn">⑦</span> 一覧を表示し直す</span>
@@ -751,8 +751,8 @@ buttons.add(addButton);
 <div class="words"><b>ここで出た言葉</b><span><b><code>JOptionPane.showMessageDialog(this, "...")</code></b>　小さな窓で知らせる命令。<code>this</code> は「この画面の上に出す」という指定です。画面のあるプログラムでは、<code>System.out.println</code> の代わりにこれを使います</span></div>
 </div></details>
 <h2>5　押されたときに追加する（⑧）</h2>
-<p class="explain-brief">入力欄から値を読み、Serviceに登録を頼む。画面側でSQLは書かない。</p>
-<p class="explain-mini"><code>service.register(product);</code></p>
+<p class="explain-brief">入力欄から値を読み、DTOにしてServiceの <code>add()</code> へ渡す。画面側にSQLは書かない。</p>
+<p class="explain-mini"><code>service.add(new ProductDTO(0, name, price, stock));</code></p>
 <details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
 <p class="fname">ProductFrame.java（抜き出し）</p>
 <pre class="code" id="c23">    private void addProduct() {                             <span class="cm">// <span class="cn">⑧</span> 押されたときの処理</span>
