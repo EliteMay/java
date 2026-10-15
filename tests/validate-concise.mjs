@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 let total=0;
-const expected={2:5,3:4,4:3,5:4,6:4,7:4,8:5,9:4,10:5,11:6,12:4,13:4};
-for(let n=2;n<=13;n++){
+const expected={2:5,3:4,4:3,5:4,6:4,7:4,8:5,9:4,10:5,11:6,12:4,13:4,14:6,15:9};
+for(let n=2;n<=15;n++){
  const path='lesson'+String(n).padStart(2,'0')+'.html';
  const html=read(path);
  const start=html.indexOf('<div class="card explanation-card">');
@@ -24,7 +24,7 @@ for(let n=2;n<=13;n++){
  assert.ok(section.indexOf('<details class="explain-more">')<section.indexOf('<pre class="code"'),path+': long code still exposed');
  total+=9;
 }
-for(const n of [11,12,13]){
+for(const n of [11,12,13,14]){
  const page=read('lesson'+n+'.html');
  assert.ok(!page.includes('localhost:3306'),n+': port reversion');
  assert.ok(!page.includes('"password"'),n+': obsolete test password');
@@ -39,6 +39,9 @@ assert.ok(!workbook.includes('"password"'), 'workbook still uses old password');
 assert.ok(workbook.includes('jdbc:mysql://localhost:65534/stock'), 'workbook needs classroom URL');
 assert.ok(workbook.includes('private static final String PASSWORD = "pass";'), 'workbook needs classroom password');
 total+=4;
+assert.ok(workbook.includes('id="q19"'), 'revised workbook must include lesson 19 exercises');
+assert.ok(read('lesson13.html').includes('href="lesson14.html"'), 'lesson 13 missing next link');
+total+=2;
 const l11=read('lesson11.html');
 assert.ok(l11.includes('"wrongpass"'), 'the deliberate wrong-password example must stay incorrect');
 assert.ok(read('concise-explanations.css').includes('.explain-more'), 'styles missing');
