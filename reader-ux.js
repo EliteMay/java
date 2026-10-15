@@ -15,7 +15,9 @@ const lessonTitles = [
 "第10回 ファイル・CSV",
 "第11回 SQL・JDBC",
 "第12回 PreparedStatement",
-"第13回 DTO・DAO・3層"
+"第13回 DTO・DAO・3層",
+"第14回 Swing・イベント",
+"第15回 UML・ユースケース"
 ];
 function makeLink(label, href) {
   const a = document.createElement("a");
