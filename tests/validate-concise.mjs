@@ -15,7 +15,7 @@ for(let n=2;n<=15;n++){
  assert.equal((section.match(/class="explain-brief"/g)||[]).length,count,path+': wrong concise takeaway count');
  assert.equal((section.match(/class="explain-more"/g)||[]).length,count,path+': missing optional deep explanation');
  assert.equal((section.match(/<summary>この部分のコード・詳しい説明を見る<\/summary>/g)||[]).length,count,path+': disclosure missing');
- assert.equal((section.match(/<h2(?:\\s[^>]*)?>/g)||[]).length,count,path+': part headings changed');
+ assert.equal((section.match(/<h2(?:\s[^>]*)?>/g)||[]).length,count,path+': part headings changed');
  assert.ok(html.includes('href="concise-explanations.css"'),path+': short style missing');
  assert.ok(html.includes('class="ans"'),path+': hidden original answers lost');
  assert.ok(html.includes('④ 自力で書く'),path+': exercises missing');
