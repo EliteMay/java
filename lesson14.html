@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第14回｜Swing の画面とイベント</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}</style>
+<link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader-ux.css">
+<script defer src="reader.js"></script>
+<script defer src="reader-ux.js"></script>
+<link rel="stylesheet" href="learning-support.css">
+<script defer src="learning-support-data.js"></script>
+<script defer src="learning-support.js"></script>
+<link rel="stylesheet" href="concise-explanations.css">
+</head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container">
+<nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson13.html">前の講義</a><a href="lesson15.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
+<header><span class="badge">第 14 回 ／ 全 22 回</span><h1>Swing の画面とイベント</h1><p>第16章　Swing の基本 ／ 部品の配置 ／ イベント処理 ／ 商品在庫管理に画面をつける</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">Swing</span>　<span class="term">部品の配置（レイアウト）</span>　<span class="term">イベント</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>ボタンを押したときの処理を <code>addActionListener</code> で登録できる</li><li>入力欄の文字を読み、第13回の <code>ProductService</code> を呼んで MySQL に書き込める</li><li>「押しても何も起きない」ときに、どこを見ればよいか分かる</li></ul></div>
+</div>
+<aside class="card mysql-class-settings"><div class="card-title">授業PCの接続設定</div><p>MySQLは <code>localhost:65534</code>、ユーザーは <code>root</code>、学習用パスワードは <code>pass</code>。Swingの画面も第13回のService経由で同じMySQLに接続します。</p><p class="config-note">授業用の値です。本番アプリでは公開コードへパスワードを書かないでください。</p></aside>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>Java での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>Swing</td><td>Java で画面（ウィンドウ・ボタン・入力欄・表など）を作るための部品の集まりです（<code>javax.swing</code>）。<code>JFrame</code> がウィンドウ、<code>JButton</code> がボタン、<code>JTextField</code> が入力欄です。<code class="ex">JButton addButton = new JButton("追加");</code></td></tr><tr><td>部品の配置（レイアウト）</td><td>画面の部品をどこにどう並べるかを決める仕組みです。<code>BorderLayout</code> は上・下・真ん中などに、<code>GridLayout</code> は格子状に並べます。<code class="ex">JPanel form = new JPanel(new GridLayout(4, 2));
+add(form, BorderLayout.NORTH);</code></td></tr><tr><td>イベント</td><td>ボタンが押された、など利用者の操作によって起きる出来事。Swing では、イベントが起きたときに動かす処理（リスナー）を、部品にあらかじめ登録しておきます。<code class="ex">addButton.addActionListener(e -&gt; addProduct());</code></td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>ボタンは「呼び鈴」、addActionListener は「鳴ったらこうする」の貼り紙</h3><p class="lead">押される前に、押されたら何をするかを貼っておきます。</p><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 250" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="20" y="30" width="200" height="84" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="20" y="30" width="200" height="26" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<rect x="21" y="49" width="198" height="8" fill="#e0f2fe"/>
+<text x="120" y="48" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">① 起動したとき</text>
+<text x="30" y="76" font-size="14" fill="#1f2933">貼り紙を貼っておく</text>
+<text x="30" y="96" font-size="14" fill="#1f2933">（まだ何も起きない）</text>
+<line x1="222" y1="72" x2="258" y2="72" stroke="#334155" stroke-width="1.8" marker-end="url(#ar3)"/>
+<rect x="260" y="30" width="200" height="84" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="260" y="30" width="200" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="261" y="49" width="198" height="8" fill="#fff3e6"/>
+<text x="360" y="48" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">② 利用者が押す</text>
+<text x="270" y="76" font-size="14" fill="#1f2933">呼び鈴が鳴る</text>
+<text x="270" y="96" font-size="14" fill="#1f2933">＝ イベント</text>
+<line x1="462" y1="72" x2="498" y2="72" stroke="#334155" stroke-width="1.8" marker-end="url(#ar3)"/>
+<rect x="500" y="30" width="200" height="84" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="500" y="30" width="200" height="26" rx="6" fill="#f0fdf4" stroke="#334155" stroke-width="1.5"/>
+<rect x="501" y="49" width="198" height="8" fill="#f0fdf4"/>
+<text x="600" y="48" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">③ 貼り紙のとおりに</text>
+<text x="510" y="76" font-size="14" fill="#1f2933">書いておいた用事を</text>
+<text x="510" y="96" font-size="14" fill="#1f2933">片付ける</text>
+<text x="40" y="146" font-size="13" font-family="Consolas,monospace" fill="#1d4ed8" xml:space="preserve">addActionListener(...)</text>
+<text x="360" y="146" font-size="13" text-anchor="middle" fill="#475569">ボタンをクリック</text>
+<text x="552" y="146" font-size="13" font-family="Consolas,monospace" fill="#047857" xml:space="preserve">addProduct()</text>
+<rect x="20" y="176" width="680" height="54" rx="8" fill="#fef2f2" stroke="#fca5a5"/>
+<text x="360" y="200" font-size="14" text-anchor="middle" fill="#b91c1c" font-weight="bold">貼り紙が無ければ、呼び鈴が鳴っても誰も動きません</text>
+<text x="360" y="220" font-size="13" text-anchor="middle" fill="#b91c1c">エラーも出ません</text>
+</svg><p class="figcap">ボタンは「呼び鈴」、addActionListener は「鳴ったらこうする」の貼り紙</p><p>これまでのプログラムは、<code>main</code> の上から順に動いて終わりました。画面のあるプログラムは違います。画面を出したあとは、<strong>利用者が何かするのを待ちます。</strong></p>
+<p>ボタンが押された、という知らせを<strong>イベント</strong>と言います。ボタンは呼び鈴のようなもので、押されると鳴りますが、自分では何もしません。</p>
+<p>そこで、起動したときに「鳴ったらこうする」という貼り紙を貼っておきます。これが <code>addActionListener</code> です。<strong>貼った時点では何も起きません。</strong>押されたときに初めて、貼り紙に書いた処理が動きます。</p>
+</div><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 410" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="180" y="26" font-size="14" text-anchor="middle" fill="#64748b" font-weight="bold">たとえ（玄関）</text>
+<text x="540" y="26" font-size="14" text-anchor="middle" fill="#64748b" font-weight="bold">Java</text>
+<rect x="20" y="38" width="320" height="74" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="20" y="38" width="320" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="21" y="57" width="318" height="8" fill="#fff3e6"/>
+<text x="180" y="56" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">玄関そのもの</text>
+<text x="180" y="92" font-size="13" text-anchor="middle" fill="#475569">呼び鈴や表示板を取り付ける土台</text>
+<line x1="342" y1="82" x2="378" y2="82" stroke="#334155" stroke-width="1.8" marker-end="url(#ar7)"/>
+<rect x="380" y="38" width="320" height="74" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="380" y="38" width="320" height="26" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<rect x="381" y="57" width="318" height="8" fill="#e0f2fe"/>
+<text x="540" y="56" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">ウィンドウ</text>
+<text x="396" y="92" font-size="14" font-family="Consolas,monospace" fill="#1d4ed8" xml:space="preserve">JFrame</text>
+<text x="470" y="92" font-size="13" text-anchor="start" fill="#475569">部品を取り付ける画面そのもの</text>
+<rect x="20" y="130" width="320" height="112" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="20" y="130" width="320" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="21" y="149" width="318" height="8" fill="#fff3e6"/>
+<text x="180" y="148" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">呼び鈴や表示板などの部品</text>
+<rect x="50" y="172" width="120" height="36" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<text x="110" y="196" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">表示板</text>
+<circle cx="250" cy="190" r="18" fill="#fde68a" stroke="#334155" stroke-width="1.5"/>
+<text x="250" y="230" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">呼び鈴</text>
+<line x1="342" y1="186" x2="378" y2="186" stroke="#334155" stroke-width="1.8" marker-end="url(#ar7)"/>
+<rect x="380" y="130" width="320" height="112" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="380" y="130" width="320" height="26" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<rect x="381" y="149" width="318" height="8" fill="#e0f2fe"/>
+<text x="540" y="148" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">Swing（画面に取り付ける部品）</text>
+<text x="396" y="180" font-size="14" font-family="Consolas,monospace" fill="#1d4ed8" xml:space="preserve">JLabel</text>
+<text x="520" y="180" font-size="13" text-anchor="start" fill="#475569">表示板（文字を出す）</text>
+<text x="396" y="204" font-size="14" font-family="Consolas,monospace" fill="#1d4ed8" xml:space="preserve">JButton</text>
+<text x="520" y="204" font-size="13" text-anchor="start" fill="#475569">呼び鈴（ボタン）</text>
+<text x="396" y="228" font-size="14" font-family="Consolas,monospace" fill="#1d4ed8" xml:space="preserve">JTextField</text>
+<text x="520" y="228" font-size="13" text-anchor="start" fill="#475569">入力欄</text>
+<rect x="20" y="260" width="320" height="136" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="20" y="260" width="320" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="21" y="279" width="318" height="8" fill="#fff3e6"/>
+<text x="180" y="278" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">どこに付けるかの配置図</text>
+<rect x="50" y="298" width="260" height="86" rx="4" fill="#fff" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5 4"/>
+<line x1="50" y1="324" x2="310" y2="324" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5 4"/>
+<line x1="50" y1="358" x2="310" y2="358" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="180" y="316" font-size="13" text-anchor="middle" fill="#c2410c" font-weight="bold">上</text>
+<text x="180" y="346" font-size="13" text-anchor="middle" fill="#1d4ed8" font-weight="bold">真ん中</text>
+<text x="180" y="376" font-size="13" text-anchor="middle" fill="#047857" font-weight="bold">下</text>
+<line x1="342" y1="328" x2="378" y2="328" stroke="#334155" stroke-width="1.8" marker-end="url(#ar7)"/>
+<rect x="380" y="260" width="320" height="136" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="380" y="260" width="320" height="26" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<rect x="381" y="279" width="318" height="8" fill="#e0f2fe"/>
+<text x="540" y="278" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">レイアウト（部品の配置）</text>
+<text x="396" y="310" font-size="14" font-family="Consolas,monospace" fill="#1d4ed8" xml:space="preserve">BorderLayout</text>
+<text x="396" y="332" font-size="13" text-anchor="start" fill="#475569">上・真ん中・下などに置き分ける</text>
+<text x="396" y="364" font-size="14" font-family="Consolas,monospace" fill="#1d4ed8" xml:space="preserve">GridLayout(4, 2)</text>
+<text x="396" y="386" font-size="13" text-anchor="start" fill="#475569">4行2列のます目に並べる</text>
+</svg><p class="figcap">玄関そのものがウィンドウ（JFrame）。取り付ける部品の集まりが Swing、どこに付けるかを決める配置図がレイアウト</p><p>呼び鈴や表示板のように、画面に取り付ける部品の集まりが <strong>Swing</strong> です。表示板が <code>JLabel</code>、部品を取り付ける玄関そのものがウィンドウの <code>JFrame</code> です。どの部品を玄関のどこに取り付けるかを決める配置図に当たるのが、<strong>部品の配置（レイアウト）</strong>です。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>呼び鈴</td><td>ボタン　<code>JButton</code></td></tr><tr><td>呼び鈴が鳴る</td><td>イベント（ボタンが押された、という知らせ）</td></tr><tr><td>「鳴ったらこうする」の貼り紙</td><td><code>addButton.addActionListener(e -&gt; addProduct());</code></td></tr><tr><td>貼り紙に書いた用事</td><td><code>addProduct()</code> の中身</td></tr><tr><td>玄関そのもの</td><td>ウィンドウ　<code>JFrame</code></td></tr><tr><td>表示板</td><td>文字を出す部品　<code>JLabel</code></td></tr><tr><td>呼び鈴や表示板などの部品</td><td>Swing　<code>JLabel</code> <code>JButton</code> <code>JTextField</code></td></tr><tr><td>部品をどこに付けるかの配置図</td><td>レイアウト　<code>BorderLayout</code> <code>GridLayout</code></td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>Swing</td><td>コンソールではなく、ボタンや入力欄で操作できる画面を作るためです。</td></tr><tr><td>部品の配置（レイアウト）</td><td>画面の大きさが変わっても、部品の並びが崩れないようにするためです。</td></tr><tr><td>イベント</td><td>画面のプログラムでは、利用者がいつ何をするか分からないので、「起きたら動く」形で書く必要があるからです。</td></tr></table>
+<p>今日のゴールは、この貼り紙を自分で貼れるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して動かす</div>
+<p><strong>まずは自分で写して動かしてみましょう。</strong>各箇所の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は新しいプロジェクト <code>lesson14</code> に、クラスを5つ作ります。<code>ProductDTO</code>・<code>ProductDAO</code>・<code>ProductService</code> は第13回と同じものを、全文写します。第13回の3層の窓口を、コンソールの <code>Main</code> から画面に替えます。</p>
+<p>始める前に、MySQL が動いているかを確かめます。Windows キーを押して「サービス」と入力して開き、<code>MySQL80</code>（8.4 を入れた PC は <code>MySQL84</code>）の状態が「実行中」なら、そのまま進みます。空欄なら、右クリック →［開始］を押します。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson14</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson14</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］。講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーに［参照ライブラリー］ができ、その中に jar が入ったことを確かめる</td></tr><tr><td>⑤</td><td><code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑥</td><td>名前に <code>ProductDTO</code> と入力する。パッケージ欄に <code>lesson14</code> と入っていることを確かめて［完了］（空なら <code>lesson14</code> と入力する）</td></tr><tr><td>⑦</td><td>⑤⑥をくり返し、<code>ProductDAO</code>・<code>ProductService</code>・<code>ProductFrame</code>・<code>Main</code> を作る</td></tr><tr><td>⑧</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑨</td><td>コマンド プロンプトで <code>mysql --protocol=TCP -h 127.0.0.1 -P 65534 -u root -p</code> と入力してパスワードを入れ、<code>mysql&gt;</code> と出たら、下の「mysql に貼る SQL」を貼って <code>Enter</code> を押す。最後に3件の表が出れば準備ができています</td></tr><tr><td>⑩</td><td><code>Main.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<p>第12回・第13回で商品を足したり消したりしたので、表の中身は人によって違います。⑨で最初の3件に戻してから始めます。<strong>この回の画面の画像は、どれも3件に戻した直後のものです。</strong>違って見えたら、⑨の SQL をもう一度実行してください。</p>
+<h2>全体像</h2>
+<p>プロジェクトの中は、次の5つのファイルです。どれも1行目は <code>package lesson14;</code> です。</p>
+<p><code>ProductDAO</code> の <code>PASSWORD</code> は、授業で使う MySQL のパスワードに合わせて変えます。</p>
+<p>下の6つが、SQL と、それぞれのファイルの中身の全部です。行の右にある ①〜⑨ は、③解説の番号です。</p>
+<svg class="fig" viewBox="0 0 720 314" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="40" y="34" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">lesson14</text>
+<line x1="48" y1="42" x2="48" y2="274" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="48" y1="70" x2="66" y2="70" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="72" y="75" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">src</text>
+<line x1="80" y1="82" x2="80" y2="108" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="80" y1="108" x2="98" y2="108" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="104" y="113" font-size="14" text-anchor="start" fill="#1f2933">lesson14（パッケージ）</text>
+<line x1="118" y1="120" x2="118" y2="240" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="144" x2="136" y2="144" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="168" x2="136" y2="168" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="192" x2="136" y2="192" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="216" x2="136" y2="216" stroke="#94a3b8" stroke-width="1.5"/>
+<line x1="118" y1="240" x2="136" y2="240" stroke="#94a3b8" stroke-width="1.5"/>
+<rect x="140" y="132" width="170" height="22" rx="6" fill="#f8fafc" stroke="#334155" stroke-width="1.5"/>
+<text x="150" y="148" font-size="13" text-anchor="start" fill="#1f2933" font-weight="bold">ProductDTO.java</text>
+<rect x="140" y="156" width="170" height="22" rx="6" fill="#f8fafc" stroke="#334155" stroke-width="1.5"/>
+<text x="150" y="172" font-size="13" text-anchor="start" fill="#1f2933" font-weight="bold">ProductDAO.java</text>
+<rect x="140" y="180" width="170" height="22" rx="6" fill="#f8fafc" stroke="#334155" stroke-width="1.5"/>
+<text x="150" y="196" font-size="13" text-anchor="start" fill="#1f2933" font-weight="bold">ProductService.java</text>
+<rect x="140" y="204" width="170" height="22" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="150" y="220" font-size="13" text-anchor="start" fill="#1f2933" font-weight="bold">ProductFrame.java</text>
+<rect x="140" y="228" width="170" height="22" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<text x="150" y="244" font-size="13" text-anchor="start" fill="#1f2933" font-weight="bold">Main.java</text>
+<text x="330" y="148" font-size="13" text-anchor="start" fill="#475569">1件分の値を運ぶ箱。第13回と同じ</text>
+<text x="330" y="172" font-size="13" text-anchor="start" fill="#475569">MySQL を読み書きする倉庫係。第13回と同じ</text>
+<text x="330" y="196" font-size="13" text-anchor="start" fill="#475569">検査をする店長。第13回と同じで、1行も変えない</text>
+<text x="330" y="220" font-size="13" text-anchor="start" fill="#1d4ed8" font-weight="bold">今日作る画面（窓口）。ProductService を呼ぶ</text>
+<text x="330" y="244" font-size="13" text-anchor="start" fill="#475569">画面を作って表示する。ここから実行する</text>
+<line x1="48" y1="274" x2="66" y2="274" stroke="#94a3b8" stroke-width="1.5"/>
+<text x="72" y="279" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">参照ライブラリー</text>
+<text x="200" y="279" font-size="13" text-anchor="start" fill="#475569">mysql-connector-j-8.4.0.jar（手順の④で足したもの）</text>
+</svg><p class="figcap">プロジェクトの中身。クラスは5つ。Connector/J も第13回と同じく足す</p><p class="fname">mysql に貼る SQL　最初の3件に戻す（第12回と同じ）</p>
+<pre class="code" id="c1">CREATE DATABASE IF NOT EXISTS stock DEFAULT CHARACTER SET utf8mb4;
+USE stock;
+
+DROP TABLE IF EXISTS products;
+CREATE TABLE products (
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(100) NOT NULL,
+    price  INT NOT NULL,
+    stock  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO products (name, price, stock) VALUES
+    ('ボールペン', 150, 30), ('ノート', 220, 10), ('消しゴム', 100, 50);
+
+SELECT id, name, price, stock FROM products ORDER BY id;</pre>
+<p class="fname">ProductDTO.java　1件分の値を運ぶ箱（第13回と同じ）</p>
+<pre class="code" id="c2">package lesson14;
+
+public class ProductDTO {
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public ProductDTO(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) { this.price = price; }
+    public void setStock(int stock) { this.stock = stock; }
+}</pre>
+<p class="fname">ProductDAO.java　MySQL を読み書きする倉庫係（第13回と同じ）</p>
+<pre class="code" id="c3">package lesson14;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDAO {
+    private static final String URL = "jdbc:mysql://localhost:65534/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "pass";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                        rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public ProductDTO findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                          rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(ProductDTO p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(ProductDTO p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+}</pre>
+<p class="fname">ProductService.java　検査をする店長（第13回と同じ）</p>
+<pre class="code" id="c4">package lesson14;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<p class="fname">ProductFrame.java　今日作る画面</p>
+<pre class="code" id="c5">package lesson14;
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.sql.SQLException;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+public class ProductFrame extends JFrame {                                            <span class="cm">// <span class="cn">①</span> 画面そのもの</span>
+    private ProductService service = new ProductService();                            <span class="cm">// 第13回の ProductService</span>
+    private DefaultTableModel model =
+            new DefaultTableModel(new String[] {"ID", "商品名", "価格", "在庫"}, 0);  <span class="cm">// <span class="cn">②</span> 表の中身</span>
+    private JTable table = new JTable(model);                                         <span class="cm">// <span class="cn">②</span> 表の見た目</span>
+
+    private JTextField idField = new JTextField();                                    <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField nameField = new JTextField();                                  <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField priceField = new JTextField();                                 <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField stockField = new JTextField();                                 <span class="cm">// <span class="cn">③</span> 入力欄</span>
+
+    public ProductFrame() {
+        setTitle("商品在庫管理");
+        setSize(480, 360);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);     <span class="cm">// <span class="cn">④</span> ×で終わる</span>
+        setLocationRelativeTo(null);
+
+        JPanel form = new JPanel(new GridLayout(4, 2));     <span class="cm">// <span class="cn">⑤</span> 4行2列に並べる</span>
+        form.add(new JLabel("ID（更新・削除で使う）"));
+        form.add(idField);
+        form.add(new JLabel("商品名"));
+        form.add(nameField);
+        form.add(new JLabel("価格"));
+        form.add(priceField);
+        form.add(new JLabel("在庫"));
+        form.add(stockField);
+
+        JButton addButton = new JButton("追加");
+        JButton updateButton = new JButton("更新");
+        JButton deleteButton = new JButton("削除");
+        JPanel buttons = new JPanel();
+        buttons.add(addButton);
+        buttons.add(updateButton);
+        buttons.add(deleteButton);
+
+        add(form, BorderLayout.NORTH);                      <span class="cm">// <span class="cn">⑤</span> 上</span>
+        add(new JScrollPane(table), BorderLayout.CENTER);   <span class="cm">// <span class="cn">⑤</span> 真ん中</span>
+        add(buttons, BorderLayout.SOUTH);                   <span class="cm">// <span class="cn">⑤</span> 下</span>
+
+        addButton.addActionListener(e -&gt; addProduct());     <span class="cm">// <span class="cn">⑥</span> イベント</span>
+        showList();                                         <span class="cm">// <span class="cn">⑦</span> 最初の一覧</span>
+    }
+
+    private void addProduct() {                             <span class="cm">// <span class="cn">⑧</span> 押されたときの処理</span>
+        try {
+            String name = nameField.getText();
+            int price = Integer.parseInt(priceField.getText());
+            int stock = Integer.parseInt(stockField.getText());
+            service.add(new ProductDTO(0, name, price, stock));  <span class="cm">// Service が検査してから登録する</span>
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "価格と在庫は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());  <span class="cm">// Service が断った理由</span>
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void showList() {                               <span class="cm">// <span class="cn">⑦</span> 一覧を表示し直す</span>
+        model.setRowCount(0);                               <span class="cm">// いったん全部消す</span>
+        try {
+            for (ProductDTO p : service.findAll()) {
+                Object[] row = {p.getId(), p.getName(), p.getPrice(), p.getStock()};
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="fname">Main.java　画面を作って表示する</p>
+<pre class="code" id="c6">package lesson14;
+
+public class Main {
+    public static void main(String[] args) {
+        ProductFrame frame = new ProductFrame();            <span class="cm">// 画面を作る</span>
+        frame.setVisible(true);                             <span class="cm">// <span class="cn">⑨</span> 最後に表示する</span>
+    }
+}</pre>
+<p>実行すると、次の画面が出ます。一覧に出るのは、いま MySQL の <code>products</code> 表に入っている商品です。</p>
+<p><img src="img/lesson14_whole.png" alt="商品在庫管理の画面。上に入力欄が4つ、真ん中に3件の一覧、下に追加・更新・削除のボタン" style="max-width:100%"></p>
+<p>コンソールには何も出ません。画面のあるプログラムでは、知らせたいことは画面に出します。</p>
+<p>クラスの行（<code>public class ProductFrame extends JFrame</code>）の <code>ProductFrame</code> に、黄色い波線が出ます。「シリアライズ可能クラス ProductFrame は long 型の static final serialVersionUID フィールドを宣言していません」という<strong>警告</strong>で、エラーではありません。この講座では気にせず進めます。</p>
+<p>終わるときは、画面の右上の × を押します。</p>
+</div>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。図や詳しい説明は必要な項目だけ開いてください。</p>
+<h2>1　画面と部品を用意する（①②③）</h2>
+<p class="explain-brief">画面は<code>JFrame</code>、ボタンは<code>JButton</code>、入力欄は<code>JTextField</code>で作る。</p>
+<p class="explain-mini"><code>class ProductFrame extends JFrame { ... }</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<pre class="code" id="c7">public class ProductFrame extends JFrame {                                            <span class="cm">// <span class="cn">①</span> 画面そのもの</span>
+    private ProductService service = new ProductService();                            <span class="cm">// 第13回の ProductService</span>
+    private DefaultTableModel model =
+            new DefaultTableModel(new String[] {"ID", "商品名", "価格", "在庫"}, 0);  <span class="cm">// <span class="cn">②</span> 表の中身</span>
+    private JTable table = new JTable(model);                                         <span class="cm">// <span class="cn">②</span> 表の見た目</span>
+
+    private JTextField idField = new JTextField();                                    <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField nameField = new JTextField();                                  <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField priceField = new JTextField();                                 <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField stockField = new JTextField();                                 <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    <span class="cm">// （中略）</span>
+}</pre>
+<div class="line-block"><pre class="code" id="c8">public class ProductFrame extends JFrame {                   <span class="cm">// <span class="cn">①</span> 画面そのもの</span>
+    private ProductService service = new ProductService();   <span class="cm">// 第13回の ProductService</span></pre>
+<p><code>ProductFrame.java</code> のクラスの行です。<code>JFrame</code> は、Swing（Java で画面を作る部品の集まり）のウィンドウです。<code>extends JFrame</code> は第6回の継承で、<code>JFrame</code> の機能を受け継ぎます。これで、<code>ProductFrame</code> 自体がウィンドウになります。<code>setTitle(...)</code> や <code>add(...)</code> を前に何も付けずに呼べるのは、受け継いで自分のメソッドになったからです。</p>
+<p><code>service</code> は、第13回の <code>ProductService</code> を作って持つフィールドです。画面は、第13回の3層の窓口に当たります。<strong>画面が頼むのは Service だけで、DAO も SQL も直接は使いません。</strong></p>
+</div>
+<div class="line-block"><pre class="code" id="c9">private DefaultTableModel model =
+        new DefaultTableModel(new String[] {"ID", "商品名", "価格", "在庫"}, 0);   <span class="cm">// <span class="cn">②</span> 表の中身</span>
+private JTable table = new JTable(model);                                          <span class="cm">// <span class="cn">②</span> 表の見た目</span></pre>
+<p>②の <code>model</code> は、表の中身（行のデータ）を持つ <code>DefaultTableModel</code> です。<code>new String[] {"ID", "商品名", "価格", "在庫"}</code> は、4つの列の見出しを並べた配列です。最後の <code>0</code> は、最初の行の数です。はじめは0行で、あとから商品を1行ずつ足します。</p>
+<p><code>table</code> は、表の見た目の <code>JTable</code> です。<code>new JTable(model)</code> で、<code>model</code> の中身を見せる表を作ります。見た目と中身を分けておくと、一覧を表示し直すときは中身だけ入れ替えれば済みます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c10">    private JTextField idField = new JTextField();      <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField nameField = new JTextField();    <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField priceField = new JTextField();   <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    private JTextField stockField = new JTextField();   <span class="cm">// <span class="cn">③</span> 入力欄</span>
+    <span class="cm">// （中略）</span>
+}</pre>
+<p>③の <code>JTextField</code> は、1行の入力欄です。<code>new JTextField()</code> で、空の入力欄を作ります。<code>idField</code> は ID、<code>nameField</code> は商品名の入力欄です。<code>priceField</code> は価格、<code>stockField</code> は在庫の入力欄です。</p>
+<p><strong>なぜフィールド（クラスの直下）に置くのか。</strong>入力欄は、コンストラクタで画面に置きます。ボタンが押されたときは、<code>addProduct()</code> で中の文字を読みます。2つのメソッドから使うので、どちらからも見えるフィールドにします。</p>
+<p><code>// （中略）</code> の所には、コンストラクタとメソッドが続きます。</p>
+</div>
+<p><strong>よくある間違い：入力欄をコンストラクタの中で作る。</strong><code>nameField</code> の宣言を、コンストラクタの中へ移した形です。</p>
+<p class="fname">ProductFrame.java の③の所（間違いあり）</p>
+<pre class="code" id="c11">    private JTextField idField = new JTextField();
+    <span class="cm">// nameField の宣言を、コンストラクタの中へ移した</span>
+    private JTextField priceField = new JTextField();
+    private JTextField stockField = new JTextField();
+
+    public ProductFrame() {
+        JTextField nameField = new JTextField();            <span class="cm">// 変えた行</span></pre>
+<p>フィールドに残したのは、<code>idField</code>・<code>priceField</code>・<code>stockField</code> の3つです。コメントの所に、もとは <code>nameField</code> の行がありました。<code>public ProductFrame() {</code> は、コンストラクタの始まりです。その直後の行で、<code>nameField</code> を作っています。メソッドやコンストラクタの中で宣言した変数を、ローカル変数と言います。ほかの行は写したままです。</p>
+<p class="expected-label">エラーメッセージ（Eclipse）</p>
+<div class="expected err">nameField を解決できません
+（nameField cannot be resolved）</div>
+<svg class="fig" viewBox="0 0 720 250" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="12" y="8" width="696" height="232" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="360" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#64748b">ProductFrame</text>
+<rect x="30" y="40" width="660" height="50" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="30" y="40" width="660" height="26" rx="6" fill="#f0fdf4" stroke="#334155" stroke-width="1.5"/>
+<rect x="31" y="59" width="658" height="8" fill="#f0fdf4"/>
+<text x="360" y="58" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">フィールド（クラスの直下）</text>
+<text x="44" y="84" font-size="13" text-anchor="start" fill="#047857">idField　priceField　stockField　…　どのメソッドからも使える</text>
+<rect x="30" y="104" width="310" height="120" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="30" y="104" width="310" height="26" rx="6" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<rect x="31" y="123" width="308" height="8" fill="#e0f2fe"/>
+<text x="185" y="122" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">コンストラクタ ProductFrame()</text>
+<text x="44" y="156" font-size="14" font-family="Consolas,monospace" fill="#b91c1c" xml:space="preserve">JTextField nameField</text>
+<text x="44" y="180" font-size="13" text-anchor="start" fill="#475569">ここで作ったので、</text>
+<text x="44" y="200" font-size="13" text-anchor="start" fill="#475569">この { } の中でしか使えない</text>
+<rect x="380" y="104" width="310" height="120" rx="6" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="380" y="104" width="310" height="26" rx="6" fill="#fff3e6" stroke="#334155" stroke-width="1.5"/>
+<rect x="381" y="123" width="308" height="8" fill="#fff3e6"/>
+<text x="535" y="122" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">addProduct()</text>
+<text x="394" y="156" font-size="14" font-family="Consolas,monospace" fill="#b91c1c" xml:space="preserve">nameField.getText()</text>
+<text x="394" y="180" font-size="13" text-anchor="start" fill="#b91c1c" font-weight="bold">nameField が見えない</text>
+<text x="394" y="200" font-size="13" text-anchor="start" fill="#b91c1c">→ コンパイルエラー</text>
+<line x1="376" y1="150" x2="342" y2="150" stroke="#b91c1c" stroke-width="1.8" marker-end="url(#ar6)" stroke-dasharray="6 4"/>
+</svg><p class="figcap">コンストラクタの中で宣言した変数は、ほかのメソッドから見えない（第3回のスコープ）</p><p>「<code>nameField</code> が何を指すのか分からない」という意味のコンパイルエラーです。<code>addProduct()</code> の中の <code>nameField.getText()</code> に、赤い波線が出ます。コンストラクタの <code>{ }</code> の中で宣言した変数は、その中でしか使えません（第3回のスコープ）。<strong>ボタンの処理から読み書きする部品は、フィールドにします。</strong></p>
+</div></details>
+<h2>2　閉じ方と並べ方を決める（④⑤）</h2>
+<p class="explain-brief"><code>setDefaultCloseOperation</code>で閉じる動作、<code>GridLayout</code>などで並べ方を決める。</p>
+<p class="explain-mini"><code>setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<p class="fname">ProductFrame.java（抜き出し）</p>
+<pre class="code" id="c12">    public ProductFrame() {
+        setTitle("商品在庫管理");
+        setSize(480, 360);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);     <span class="cm">// <span class="cn">④</span> ×で終わる</span>
+        setLocationRelativeTo(null);
+
+        JPanel form = new JPanel(new GridLayout(4, 2));     <span class="cm">// <span class="cn">⑤</span> 4行2列に並べる</span>
+        form.add(new JLabel("ID（更新・削除で使う）"));
+        form.add(idField);
+        <span class="cm">// （中略）</span>
+        JPanel buttons = new JPanel();
+        buttons.add(addButton);
+        <span class="cm">// （中略）</span>
+        add(form, BorderLayout.NORTH);                      <span class="cm">// <span class="cn">⑤</span> 上</span>
+        add(new JScrollPane(table), BorderLayout.CENTER);   <span class="cm">// <span class="cn">⑤</span> 真ん中</span>
+        add(buttons, BorderLayout.SOUTH);                   <span class="cm">// <span class="cn">⑤</span> 下</span>
+        <span class="cm">// （中略）</span>
+    }</pre>
+<div class="line-block"><pre class="code" id="c13">public ProductFrame() {
+    setTitle("商品在庫管理");
+    setSize(480, 360);
+    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);   <span class="cm">// <span class="cn">④</span> ×で終わる</span>
+    setLocationRelativeTo(null);</pre>
+<p><code>public ProductFrame() {</code> は、コンストラクタの始まりです。<code>new ProductFrame()</code> のときに1回だけ動き、画面を組み立てます。</p>
+<p><code>setTitle("商品在庫管理")</code> で、ウィンドウの上の帯に出す題名を決めます。<code>setSize(480, 360)</code> は、ウィンドウの大きさです。<code>480</code> が横の幅、<code>360</code> が縦の高さです。単位はピクセル（画面の点の数）です。</p>
+<p>④の <code>setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)</code> は、× を押したときの動きを決めます。<code>JFrame.EXIT_ON_CLOSE</code> は、「プログラムごと終わる」を表す値です。</p>
+<p><code>setLocationRelativeTo(null)</code> は、ウィンドウを出す位置です。<code>null</code> を渡すと、PC の画面の真ん中に出します。</p>
+<p>画面を作るときは、この4行を毎回コンストラクタの最初に書きます。</p>
+</div>
+<p><strong>よくある間違い：④の1行を書き忘れる。</strong>× を押すと画面は消え、エラーも出ません。ところが、Eclipse の［コンソール］の右上にある赤い四角のボタン（［終了］）が、押せる色のまま残ります。<strong>プログラムはまだ動いています。</strong></p>
+<p><code>JFrame</code> の × は、何も書かないと「画面を隠す」だけです。残ったものは、［コンソール］の赤い四角のボタンを押して終わらせます。</p>
+<div class="line-block"><pre class="code" id="c14">JPanel form = new JPanel(new GridLayout(4, 2));   <span class="cm">// <span class="cn">⑤</span> 4行2列に並べる</span>
+form.add(new JLabel("ID（更新・削除で使う）"));
+form.add(idField);
+<span class="cm">// （中略）</span></pre>
+<p>⑤の <code>JPanel</code> は、部品をまとめて置く台です。<code>new JPanel(new GridLayout(4, 2))</code> で、ます目に並べる台を作り、<code>form</code> に入れます。<code>GridLayout(4, 2)</code> の <code>4</code> は行の数、<code>2</code> は列の数です。ラベルと入力欄の組が4つあるので、4行です。1組がラベルと入力欄の2つなので、2列です。置いた順に、左上から右へ、1行ずつ詰めていきます。</p>
+<p><code>form.add(new JLabel("ID（更新・削除で使う）"))</code> で、1行目の左にラベルを置きます。<code>JLabel</code> は、文字を出すだけの部品です。<code>form.add(idField)</code> で、その右に ID の入力欄を置きます。</p>
+<p><code>// （中略）</code> の所では、商品名・価格・在庫も同じく、ラベルと入力欄を1組ずつ置きます。そのあと、<code>new JButton("追加")</code> のように、［追加］［更新］［削除］の3つのボタンを作ります。</p>
+</div>
+<div class="line-block"><pre class="code" id="c15">JPanel buttons = new JPanel();
+buttons.add(addButton);
+<span class="cm">// （中略）</span></pre>
+<p><code>JPanel buttons = new JPanel();</code> は、ボタンを並べる台です。並べ方を指定しない <code>JPanel</code> は、置いた順に横1列に並べます。<code>buttons.add(addButton)</code> で、［追加］のボタンを置きます。<code>// （中略）</code> の所で、［更新］と［削除］も同じく置きます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c16">    add(form, BorderLayout.NORTH);                      <span class="cm">// <span class="cn">⑤</span> 上</span>
+    add(new JScrollPane(table), BorderLayout.CENTER);   <span class="cm">// <span class="cn">⑤</span> 真ん中</span>
+    add(buttons, BorderLayout.SOUTH);                   <span class="cm">// <span class="cn">⑤</span> 下</span>
+    <span class="cm">// （中略）</span>
+}</pre>
+<p>この3行の <code>add</code> は、<code>JFrame</code> から受け継いだメソッドです。ウィンドウに部品を置きます。<code>JFrame</code> の初めの並べ方は、<code>BorderLayout</code> です。上（<code>NORTH</code>）・真ん中（<code>CENTER</code>）・下（<code>SOUTH</code>）に置き分けます。</p>
+<p><code>add(form, BorderLayout.NORTH)</code> で、入力欄の台を上に置きます。<code>new JScrollPane(table)</code> は、表をスクロールできる枠に入れたものです。行が増えて入りきらなくなっても、スクロールで見られます。それを <code>BorderLayout.CENTER</code> で真ん中に置きます。<code>add(buttons, BorderLayout.SOUTH)</code> で、ボタンの台を下に置きます。</p>
+<p><strong>なぜ置き場所を決めるのか。</strong><code>BorderLayout</code> では、決めないと部品が同じ場所に重なります。そして、最後に置いたものしか見えません。</p>
+<p>最後の <code>// （中略）</code> の所には、次の節で見る⑥と⑦の2行が続きます。</p>
+</div>
+</div></details>
+<h2>3　ボタンに貼り紙を貼る（⑥）</h2>
+<p class="explain-brief">ボタンを押したときの処理は<code>addActionListener</code>で登録する。</p>
+<p class="explain-mini"><code>addButton.addActionListener(e -&gt; addProduct());</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<p class="fname">ProductFrame.java（抜き出し）</p>
+<div class="line-block"><pre class="code" id="c17">public ProductFrame() {
+    <span class="cm">// （中略）</span>
+    addButton.addActionListener(e -&gt; addProduct());   <span class="cm">// <span class="cn">⑥</span> イベント</span>
+    showList();                                       <span class="cm">// <span class="cn">⑦</span> 最初の一覧</span>
+}</pre>
+<p><code>public ProductFrame() {</code> から始まるコンストラクタの、最後の2行です。<code>// （中略）</code> は、④⑤で見た所です。</p>
+<p>⑥が、今日の主役の貼り紙です。<code>addButton.addActionListener(...)</code> で、［追加］のボタンに「押されたらこうする」を登録します。<code>e -&gt; addProduct()</code> は、「押されたら <code>addProduct()</code> を呼ぶ」を短く書く形（ラムダ式）です。<code>e</code> は、押されたときの知らせ（イベント）そのものです。今日は使いません。登録した時点では、<code>addProduct()</code> はまだ動きません。</p>
+<p>⑦の <code>showList();</code> は、起動したときに一覧を表示する呼び出しです。<code>showList()</code> の中身は、次の節で見ます。</p>
+</div>
+<p><strong>よくある間違い：addActionListener を書かない。</strong>⑥の1行を消した形です。</p>
+<p class="fname">ProductFrame.java の⑥⑦の所（間違いあり）</p>
+<pre class="code" id="c18">        <span class="cm">// addActionListener の1行を消した</span>
+        showList();</pre>
+<p>コメントの所に、もとは⑥の <code>addButton.addActionListener(e -&gt; addProduct());</code> がありました。残っているのは、⑦の、最初の一覧を表示する <code>showList();</code> だけです。</p>
+<p>実行して、商品名に「定規」、価格に「120」、在庫に「20」を入れます。［追加］を押しても、一覧は3件のままです。<strong>エラーは出ません。</strong>コンソールにも何も出ません。</p>
+<p>ボタンは「押されました」と知らせるだけで、何をするかは知りません。その知らせを受け取って <code>addProduct()</code> を呼ぶ登録が無いので、誰も動きません。</p>
+<div class="trap">写経のコードの［更新］と［削除］も、この状態です。押しても何も起きません。④の自力で、この2つに貼り紙を貼ります。</div>
+</div></details>
+<h2>4　一覧を表示し直す（⑦）</h2>
+<p class="explain-brief">登録・更新後は一覧を読み直し、表示に反映する。</p>
+<p class="explain-mini"><code>refreshTable();</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<p class="fname">ProductFrame.java（抜き出し）</p>
+<pre class="code" id="c19">    private void showList() {                               <span class="cm">// <span class="cn">⑦</span> 一覧を表示し直す</span>
+        model.setRowCount(0);                               <span class="cm">// いったん全部消す</span>
+        try {
+            for (ProductDTO p : service.findAll()) {
+                Object[] row = {p.getId(), p.getName(), p.getPrice(), p.getStock()};
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }</pre>
+<div class="line-block"><pre class="code" id="c20">private void showList() {   <span class="cm">// <span class="cn">⑦</span> 一覧を表示し直す</span>
+    model.setRowCount(0);   <span class="cm">// いったん全部消す</span></pre>
+<p><code>showList()</code> は、一覧を表示し直すメソッドです。<code>private</code> なので、このクラスの中からだけ呼びます。何も返さないので、<code>void</code> です。</p>
+<p><code>model.setRowCount(0)</code> で、表の中身の行の数を0にします。つまり、いったん全部消します。</p>
+<p><strong>なぜ全部消してから入れ直すのか。</strong>起動したときと、追加したあとの両方で、MySQL の今の中身を表示するためです。全部入れ直すので、表示と MySQL がずれません。</p>
+</div>
+<div class="line-block"><pre class="code" id="c21">try {
+    for (ProductDTO p : service.findAll()) {
+        Object[] row = {p.getId(), p.getName(), p.getPrice(), p.getStock()};
+        model.addRow(row);
+    }</pre>
+<p><code>try</code> の中で、MySQL から読みます。<code>for (ProductDTO p : service.findAll())</code> は、Service から受け取った商品を、1件ずつ <code>p</code> に入れてくり返します。</p>
+<p><code>Object[] row</code> は、表の1行分の値を入れる配列です。<code>Object</code> は、すべてのクラスの親の型です。どんな型の値でも入れられます（第6回）。1行の中に整数と文字列が混ざるので、<code>Object</code> の配列にします。<code>{p.getId(), p.getName(), p.getPrice(), p.getStock()}</code> で、ID・商品名・価格・在庫の順に入れます。列の見出しと同じ順です。</p>
+<p><code>model.addRow(row)</code> で、その1行を表の中身に足します。中身が変わると、表の見た目（<code>table</code>）も自動で表示し直されます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c22">    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+    }
+}</pre>
+<p><code>catch (SQLException e)</code> は、MySQL につながらないなど、データベースの例外が起きたときに動きます。「データベースのエラー: 」のあとに、<code>e.getMessage()</code> で取り出した理由をつなぎます。それを、<code>JOptionPane.showMessageDialog</code> で小さな窓に出します。</p>
+</div>
+<div class="words"><b>ここで出た言葉</b><span><b><code>JOptionPane.showMessageDialog(this, "...")</code></b>　小さな窓で知らせる命令。<code>this</code> は「この画面の上に出す」という指定です。画面のあるプログラムでは、<code>System.out.println</code> の代わりにこれを使います</span></div>
+</div></details>
+<h2>5　押されたときに追加する（⑧）</h2>
+<p class="explain-brief">入力欄から値を読み、Serviceに登録を頼む。画面側でSQLは書かない。</p>
+<p class="explain-mini"><code>service.register(product);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<p class="fname">ProductFrame.java（抜き出し）</p>
+<pre class="code" id="c23">    private void addProduct() {                             <span class="cm">// <span class="cn">⑧</span> 押されたときの処理</span>
+        try {
+            String name = nameField.getText();
+            int price = Integer.parseInt(priceField.getText());
+            int stock = Integer.parseInt(stockField.getText());
+            service.add(new ProductDTO(0, name, price, stock));  <span class="cm">// Service が検査してから登録する</span>
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "価格と在庫は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());  <span class="cm">// Service が断った理由</span>
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }</pre>
+<div class="line-block"><pre class="code" id="c24">private void addProduct() {   <span class="cm">// <span class="cn">⑧</span> 押されたときの処理</span>
+    try {
+        String name = nameField.getText();
+        int price = Integer.parseInt(priceField.getText());
+        int stock = Integer.parseInt(stockField.getText());</pre>
+<p>⑧の <code>addProduct()</code> は、［追加］が押されたときに動くメソッドです。⑥の貼り紙から呼ばれます。</p>
+<p><code>try</code> の中の1行目は、<code>nameField.getText()</code> で商品名の入力欄の文字を読みます。読んだ文字を、<code>name</code> に入れます。</p>
+<p>続く2行は、価格と在庫です。入力欄から読めるのは、いつも文字列です。そこで、<code>Integer.parseInt(...)</code> で文字列を整数に変えます。変えた値を、<code>price</code> と <code>stock</code> に入れます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c25">service.add(new ProductDTO(0, name, price, stock));   <span class="cm">// Service が検査してから登録する</span>
+showList();</pre>
+<p><code>new ProductDTO(0, name, price, stock)</code> で、読んだ値を箱に詰めます。<code>0</code> は、<code>id</code> の仮の値です。その箱を <code>service.add(...)</code> に渡します。Service が検査してから DAO に頼み、MySQL に書き込みます（第13回）。</p>
+<p>書き込めたら、<code>showList()</code> で一覧を表示し直します。</p>
+</div>
+<p>商品名に「定規」、価格に「120」、在庫に「20」と入れて［追加］を押します。一覧の4件目に、定規が増えます。ID は MySQL が自動で振るので、入力しなくても <code>4</code> が入ります。MySQL に書き込んだので、閉じてもう一度実行しても残っています。</p>
+<p><strong>なぜ catch が3つあるのか。</strong>起きる例外が3種類あり、それぞれ知らせ方が違うからです。</p>
+<div class="line-block"><pre class="code" id="c26">} catch (NumberFormatException e) {
+    JOptionPane.showMessageDialog(this, "価格と在庫は数字で入力してください");</pre>
+<p>1つ目の <code>NumberFormatException</code> は、数字にできない文字を <code>Integer.parseInt</code> に渡したときの例外です。価格に「abc」と入れると、これが起きます。受け止めて、「価格と在庫は数字で入力してください」と小さな窓で知らせます。</p>
+</div>
+<img src="img/lesson14_error.png" alt="「価格と在庫は数字で入力してください」と出た小さな窓" style="max-width:100%"><div class="line-block"><pre class="code" id="c27">} catch (IllegalArgumentException e) {
+    JOptionPane.showMessageDialog(this, e.getMessage());   <span class="cm">// Service が断った理由</span></pre>
+<p>2つ目の <code>IllegalArgumentException</code> は、Service の検査で断られたときの例外です。商品名が空のときや、価格や在庫が負のときに起きます。</p>
+<p><code>NumberFormatException</code> は、<code>IllegalArgumentException</code> の子クラスです。そのため、子の方を先に書きます（第9回）。</p>
+<p><code>e.getMessage()</code> で、Service が入れた理由を取り出し、そのまま小さな窓に出します。何をどう見せるかは窓口が決める、という第13回の約束どおりです。</p>
+</div>
+<div class="line-block"><pre class="code" id="c28">    } catch (SQLException e) {
+        JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+    }
+}</pre>
+<p>3つ目の <code>SQLException</code> は、MySQL とのやりとりで起きる例外です。検査例外（第10回）なので、<code>catch</code> が無いとコンパイルが通りません。知らせ方は、解説4の <code>showList()</code> と同じです。</p>
+</div>
+<p><strong>よくある間違い：IllegalArgumentException の catch を書かない。</strong>コンパイルは通ります。価格に「-120」と入れて［追加］を押すと、コンソールに赤い文字が出ます。1行目は <code>Exception in thread "AWT-EventQueue-0" java.lang.IllegalArgumentException: 価格に負の値は設定できません</code> です。<code>AWT-EventQueue-0</code> は、ボタンの処理を動かしている係の名前です。打ち切られるのは、その1回の <code>addProduct()</code> だけです。画面は閉じません。<strong>利用者はコンソールを見ていない</strong>ので、ボタンを押しても何も起きなかった、としか分かりません。</p>
+</div></details>
+<h2>6　最後に表示する（⑨）</h2>
+<p class="explain-brief">画面の準備が終わったら<code>setVisible(true)</code>で表示する。</p>
+<p class="explain-mini"><code>frame.setVisible(true);</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<p class="fname">Main.java（抜き出し）</p>
+<div class="line-block"><pre class="code" id="c29">public static void main(String[] args) {
+    ProductFrame frame = new ProductFrame();   <span class="cm">// 画面を作る</span>
+    frame.setVisible(true);                    <span class="cm">// <span class="cn">⑨</span> 最後に表示する</span>
+}</pre>
+<p><code>main</code> の定義行に、<code>throws SQLException</code> はありません。<code>ProductFrame</code> の中で、<code>SQLException</code> を全部 <code>catch</code> しているからです。</p>
+<p><code>new ProductFrame()</code> で画面を作り、<code>frame</code> に入れます。このときコンストラクタが動き、部品が全部置かれます。最初の一覧も、ここで読み込まれます。</p>
+<p>⑨の <code>frame.setVisible(true);</code> で、画面を表示します。<code>true</code> は「見せる」という指定です。部品を置き終わってから表示するので、そろった画面が一度に出ます。<code>main</code> はここで終わりますが、画面は残り、ボタンが押されるのを待ちます。</p>
+</div>
+</div></details>
+</div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>ボタンを押したときに addProduct() を実行させるには何を登録する？</h2><details class="quick-answer"><summary>答えと理由を見る</summary><p>addActionListener で、ボタンの操作と処理を結びます。</p></details></div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①で一覧の値が書き換わったら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　［更新］ボタンを押したら <code>updateProduct()</code> が動くようにする。<code>updateProduct()</code> では、4つの入力欄を読んで <code>service.update</code> で書き換え、一覧を表示し直す。その ID の商品が無いときは、Service が断った理由（「ID 9 の商品はありません」）を小さな窓で知らせる。</li><li>②　［削除］ボタンを押したら <code>deleteProduct()</code> が動くようにする。<code>deleteProduct()</code> では、ID の入力欄を読んで <code>service.delete</code> で消し、一覧を表示し直す。商品が無いときは①と同じく知らせる。</li></ul>
+<h2>骨組み</h2>
+<p><code>ProductFrame.java</code> の全体です。<code>// ここに…</code> の所を書きます。<code>ProductDTO</code>・<code>ProductDAO</code>・<code>ProductService</code> は変えません。</p>
+<p class="fname">ProductFrame.java（［更新］と［削除］をつなぐ）</p>
+<pre class="code" id="c30">package lesson14;
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.sql.SQLException;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+public class ProductFrame extends JFrame {
+    private ProductService service = new ProductService();  <span class="cm">// 第13回の ProductService</span>
+    private DefaultTableModel model =
+            new DefaultTableModel(new String[] {"ID", "商品名", "価格", "在庫"}, 0);
+    private JTable table = new JTable(model);
+
+    private JTextField idField = new JTextField();
+    private JTextField nameField = new JTextField();
+    private JTextField priceField = new JTextField();
+    private JTextField stockField = new JTextField();
+
+    public ProductFrame() {
+        setTitle("商品在庫管理");
+        setSize(480, 360);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel form = new JPanel(new GridLayout(4, 2));
+        form.add(new JLabel("ID（更新・削除で使う）"));
+        form.add(idField);
+        form.add(new JLabel("商品名"));
+        form.add(nameField);
+        form.add(new JLabel("価格"));
+        form.add(priceField);
+        form.add(new JLabel("在庫"));
+        form.add(stockField);
+
+        JButton addButton = new JButton("追加");
+        JButton updateButton = new JButton("更新");
+        JButton deleteButton = new JButton("削除");
+        JPanel buttons = new JPanel();
+        buttons.add(addButton);
+        buttons.add(updateButton);
+        buttons.add(deleteButton);
+
+        add(form, BorderLayout.NORTH);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(buttons, BorderLayout.SOUTH);
+
+        addButton.addActionListener(e -&gt; addProduct());
+        <span class="cm">// ここに、updateButton を押したら updateProduct() を呼ぶ1行を書く</span>
+        <span class="cm">// ここに、deleteButton を押したら deleteProduct() を呼ぶ1行を書く</span>
+        showList();
+    }
+
+    private void addProduct() {
+        try {
+            String name = nameField.getText();
+            int price = Integer.parseInt(priceField.getText());
+            int stock = Integer.parseInt(stockField.getText());
+            service.add(new ProductDTO(0, name, price, stock));  <span class="cm">// Service が検査してから登録する</span>
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "価格と在庫は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());  <span class="cm">// Service が断った理由</span>
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void updateProduct() {
+        <span class="cm">// ここに、4つの入力欄を読み、service.update で書き換える処理を書く</span>
+        <span class="cm">// 商品が無いときに Service が投げる例外は、理由を小さな窓で知らせる</span>
+        <span class="cm">// 最後に showList() で一覧を表示し直す</span>
+    }
+
+    private void deleteProduct() {
+        <span class="cm">// ここに、ID の入力欄を読み、service.delete で消す処理を書く</span>
+        <span class="cm">// 商品が無いときに Service が投げる例外は、理由を小さな窓で知らせる</span>
+        <span class="cm">// 最後に showList() で一覧を表示し直す</span>
+    }
+
+    private void showList() {
+        model.setRowCount(0);                               <span class="cm">// いったん全部消す</span>
+        try {
+            for (ProductDTO p : service.findAll()) {
+                Object[] row = {p.getId(), p.getName(), p.getPrice(), p.getStock()};
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c30">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p>ID に「2」、商品名に「ノート」、価格に「250」、在庫に「8」を入れて［更新］、続けて ID に「3」を入れて［削除］を押すと、次のようになります。</p><img src="img/lesson14_goal.png" alt="ノートが250円・在庫8に変わり、消しゴムが消えた一覧" style="max-width:100%"><p>ほかの欄は入れたままで、ID に「9」を入れて［更新］か［削除］を押すと、次の窓が出ます。</p><img src="img/lesson14_goal_none.png" alt="「ID 9 の商品はありません」と出た小さな窓" style="max-width:100%"><h2>ヒント</h2><ul class="plain num"><li>①　貼り紙は⑥と同じ形です。<code>updateButton.addActionListener(e -&gt; updateProduct());</code> のように書きます。押しても何も起きないときは、まずこの貼り紙を確かめます。</li><li>②　①の中身は <code>addProduct()</code> とほぼ同じです。ID も数字に変えて <code>new ProductDTO(id, name, price, stock)</code> にし、<code>service.update</code> を呼びます。<code>catch</code> も同じ3つです。</li><li>③　第13回の <code>ProductService</code> の <code>update</code> と <code>delete</code> は、その ID の商品が無いと <code>IllegalArgumentException</code>（理由は「ID 9 の商品はありません」）を投げます。<code>catch</code> で受け止めて <code>e.getMessage()</code> を出せば、そのまま知らせになります。</li></ul>
+<div class="calm">2問とも解けなくて構いません。書けなかった所は、答えを見て写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第14回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1・2　［更新］と［削除］</summary><div class="sol">
+<p class="fname">ProductFrame.java</p>
+<pre class="code" id="c31">package lesson14;
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.sql.SQLException;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+public class ProductFrame extends JFrame {
+    private ProductService service = new ProductService();  <span class="cm">// 第13回の ProductService</span>
+    private DefaultTableModel model =
+            new DefaultTableModel(new String[] {"ID", "商品名", "価格", "在庫"}, 0);
+    private JTable table = new JTable(model);
+
+    private JTextField idField = new JTextField();
+    private JTextField nameField = new JTextField();
+    private JTextField priceField = new JTextField();
+    private JTextField stockField = new JTextField();
+
+    public ProductFrame() {
+        setTitle("商品在庫管理");
+        setSize(480, 360);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel form = new JPanel(new GridLayout(4, 2));
+        form.add(new JLabel("ID（更新・削除で使う）"));
+        form.add(idField);
+        form.add(new JLabel("商品名"));
+        form.add(nameField);
+        form.add(new JLabel("価格"));
+        form.add(priceField);
+        form.add(new JLabel("在庫"));
+        form.add(stockField);
+
+        JButton addButton = new JButton("追加");
+        JButton updateButton = new JButton("更新");
+        JButton deleteButton = new JButton("削除");
+        JPanel buttons = new JPanel();
+        buttons.add(addButton);
+        buttons.add(updateButton);
+        buttons.add(deleteButton);
+
+        add(form, BorderLayout.NORTH);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(buttons, BorderLayout.SOUTH);
+
+        addButton.addActionListener(e -&gt; addProduct());
+        <span class="cm">// ここに、updateButton を押したら updateProduct() を呼ぶ1行を書く</span>
+        updateButton.addActionListener(e -&gt; updateProduct());
+        <span class="cm">// ここに、deleteButton を押したら deleteProduct() を呼ぶ1行を書く</span>
+        deleteButton.addActionListener(e -&gt; deleteProduct());
+        showList();
+    }
+
+    private void addProduct() {
+        try {
+            String name = nameField.getText();
+            int price = Integer.parseInt(priceField.getText());
+            int stock = Integer.parseInt(stockField.getText());
+            service.add(new ProductDTO(0, name, price, stock));  <span class="cm">// Service が検査してから登録する</span>
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "価格と在庫は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());  <span class="cm">// Service が断った理由</span>
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void updateProduct() {
+        <span class="cm">// ここに、4つの入力欄を読み、service.update で書き換える処理を書く</span>
+        try {
+            int id = Integer.parseInt(idField.getText());
+            String name = nameField.getText();
+            int price = Integer.parseInt(priceField.getText());
+            int stock = Integer.parseInt(stockField.getText());
+            service.update(new ProductDTO(id, name, price, stock));
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "ID と価格と在庫は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void deleteProduct() {
+        <span class="cm">// ここに、ID の入力欄を読み、service.delete で消す処理を書く</span>
+        try {
+            int id = Integer.parseInt(idField.getText());
+            service.delete(id);
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "ID は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void showList() {
+        model.setRowCount(0);                               <span class="cm">// いったん全部消す</span>
+        try {
+            for (ProductDTO p : service.findAll()) {
+                Object[] row = {p.getId(), p.getName(), p.getPrice(), p.getStock()};
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<p>コンストラクタの2行が貼り紙で、<code>updateProduct()</code> と <code>deleteProduct()</code> が貼り紙に書いた用事です。</p>
+<div class="note"><code>ProductDTO</code>・<code>ProductDAO</code>・<code>ProductService</code> は1行も変えていません。画面は「入力欄を読む・Service に頼む・結果を見せる」だけで、検査も SQL も書いていません。第13回の3層の窓口が、コンソールの <code>Main</code> から画面に替わっただけです。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>イベントと <code>addActionListener</code> の関係を、呼び鈴と貼り紙で説明できる</li><li>ボタンの処理から使う部品を、フィールドにする理由を説明できる</li><li>押しても何も起きないとき、まず <code>addActionListener</code> を確かめられる</li><li><code>ProductService</code> を変えずに、画面から呼べたことを、自分のコードで指させる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、UML とユースケースです。</strong>今日までに作った商品在庫管理アプリを、コードではなく図で表します。まず、担当者がこのアプリで何をできるかを、ユースケース図に描きます。今日の画面のボタンが、その手がかりになります。</p></div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>イベント</td><td>いべんと</td><td>ボタンが押された、などの「何かが起きた」という知らせ</td></tr><tr><td>Swing</td><td>すいんぐ</td><td>Java で画面を作るための道具一式。<code>javax.swing</code> で始まる部品が入っています</td></tr><tr><td>JFrame</td><td>じぇいふれーむ</td><td>ウィンドウ。<code>extends JFrame</code> で、自分のクラスをウィンドウにします</td></tr><tr><td>JPanel</td><td>じぇいぱねる</td><td>部品をまとめて置く台</td></tr><tr><td>JLabel</td><td>じぇいらべる</td><td>文字を出すだけの部品。<code>setText</code> で文字を変えられます</td></tr><tr><td>JTextField</td><td>じぇいてきすとふぃーるど</td><td>1行の入力欄。<code>getText()</code> で入力された文字を読みます</td></tr><tr><td>JButton</td><td>じぇいぼたん</td><td>ボタン。押されるとイベントを知らせます</td></tr><tr><td>JTable</td><td>じぇいてーぶる</td><td>表の見た目。中身は <code>DefaultTableModel</code> が持ちます</td></tr><tr><td>DefaultTableModel</td><td>でふぉると てーぶる もでる</td><td>表の中身。<code>addRow</code> で1行足し、<code>setRowCount(0)</code> で全部消します</td></tr><tr><td>JScrollPane</td><td>じぇいすくろーるぺいん</td><td>中に入れた部品を、はみ出したらスクロールできるようにする枠</td></tr><tr><td>BorderLayout</td><td>ぼーだーれいあうと</td><td>上（<code>NORTH</code>）・真ん中（<code>CENTER</code>）・下（<code>SOUTH</code>）などに置き分ける並べ方。<code>JFrame</code> の初めの並べ方です</td></tr><tr><td>GridLayout</td><td>ぐりっどれいあうと</td><td>決めた行数・列数のます目に、置いた順に詰める並べ方</td></tr><tr><td>addActionListener</td><td>あどあくしょんりすなー</td><td>ボタンが押されたときの処理を登録するメソッド。今日の貼り紙</td></tr><tr><td>リスナー</td><td>りすなー</td><td>イベントを受け取って動くもの。聞き手という意味です</td></tr><tr><td>ラムダ式</td><td>らむだしき</td><td><code>e -&gt; addProduct()</code> の形。「押されたらこれをする」を短く書く書き方です</td></tr><tr><td>getText / setText</td><td>げっとてきすと ／ せっとてきすと</td><td>部品の文字を読む／書き換えるメソッド。読めるのはいつも文字列です</td></tr><tr><td>JOptionPane</td><td>じぇいおぷしょんぺいん</td><td>小さな窓を出す道具。<code>showMessageDialog</code> で知らせを出します</td></tr><tr><td>setVisible</td><td>せっとびじぶる</td><td><code>true</code> を渡すと画面を表示します。部品を置き終わってから呼びます</td></tr><tr><td>setDefaultCloseOperation</td><td>せっとでふぉるとくろーずおぺれーしょん</td><td>× を押したときの動きを決めるメソッド。<code>JFrame.EXIT_ON_CLOSE</code> でプログラムごと終わります</td></tr><tr><td>AWT-EventQueue-0</td><td>―</td><td>ボタンの処理を動かしている係の名前。例外が出ると、赤い文字の1行目に出ます</td></tr><tr><td>スコープ</td><td>すこーぷ</td><td>変数を使える範囲。<code>{ }</code> の中で宣言した変数は、その中でしか使えません（第3回）</td></tr><tr><td>警告</td><td>けいこく</td><td>Eclipse の黄色い波線。エラーではないので、実行はできます</td></tr><tr><td>継承</td><td>けいしょう</td><td><code>extends</code> で、ほかのクラスの機能を受け継ぐこと（第6回）</td></tr><tr><td>Object</td><td>おぶじぇくと</td><td>すべてのクラスの親の型。どんな型の値でも入れられます（第6回）</td></tr></table></details>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 14 回 ／ 全 22 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
