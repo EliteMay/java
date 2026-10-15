@@ -5,9 +5,9 @@ const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 const context={window:{}};
 vm.runInNewContext(read("learning-support-data.js"),context,{timeout:2000});
 const data=context.window.JAVA_SUPPORT_DATA;
-assert.ok(data && Object.keys(data).length===12,"2-13 have exactly twelve optional guides");
+assert.ok(data && Object.keys(data).length===14,"2-15 have exactly fourteen optional guides");
 let checks=0;
-for(let n=2;n<=13;n++){
+for(let n=2;n<=15;n++){
   const d=data[n], page="lesson"+String(n).padStart(2,"0")+".html";
   assert.ok(d,"No guide for "+n);
   const html=read(page);
@@ -25,7 +25,7 @@ for(let n=2;n<=13;n++){
   assert.ok(d.steps.length>=3 && d.snippet.length>15 && !/TODO|PLACEHOLDER/i.test(d.snippet));
   assert.ok(d.choices.length>=2 && Number.isInteger(d.answer) && d.answer>=0 && d.answer<d.choices.length);
   assert.ok(d.question && d.reason);
-  assert.ok(existsSync(new URL("../"+d.link,import.meta.url)),"Missing deep-dive "+d.link);
+  assert.ok(existsSync(new URL("../"+d.link.split('#')[0],import.meta.url)),"Missing deep-dive "+d.link);
   checks+=14;
 }
 const intro=read("start.html"), home=read("index.html"), widget=read("learning-support.js");
