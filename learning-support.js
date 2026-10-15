@@ -68,9 +68,9 @@ function makeCard(){
  terms.append(termList);
  panel.append(terms);
  const trace=element("section","learn-block");
- trace.append(element("h3","","実行の順番を1つずつ見る"));
+ trace.append(element("h3","",Number(page)===15 ? "図の読み方を1つずつ見る" : "実行の順番を1つずつ見る"));
  trace.append(element("p","learn-hint","短い説明用の抜粋です。実行する際は講義の全体コードを使ってください。"));
- const label=element("div","learn-code-label",Number(page)===11 ? "SQLの抜粋" : Number(page)===13 ? "動きの概念図（Javaコードではありません）" : "重要な行だけを抜粋");
+ const label=element("div","learn-code-label",Number(page)===11 ? "SQLの抜粋" : [13,15].includes(Number(page)) ? "動きや関係の概念図（Javaコードではありません）" : "重要な行だけを抜粋");
  const pre=element("pre","learn-code",lesson.snippet);
  pre.setAttribute("tabindex","0");
  const player=element("div","learn-trace");
