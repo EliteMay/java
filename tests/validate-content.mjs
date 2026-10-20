@@ -5,10 +5,10 @@ const read = (name) => readFileSync(new URL('../' + name, import.meta.url), 'utf
 const required = ['① 今日の主役', '② 写して動かす', '③ 解説', '④ 自力で書く', '⑤ まとめ'];
 let checks = 0;
 
-for (let n = 2; n <= 15; n++) {
+for (let n = 2; n <= 16; n++) {
   const name = 'lesson' + String(n).padStart(2, '0') + '.html';
   const html = read(name);
-  for (const label of required.map(x=>n===15 && x==="② 写して動かす"?"② 写して描く":x)) {
+  for (const label of required.map(x=>n>=15 && x==="② 写して動かす"?"② 写して描く":x)) {
     assert.ok(html.includes(label), name + ': missing essential section ' + label);
     checks++;
   }
@@ -25,7 +25,7 @@ for (let n = 2; n <= 15; n++) {
   checks += 6;
 }
 const home = read('index.html');
-for (let n = 2; n <= 15; n++) {
+for (let n = 2; n <= 16; n++) {
   const name = 'lesson' + String(n).padStart(2, '0') + '.html';
   assert.ok(home.includes(name), 'Index missing ' + name);
   checks++;

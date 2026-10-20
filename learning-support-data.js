@@ -140,6 +140,15 @@ window.JAVA_SUPPORT_DATA = {
     question:"ユースケース図で『商品を登録する』を表す基本の形は？",
     choices:["棒人間","楕円","ひし形"],answer:1,
     reason:"楕円がユースケース、棒人間がアクター、システムの範囲は四角で描く。",link:"lesson15.html#lesson-part-3",linkText:"ユースケース図と記述の解説"
+  },
+  16: {
+    title:"クラス図とオブジェクト図の違い",
+    summary:"クラス図は型や関係の設計、オブジェクト図は実際のインスタンスとある瞬間の値を描く。",
+    connects:"第13回のDTO・DAO・Serviceというクラスと、第15回のUML表記が前提です。",
+    basics:[["クラス図","クラスの名前・属性・操作と、クラス同士の関係を描く。"],["可視性","+ は public、- は private。属性や操作の先頭に記号を付ける。"],["オブジェクト図","具体的なインスタンスの現在値やリンクを示す。クラス図と違って操作の段はない。"]],
+    snippet:"// UMLを文字で簡略化した概念図（Javaコードではありません）\nProductDTO\n  - id : int\n  - price : int\n\npen : ProductDTO\n  id = 3\n  price = 150",
+    steps:["ProductDTOのクラス図ではフィールド名と型を宣言する。","pen : ProductDTO はそのクラスから作られた実体を表す。","オブジェクト図では、その瞬間のidやpriceの実際の値を書く。"],
+    question:"『pen : ProductDTO』『price = 150』を描く図は？",choices:["クラス図","オブジェクト図","ユースケース図"],answer:1,
+    reason:"実際のインスタンスと値を描くのがオブジェクト図。クラス図は設計の形を描きます。",link:"lesson16.html#lesson-part-3",linkText:"図の記号と書き方"
   }
-
 };

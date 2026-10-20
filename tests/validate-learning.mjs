@@ -5,9 +5,9 @@ const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 const context={window:{}};
 vm.runInNewContext(read("learning-support-data.js"),context,{timeout:2000});
 const data=context.window.JAVA_SUPPORT_DATA;
-assert.ok(data && Object.keys(data).length===14,"2-15 have exactly fourteen optional guides");
+assert.ok(data && Object.keys(data).length===15,"2-16 have exactly fifteen optional guides");
 let checks=0;
-for(let n=2;n<=15;n++){
+for(let n=2;n<=16;n++){
   const d=data[n], page="lesson"+String(n).padStart(2,"0")+".html";
   assert.ok(d,"No guide for "+n);
   const html=read(page);

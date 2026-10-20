@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第16回｜クラス図とオブジェクト図</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
+    table.symtab td { vertical-align:middle; }   /* UML の記号の表（2026-10-14） */
+    table.symtab td.sym-cell { width:176px; text-align:center; background:#fff; }
+    table.symtab td.sym-name { white-space:nowrap; font-weight:bold; }
+    svg.sym { display:block; margin:0 auto; width:164px; max-width:100%; height:auto; }   /* 絵の中の文字を本文に近い大きさにする */
+    .card h2.sym-h { border-left-color:#0f766e; }
+    table.mini { width:auto; margin:0 auto; font-size:.72rem; }
+    table.mini th, table.mini td { padding:.15rem .35rem; }
+    code.symcode { display:inline-block; text-align:left; white-space:pre; background:#f8fafc; font-size:.82rem; line-height:1.6; padding:.3em .5em; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}</style>
+<link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader-ux.css">
+<script defer src="reader.js"></script>
+<script defer src="reader-ux.js"></script>
+<link rel="stylesheet" href="learning-support.css">
+<script defer src="learning-support-data.js"></script>
+<script defer src="learning-support.js"></script>
+<link rel="stylesheet" href="concise-explanations.css">
+</head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container">
+<nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson15.html">前の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
+
+<header><span class="badge">第 16 回 ／ 全 22 回</span><h1>クラス図とオブジェクト図</h1><p>第20章　オブジェクトの抽出 ／ クラス図 ／ オブジェクト図</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">クラス図</span>　<span class="term">オブジェクト図</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>クラスを3段の箱で描き、<code>- id : int</code> のように可視性・名前・型を書ける</li><li>関連・依存・汎化を、実線か破線かと矢じりの形で描き分けられる</li><li>実行したある瞬間を、オブジェクト図に描ける</li></ul></div>
+</div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>UML での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>クラス図</td><td>プログラムを構成するクラスと、その属性（フィールド）・操作（メソッド）、クラスどうしの関係を表す UML の図。いつでも変わらないプログラムの形を表します。</td></tr><tr><td>オブジェクト図</td><td>ある時点で存在するインスタンスと、その値、インスタンスどうしのつながりを表す UML の図。</td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>クラス図は「プログラムの間取り図」です</h3><p class="lead">家の中を歩き回らなくても、どこにどんな部屋があり、どうつながっているかが1枚で分かります。</p><svg class="fig" viewBox="0 0 720 250" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u1OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u1TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u1DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u1FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u1SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u1ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u1RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u1RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u1RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u1RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<rect x="10" y="8" width="330" height="234" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="175" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#64748b">間取り図</text>
+<rect x="34" y="44" width="282" height="150" fill="#fff" stroke="#475569" stroke-width="3"/>
+<line x1="175" y1="44" x2="175" y2="100" stroke="#475569" stroke-width="3"/>
+<line x1="175" y1="130" x2="175" y2="194" stroke="#475569" stroke-width="3"/>
+<line x1="34" y1="120" x2="120" y2="120" stroke="#475569" stroke-width="3"/>
+<line x1="146" y1="120" x2="175" y2="120" stroke="#475569" stroke-width="3"/>
+<text x="104" y="80" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">寝室</text>
+<text x="104" y="100" font-size="12" text-anchor="middle" fill="#64748b">6畳・収納</text>
+<text x="104" y="155" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">キッチン</text>
+<text x="104" y="175" font-size="12" text-anchor="middle" fill="#64748b">4畳・コンロ</text>
+<text x="245" y="110" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">リビング</text>
+<text x="245" y="130" font-size="12" text-anchor="middle" fill="#64748b">12畳・窓2つ</text>
+<text x="175" y="222" font-size="12" text-anchor="middle" fill="#475569">部屋・広さ・設備と、ドアのつながり</text>
+<rect x="380" y="8" width="330" height="234" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="545" y="30" font-size="14" font-weight="bold" text-anchor="middle" fill="#64748b">クラス図</text>
+<rect x="400" y="50" width="140" height="30" fill="#fff"/>
+<rect x="400" y="50" width="140" height="30" fill="#e0f2fe"/>
+<text x="470" y="71" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">ProductService</text>
+<rect x="400" y="50" width="140" height="30" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="400" y="150" width="140" height="30" fill="#fff"/>
+<rect x="400" y="150" width="140" height="30" fill="#e0f2fe"/>
+<text x="470" y="171" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">ProductDAO</text>
+<rect x="400" y="150" width="140" height="30" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="566" y="100" width="124" height="30" fill="#fff"/>
+<rect x="566" y="100" width="124" height="30" fill="#e0f2fe"/>
+<text x="628" y="121" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">ProductDTO</text>
+<rect x="566" y="100" width="124" height="30" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polyline points="470,80 470,150" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u1OP)"/>
+<polyline points="540,65 628,65 628,100" fill="none" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#u1OP)"/>
+<polyline points="540,165 628,165 628,130" fill="none" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#u1OP)"/>
+<text x="545" y="222" font-size="12" text-anchor="middle" fill="#475569">クラスの中身と、クラスどうしのつながり</text>
+</svg><p class="figcap">どちらも、中を歩き回らずに全体の形が1枚で分かる</p><p>間取り図には、部屋の名前・広さ・設備と、部屋どうしをつなぐドアが描いてあります。<strong>住んでいる人や、その日の家具の置き方は描きません。</strong>いつ見ても変わらない形だけを描きます。</p>
+<p><strong>クラス図</strong>も同じです。クラス1つを箱1つで描き、中に「持っている値」と「できること」を書き、クラスどうしのつながりを線で結びます。<strong>ファイルを1つずつ開かなくても、プログラム全体の形が1枚で分かります。</strong></p>
+<p>人が住んでいる「ある日の写真」に当たるのが、オブジェクト図です。第4回の「たい焼きの型」と「焼いたたい焼き」を、それぞれ図にしたのがクラス図とオブジェクト図です。</p>
+</div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>間取り図</td><td>クラス図</td></tr><tr><td>部屋1つ</td><td>クラス1つ。3段の箱で描く</td></tr><tr><td>部屋の名前・広さ・設備</td><td>クラス名・属性（フィールド）・操作（メソッド）</td></tr><tr><td>部屋をつなぐドア</td><td>クラスどうしをつなぐ線</td></tr><tr><td>人が住んでいる、ある日の写真</td><td>オブジェクト図。ある瞬間のインスタンスと値</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>クラス図</td><td>ファイルを1つずつ開かなくても、どんなクラスがあり、どうつながっているかを1枚で見渡すためです。</td></tr><tr><td>オブジェクト図</td><td>クラス図だけでは見えにくい、実際に作られるインスタンスと値の様子を確かめるためです。</td></tr></table>
+<details class="context-fold"><summary>どんな場面で使う？</summary>
+<h3>使う場面</h3>
+<table class="define"><tr><td>クラス図</td><td>設計するとき。プログラム全体の形を人に説明するとき。</td></tr><tr><td>オブジェクト図</td><td>クラス図の線や多重度が正しいかを、具体的な例で確かめるとき。</td></tr></table>
+<p>今日は、第13回で作った3つのクラスを、この形で描きます。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して描く</div>
+<p><strong>まずは自分で図を描き写し、コードは写して動かしてみましょう。</strong>各部品の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>図とコードを見比べながら進めるので、第13回と同じ3つのクラスを新しいプロジェクト <code>lesson16</code> に置き、<code>Main</code> の代わりに <code>ProductMain</code> から動かします。</p>
+
+</details>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>ノートと鉛筆を用意する。定規があると、線がまっすぐ引けます</td></tr><tr><td>②</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>③</td><td>プロジェクト名に <code>lesson16</code> と入力して［完了］</td></tr><tr><td>④</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>⑤</td><td>左のツリーで <code>lesson16</code> を右クリック →［ビルド・パス］→［外部アーカイブの追加...］→ 講師が配った <code>mysql-connector-j-8.4.0.jar</code> を選んで［開く］。ツリーの「参照ライブラリー」の下に jar が出たことを確かめる</td></tr><tr><td>⑥</td><td><code>lesson16</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑦</td><td>名前に <code>ProductDTO</code> と入力する。パッケージ欄に <code>lesson16</code> と入っていることを確かめて［完了］（空なら <code>lesson16</code> と入力する）</td></tr><tr><td>⑧</td><td>⑥⑦をくり返し、<code>ProductDAO</code>・<code>ProductService</code>・<code>ProductMain</code> のクラスを作る</td></tr><tr><td>⑨</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑩</td><td>第11回と同じように MySQL に入り、下の「表を3件に戻す SQL」を貼り付けて実行する</td></tr><tr><td>⑪</td><td><code>ProductMain.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr><tr><td>⑫</td><td>実行できたら、下の2枚の図をノートに写す</td></tr></table>
+<h2>全体像</h2>
+<p>写す図は、次の2枚です。1枚目は、第13回の3つのクラスを描いた<strong>クラス図</strong>です。箱は3段に区切り、<code>-</code> や <code>+</code>、下線、線が実線か破線か、矢じりの形まで、そのまま写します。2枚目は、<code>ProductMain</code> で <code>findAll()</code> が返った瞬間を描いた<strong>オブジェクト図</strong>です。</p>
+<p>オレンジの ①〜⑨ は、③解説の番号です。ノートには写さなくて構いません。</p>
+<p>図のあとに、この図が表しているコードの全部を載せます。どれも第13回と同じ中身で、1行目だけ <code>package lesson16;</code> です。</p>
+<svg class="fig" viewBox="0 0 720 490" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u2OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u2TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u2DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u2FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u2SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u2ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u2RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u2RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u2RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u2RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<g id="l16class3">
+<rect x="40" y="30" width="270" height="148" fill="#fff"/>
+<rect x="40" y="30" width="270" height="30" fill="#e0f2fe"/>
+<text x="175" y="51" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">ProductService</text>
+<line x1="40" y1="60" x2="310" y2="60" stroke="#334155" stroke-width="1.5"/>
+<line x1="40" y1="74" x2="310" y2="74" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="94" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ findAll() : List&lt;ProductDTO&gt;</text>
+<text x="50" y="112" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ add(p : ProductDTO) : void</text>
+<text x="50" y="130" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ update(p : ProductDTO) : void</text>
+<text x="50" y="148" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ delete(id : int) : void</text>
+<text x="50" y="166" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- check(p : ProductDTO) : void</text>
+<rect x="40" y="30" width="270" height="148" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="40" y="270" width="270" height="202" fill="#fff"/>
+<rect x="40" y="270" width="270" height="30" fill="#e0f2fe"/>
+<text x="175" y="291" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">ProductDAO</text>
+<line x1="40" y1="300" x2="310" y2="300" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="320" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve" text-decoration="underline">- URL : String</text>
+<text x="50" y="338" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve" text-decoration="underline">- USER : String</text>
+<text x="50" y="356" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve" text-decoration="underline">- PASSWORD : String</text>
+<line x1="40" y1="368" x2="310" y2="368" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="388" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ findAll() : List&lt;ProductDTO&gt;</text>
+<text x="50" y="406" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ findById(id : int) : ProductDTO</text>
+<text x="50" y="424" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ insert(p : ProductDTO) : int</text>
+<text x="50" y="442" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ update(p : ProductDTO) : int</text>
+<text x="50" y="460" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ delete(id : int) : int</text>
+<rect x="40" y="270" width="270" height="202" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="420" y="30" width="290" height="274" fill="#fff"/>
+<rect x="420" y="30" width="290" height="30" fill="#e0f2fe"/>
+<text x="565" y="51" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">ProductDTO</text>
+<line x1="420" y1="60" x2="710" y2="60" stroke="#334155" stroke-width="1.5"/>
+<text x="430" y="80" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- id : int</text>
+<text x="430" y="98" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- name : String</text>
+<text x="430" y="116" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- price : int</text>
+<text x="430" y="134" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- stock : int</text>
+<line x1="420" y1="146" x2="710" y2="146" stroke="#334155" stroke-width="1.5"/>
+<text x="430" y="166" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ ProductDTO(id : int, name : String,</text>
+<text x="430" y="184" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">             price : int, stock : int)</text>
+<text x="430" y="202" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ getId() : int</text>
+<text x="430" y="220" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ getName() : String</text>
+<text x="430" y="238" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ getPrice() : int</text>
+<text x="430" y="256" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ getStock() : int</text>
+<text x="430" y="274" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ setPrice(price : int) : void</text>
+<text x="430" y="292" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ setStock(stock : int) : void</text>
+<rect x="420" y="30" width="290" height="274" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polyline points="175,178 175,270" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u2OP)"/>
+<text x="165" y="262" font-size="13" text-anchor="end" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- dao</text>
+<text x="185" y="262" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">1</text>
+<polyline points="310,100 420,100" fill="none" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#u2OP)"/>
+<polyline points="310,290 420,290" fill="none" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#u2OP)"/>
+<text x="695" y="51" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">①</text>
+<text x="695" y="81" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">②</text>
+<text x="695" y="239" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">③</text>
+<text x="409" y="135" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">④</text>
+<text x="295" y="321" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">⑤</text>
+<text x="200" y="224" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">⑥</text>
+<text x="207" y="262" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">⑦</text>
+<text x="365" y="90" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">⑧</text>
+<text x="365" y="280" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">⑧</text>
+</g>
+</svg><p class="figcap">1枚目　第13回の3つのクラスを描いたクラス図（オレンジの番号は③解説の番号。写さなくてよい）</p><svg class="fig" viewBox="0 0 720 140" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u3OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u3TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u3DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u3FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u3SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u3ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u3RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u3RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u3RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u3RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<g id="l16obj3">
+<rect x="20" y="10" width="200" height="116" fill="#fff"/>
+<rect x="20" y="10" width="200" height="30" fill="#fff3e6"/>
+<text x="120" y="31" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold" text-decoration="underline">pen : ProductDTO</text>
+<line x1="20" y1="40" x2="220" y2="40" stroke="#334155" stroke-width="1.5"/>
+<text x="30" y="60" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">id = 1</text>
+<text x="30" y="78" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">name = "ボールペン"</text>
+<text x="30" y="96" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">price = 150</text>
+<text x="30" y="114" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">stock = 30</text>
+<rect x="20" y="10" width="200" height="116" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="260" y="10" width="200" height="116" fill="#fff"/>
+<rect x="260" y="10" width="200" height="30" fill="#fff3e6"/>
+<text x="360" y="31" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold" text-decoration="underline">note : ProductDTO</text>
+<line x1="260" y1="40" x2="460" y2="40" stroke="#334155" stroke-width="1.5"/>
+<text x="270" y="60" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">id = 2</text>
+<text x="270" y="78" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">name = "ノート"</text>
+<text x="270" y="96" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">price = 220</text>
+<text x="270" y="114" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">stock = 10</text>
+<rect x="260" y="10" width="200" height="116" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="500" y="10" width="200" height="116" fill="#fff"/>
+<rect x="500" y="10" width="200" height="30" fill="#fff3e6"/>
+<text x="600" y="31" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold" text-decoration="underline">eraser : ProductDTO</text>
+<line x1="500" y1="40" x2="700" y2="40" stroke="#334155" stroke-width="1.5"/>
+<text x="510" y="60" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">id = 3</text>
+<text x="510" y="78" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">name = "消しゴム"</text>
+<text x="510" y="96" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">price = 100</text>
+<text x="510" y="114" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">stock = 50</text>
+<rect x="500" y="10" width="200" height="116" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="240" y="30" font-size="17" text-anchor="middle" fill="#e76f00" font-weight="bold">⑨</text>
+</g>
+</svg><p class="figcap">2枚目　<code>findAll()</code> が返った瞬間のオブジェクト図</p><p class="fname">表を3件に戻す SQL（MySQL で実行する）</p>
+<pre class="code" id="c1">CREATE DATABASE IF NOT EXISTS stock DEFAULT CHARACTER SET utf8mb4;
+USE stock;
+
+DROP TABLE IF EXISTS products;
+CREATE TABLE products (
+    id     INT AUTO_INCREMENT PRIMARY KEY,
+    name   VARCHAR(100) NOT NULL,
+    price  INT NOT NULL,
+    stock  INT NOT NULL
+) DEFAULT CHARSET = utf8mb4;
+
+INSERT INTO products (name, price, stock) VALUES
+    ('ボールペン', 150, 30), ('ノート', 220, 10), ('消しゴム', 100, 50);
+
+SELECT id, name, price, stock FROM products ORDER BY id;</pre>
+<p class="fname">ProductDTO.java</p>
+<pre class="code" id="c2">package lesson16;
+
+public class ProductDTO {
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public ProductDTO(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) { this.price = price; }
+    public void setStock(int stock) { this.stock = stock; }
+}</pre>
+<p class="fname">ProductDAO.java</p>
+<pre class="code" id="c3">package lesson16;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDAO {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                        rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public ProductDTO findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                          rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(ProductDTO p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(ProductDTO p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+}</pre>
+<p class="fname">ProductService.java</p>
+<pre class="code" id="c4">package lesson16;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<p class="fname">ProductMain.java　使う側（図には描いていない）</p>
+<pre class="code" id="c5">package lesson16;
+
+import java.sql.SQLException;
+
+public class ProductMain {
+    public static void main(String[] args) throws SQLException {
+        ProductService service = new ProductService();
+
+        for (ProductDTO p : service.findAll()) {
+            System.out.println(p.getId() + " / " + p.getName() + " / " + p.getPrice()
+                    + "円 / 残り" + p.getStock() + "個");
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">1 / ボールペン / 150円 / 残り30個
+2 / ノート / 220円 / 残り10個
+3 / 消しゴム / 100円 / 残り50個</div>
+<p>実行するのは <code>ProductMain</code> です。表を3件に戻した直後に実行した結果です。</p>
+<p><code>PASSWORD</code> の <code>"password"</code> は、授業で使う MySQL のパスワードに合わせて変えてください。</p>
+</div>
+<div class="card explanation-card"><div class="card-title">③ 解説（要点だけ読む）</div>
+<p class="explanation-intro">結論と短い例だけで確認できます。図や詳しい説明は必要な項目だけ開いてください。</p>
+<h2 class="sym-h">クラス図で使う記号と書き方</h2>
+<p class="explain-brief">クラスの形は名前・属性・操作の3段。線と矢じりでクラス同士の関係を表す。</p>
+<p class="explain-mini"><code>- id : int</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+<p>UMLの記法例（Javaコードではありません）</p><pre class="code" id="uml16-example">- id : int
++ getId() : int</pre>
+
+<table class="symtab"><tr><th>記号・書き方</th><th>名前</th><th>意味と書き方</th></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 86" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s1o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s1f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s1t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="10" y="4" width="110" height="78" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="10,24 120,24" fill="none" stroke="#334155" stroke-width="1.5"/><polyline points="10,52 120,52" fill="none" stroke="#334155" stroke-width="1.5"/><text x="65" y="18" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">ProductDTO</text><text x="16" y="42" font-size="10" text-anchor="start" fill="#1f2933">- price : int</text><text x="16" y="72" font-size="10" text-anchor="start" fill="#1f2933">+ getPrice() : int</text></svg></td><td class="sym-name">クラス</td><td>四角を3段に分けます。1段目にクラス名、2段目に属性（フィールド）、3段目に操作（メソッド）を書きます。</td></tr><tr><td class="sym-cell"><code class="symcode">- price : int
+- name : String = ""</code></td><td class="sym-name">属性</td><td>「可視性 名前 : 型」の順に書きます。初めの値があれば「= 値」を後ろに付けます。Java の <code>private int price;</code> に当たります。</td></tr><tr><td class="sym-cell"><code class="symcode">+ getPrice() : int
++ setPrice(price : int)</code></td><td class="sym-name">操作</td><td>「可視性 名前(引数 : 型) : 戻り値の型」の順に書きます。戻り値が void のときは、省くことが多くあります。</td></tr><tr><td class="sym-cell"><code class="symcode">-  private
++  public
+#  protected</code></td><td class="sym-name">可視性</td><td>行の先頭の印です。クラスの外から見えるかどうかを表します。- は private、+ は public、# は protected（子クラスからは見える）です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 26" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s2o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s2f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s2t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><text x="6" y="17" font-size="11" text-anchor="start" fill="#1f2933">- URL : String</text><polyline points="6,21 92,21" fill="none" stroke="#334155" stroke-width="1.2"/></svg></td><td class="sym-name">下線</td><td>static のフィールドやメソッドには、下線を引きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 56" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s3o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s3f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s3t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="10" y="4" width="110" height="48" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="10,40 120,40" fill="none" stroke="#334155" stroke-width="1.5"/><text x="65" y="20" font-size="11" text-anchor="middle" fill="#1f2933" font-style="italic" font-weight="bold">Sale</text><text x="65" y="34" font-size="10" text-anchor="middle" fill="#64748b">{abstract}</text></svg></td><td class="sym-name">抽象クラス</td><td>クラス名を斜体にします。手で書くときは、名前の下に {abstract} と書きます。Java の abstract class です。中身の無いメソッド（抽象操作）も斜体にします。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 70" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s4o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s4f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s4t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="10" y="4" width="110" height="62" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="10,34 120,34" fill="none" stroke="#334155" stroke-width="1.5"/><text x="65" y="16" font-size="9" text-anchor="middle" fill="#1f2933">«enumeration»</text><text x="65" y="29" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">Status</text><text x="18" y="48" font-size="10" text-anchor="start" fill="#1f2933">IN_STOCK</text><text x="18" y="61" font-size="10" text-anchor="start" fill="#1f2933">SOLD_OUT</text></svg></td><td class="sym-name">列挙</td><td>決まった値だけを持つ型です。Java の enum です。1段目に «enumeration» と名前、2段目に値を並べます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 34" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s5o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s5f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s5t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,24 120,24" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s5o)"/><text x="108" y="15" font-size="11" text-anchor="middle" fill="#1f2933">1</text></svg></td><td class="sym-name">関連と多重度</td><td>フィールドに持っている相手へ引く実線です。矢印の先が、持たれる側です。矢印の無い線は、お互いに持つか、まだ決めていないという意味です。相手側の端の数が多重度で、1（ちょうど1つ）、0..1（0か1つ）、0..&#42; または &#42;（いくつでも）、1..&#42;（1つ以上）、2..5（2〜5）と書きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 34" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s6o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s6f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s6t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,24 120,24" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s6o)"/><text x="112" y="15" font-size="10" text-anchor="end" fill="#1f2933">- dao</text><text x="120" y="15" font-size="10" text-anchor="start" fill="#1f2933">1</text></svg></td><td class="sym-name">ロール名</td><td>関連の端に書く名前です。持つ側のフィールド名になります。同じクラスの間に関連が2本あるときに書き分けます。</td></tr><tr><td class="sym-cell"><code class="symcode">- items : List&lt;Item&gt;</code></td><td class="sym-name">型に &lt; &gt;</td><td>Java のジェネリクスです。「0..&#42; の関連」と「List 型の属性」は、同じことの2通りの書き方です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s7o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s7f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s7t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,12 120,12" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#s7o)"/></svg></td><td class="sym-name">依存</td><td>破線の矢印です。フィールドには持たず、引数・戻り値・メソッドの中の変数として一時的に使うだけの相手へ引きます。フィールドで持つなら関連です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s8o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s8f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s8t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,12 120,12" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s8t)"/></svg></td><td class="sym-name">汎化</td><td>継承（extends）です。子から親へ実線を引き、親の側に白抜きの三角を付けます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s9o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s9f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s9t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,12 120,12" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#s9t)"/></svg></td><td class="sym-name">実現</td><td>インタフェースの実装（implements）です。クラスからインタフェースへ破線を引き、白抜きの三角を付けます。インタフェースの名前の上には «interface» と書きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s10o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s10f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s10t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s10d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s10D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="26,12 120,12" fill="none" stroke="#334155" stroke-width="1.5" marker-start="url(#s10d)"/></svg></td><td class="sym-name">集約</td><td>全体と部分の関係で、全体の側に白抜きのひし形を付けます。全体を消しても、部分は残ります。使い方が現場で分かれるので、読めればよく、描くときは関連かコンポジションにします。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s11o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s11f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s11t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s11d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s11D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="26,12 120,12" fill="none" stroke="#334155" stroke-width="1.5" marker-start="url(#s11D)"/></svg></td><td class="sym-name">コンポジション</td><td>全体と部分の関係で、全体の側に黒塗りのひし形を付けます。全体を消すと、部分も一緒に消えます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 56" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s12o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s12f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s12t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s12d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s12D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><path d="M14,8 L56,8 L56,16 L14,16 z" fill="#fff" stroke="#334155" stroke-width="1.5"/><rect x="14" y="16" width="104" height="36" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="66" y="39" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">lesson16</text></svg></td><td class="sym-name">パッケージ</td><td>タブの付いたフォルダの形です。クラスをまとめる入れ物で、Java の package です。</td></tr></table>
+
+</div></details>
+<h2 class="sym-h">オブジェクト図で使う記号と書き方</h2>
+<p class="explain-brief">オブジェクト図は、ある時点のインスタンスと実際の値・つながりを表す。</p>
+<p class="explain-mini"><code>pen : ProductDTO</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<table class="symtab"><tr><th>記号・書き方</th><th>名前</th><th>意味と書き方</th></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 62" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s13o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s13f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s13t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s13d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s13D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="10" y="4" width="110" height="54" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="10,24 120,24" fill="none" stroke="#334155" stroke-width="1.5"/><text x="65" y="18" font-size="10" text-anchor="middle" fill="#1f2933" font-weight="bold" text-decoration="underline">pen : ProductDTO</text><text x="16" y="42" font-size="10" text-anchor="start" fill="#1f2933">price = 150</text></svg></td><td class="sym-name">インスタンス</td><td>1段目に「名前 : クラス名」を書き、下線を引きます。2段目に「属性 = 値」を書きます。操作の段は書きません。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 26" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s14o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s14f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s14t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s14d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s14D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><text x="6" y="18" font-size="12" text-anchor="start" fill="#1f2933" text-decoration="underline">: ProductDTO</text></svg></td><td class="sym-name">名前の無いインスタンス</td><td>名前を付ける意味が無いときは、「: クラス名」とだけ書きます。下線は同じように引きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s15o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s15f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s15t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s15d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s15D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,12 122,12" fill="none" stroke="#334155" stroke-width="1.5"/></svg></td><td class="sym-name">リンク</td><td>インスタンスどうしのつながりです。実線で描き、多重度は書きません。</td></tr></table>
+
+</div></details>
+<h2>1　クラス名と属性（①②）</h2>
+<p class="explain-brief">属性は「可視性 名前 : 型」の順番で書く。クラス名は一番上の段。</p>
+<p class="explain-mini"><code>- id : int</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:292px" viewBox="421 24 292 126" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l16class3"/></svg><div class="line-block"><p class="item-label">① 1段目の ProductDTO（クラス名）</p>
+<p>抜き出した箱は、<code>ProductDTO</code> クラスを表しています。<strong>箱1つがクラス1つ</strong>です。箱は、横線で3段に区切ります。</p>
+<p>①の1段目には、クラス名を書きます。1段目は省略できません。2段目と3段目は省略できます。つながりだけを見せたいときは、名前だけの箱にします（今日の主役の図）。</p>
+</div>
+<div class="line-block"><p class="item-label">② 2段目（属性）</p>
+<p>②の2段目は<strong>属性</strong>です。属性は、クラスが持つフィールドのことです。1行の書き方は「可視性 名前 : 型」です。<strong>名前が先、型が後ろ</strong>で、間に <code>:</code> を入れます。行の先頭の <code>-</code> は可視性の印で、④で説明します。</p>
+<p><code>- id : int</code> は、商品の番号です。Java の <code>private int id;</code> に当たります。<code>- name : String</code> は商品名で、型は文字列の <code>String</code> です。<code>- price : int</code> は価格、<code>- stock : int</code> は在庫の数です。</p>
+<p><strong>なぜ書くのか。</strong>インスタンス1つ1つが何を持つかを、コードを開かずに見るためです。</p>
+</div>
+<p><strong>よくある間違い：名前と型を、Java の順で書く。</strong><code>- int id</code> と書くと、UML の決まり（名前が先、型が後ろ）と逆になります。図を読む人が、どちらが名前かで止まってしまいます。Java から写すときは「型を後ろへ回して、<code>:</code> を挟む」と覚えてください。</p>
+<svg class="fig" viewBox="0 0 720 170" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u4OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u4TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u4DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u4FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u4SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u4ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u4RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u4RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u4RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u4RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<text x="40" y="26" font-size="14" text-anchor="start" fill="#475569" font-weight="bold">Java</text>
+<text x="430" y="26" font-size="14" text-anchor="start" fill="#475569" font-weight="bold">UML</text>
+<text x="40" y="62" font-size="14" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">private int id;</text>
+<text x="40" y="104" font-size="14" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">public int getId()</text>
+<text x="40" y="146" font-size="14" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">public void setPrice(int price)</text>
+<polyline points="318,57 410,57" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u4OP)"/>
+<polyline points="318,99 410,99" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u4OP)"/>
+<polyline points="318,141 410,141" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u4OP)"/>
+<text x="430" y="62" font-size="14" text-anchor="start" fill="#1d4ed8" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve" font-weight="bold">- id : int</text>
+<text x="430" y="104" font-size="14" text-anchor="start" fill="#1d4ed8" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve" font-weight="bold">+ getId() : int</text>
+<text x="430" y="146" font-size="14" text-anchor="start" fill="#1d4ed8" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve" font-weight="bold">+ setPrice(price : int) : void</text>
+</svg><p class="figcap">型を後ろへ回して、間に「 : 」を入れる</p><p>上の図は、Java の書き方（左）と UML の書き方（右）を並べたものです。1行目は、フィールドの <code>private int id;</code> です。型の <code>int</code> を後ろへ回して、<code>- id : int</code> にします。2行目は、メソッドの <code>public int getId()</code> です。戻り値の型を最後へ回して、<code>+ getId() : int</code> にします。3行目の <code>public void setPrice(int price)</code> は、引数のあるメソッドです。引数も <code>price : int</code> と、名前を先に書きます。戻り値の無い <code>void</code> も、最後に <code>: void</code> と書きます。</p>
+
+</div></details>
+<h2>2　操作・可視性・下線（③④⑤）</h2>
+<p class="explain-brief">操作はメソッドを表す。+ はpublic、- はprivate。staticは下線で示す。</p>
+<p class="explain-mini"><code>+ getId() : int</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:315px" viewBox="400 121 315 184" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l16class3"/><rect x="400" y="280" width="19.2" height="20" fill="#fff"/></svg><div class="line-block"><p class="item-label">③ 3段目（操作）</p>
+<p>③の3段目は<strong>操作</strong>です。操作は、クラスが持つメソッドのことです。1行の書き方は「可視性 名前(引数) : 戻り値の型」です。引数は、丸括弧の中に <code>名前 : 型</code> で書きます。複数あれば <code>,</code> で区切ります。</p>
+<p><code>+ ProductDTO(id : int, name : String,</code> から次の行までは、コンストラクタです。<code>id</code>・<code>name</code>・<code>price</code>・<code>stock</code> の4つを受け取ります。コンストラクタは値を返さないので、戻り値の型を書きません。</p>
+<p><code>getId()</code>・<code>getName()</code>・<code>getPrice()</code>・<code>getStock()</code> は、getter です。getter は、フィールドの値を返すメソッドです。引数が無いので、丸括弧の中は空です。後ろの <code>: int</code> や <code>: String</code> が、返す値の型です。</p>
+<p><code>setPrice(price : int) : void</code> と <code>setStock(stock : int) : void</code> は、setter です。setter は、受け取った値をフィールドに入れるメソッドです。何も返さないので、最後は <code>: void</code> です。戻り値が <code>void</code> のときは、<code>: void</code> を省いても構いません。</p>
+<p>何を渡せば何が返るかが分かるので、呼び出し方が図だけで分かります。</p>
+</div>
+<div class="line-block"><p class="item-label">④ 行の先頭の - と +（可視性）</p>
+<p>④は、行の先頭の <code>-</code> と <code>+</code> です。これを<strong>可視性</strong>と言います。可視性は、クラスの外から見えるかどうかの印です。<code>-</code> は <code>private</code>、<code>+</code> は <code>public</code> です。</p>
+<p>抜き出した図では、いちばん上の属性 <code>- stock : int</code> が <code>-</code> です。コードの <code>private int stock;</code> に当たります。操作は、すべて <code>+</code> です。<code>+ getStock() : int</code> は、コードの <code>public int getStock()</code> に当たります。</p>
+<p><strong>なぜ書くのか。</strong>カプセル化できているかが、見た目で分かるからです。カプセル化は、フィールドを <code>private</code> にして、メソッドを通して使わせることです（第5回）。もし <code>price</code> を <code>public</code> にすると、2段目に <code>+ price : int</code> が混ざります。コードを読まなくても、カプセル化が崩れていると分かります。</p>
+</div>
+<svg class="fig" style="max-width:277px" viewBox="34 269.2 277 99.8" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l16class3"/></svg><div class="line-block"><p class="item-label">⑤ ProductDAO の2段目の下線</p>
+<p>⑤は、<code>ProductDAO</code> の2段目の3行に引いた下線です。下線は、<code>static</code> の印です。<code>static</code> は、インスタンスごとではなく、クラスに1つだけあるものです（第5回）。インスタンスごとに持つものと、クラスに1つだけのものを見分けるために引きます。</p>
+<p>3つとも、コードでは <code>private static final String</code> と書いたフィールドです。だから、先頭が <code>-</code> で、型が <code>String</code> です。<code>URL</code> は、つなぐデータベースの場所です。<code>USER</code> と <code>PASSWORD</code> は、MySQL に入るときの名前とパスワードです。</p>
+</div>
+
+</div></details>
+<h2>3　関連と多重度（⑥⑦）</h2>
+<p class="explain-brief">関連は実線で結び、1・0..* などの多重度で個数を表す。</p>
+<p class="explain-mini"><code>1</code> / <code>0..*</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:270px" viewBox="40 150 270 140" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l16class3"/></svg><div class="line-block"><p class="item-label">⑥ 上から下へ向かう実線の矢印（関連）</p>
+<p>上の箱が <code>ProductService</code>、下の箱が <code>ProductDAO</code> です。上の箱のいちばん下の行 <code>- check(p : ProductDTO) : void</code> は、<code>private</code> のメソッドです。だから、先頭が④の <code>-</code> です。</p>
+<p>⑥の、上から下へ向かう実線の矢印が<strong>関連</strong>です。関連は、相手をフィールドとして持ち続けている、という線です。<code>ProductService</code> は、<code>ProductDAO</code> をフィールド <code>dao</code> として持っています。コードでは、<code>private ProductDAO dao = new ProductDAO();</code> の行です。</p>
+<p>線の端の <code>- dao</code> が、そのフィールドの可視性と名前です。フィールド名は、箱の中ではなく、線の端に書きます。両方に書くと、フィールドが2つあるように読めるためです。だから、<code>ProductService</code> の箱の2段目は、空の段になっています。</p>
+<p>矢じりの向きは「知っている向き」です。<code>ProductService</code> は <code>ProductDAO</code> を知っていますが、その逆は知りません。だから <code>ProductDAO</code> は、別の画面からもそのまま使えます。</p>
+</div>
+<div class="line-block"><p class="item-label">⑦ 1（多重度）</p>
+<p>⑦の <code>1</code> は<strong>多重度</strong>です。多重度は、相手をいくつ持つかを表す数です。<strong>相手の側の端に書いた数字</strong>を読みます。<code>ProductDAO</code> の側に <code>1</code> があります。<code>ProductService</code> 1つは、<code>ProductDAO</code> をちょうど1つ持つ、と読みます。</p>
+<p><code>ProductService</code> の側の端には、数字がありません。数字が無い端は、数を決めていない（この図では問わない）という意味です。</p>
+<p><strong>なぜ書くのか。</strong>何個持つかで、フィールドの書き方が決まるからです。</p>
+</div>
+<p>よく使う書き方を、下の表にまとめます。</p>
+<table><tr><th>書き方</th><th>意味</th><th>Java では</th></tr><tr><td><code>1</code></td><td>ちょうど1つ</td><td><code>ProductDAO dao;</code></td></tr><tr><td><code>0..1</code></td><td>0個か1個</td><td><code>null</code> のこともあるフィールド</td></tr><tr><td><code>0..&#42;</code>（<code>&#42;</code> だけでも同じ）</td><td>0個以上、いくつでも</td><td><code>List&lt;Member&gt; members;</code></td></tr><tr><td><code>1..&#42;</code></td><td>1個以上</td><td><code>List</code> で、空にしない決まりがあるもの</td></tr></table>
+
+</div></details>
+<h2>4　依存と、ほかの線（⑧）</h2>
+<p class="explain-brief">依存は破線の矢印。継承は白い三角の矢じり。線の種類に意味がある。</p>
+<p class="explain-mini"><code>implements</code> / <code>extends</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:684px" viewBox="36 26 684 160" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l16class3"/></svg><div class="line-block"><p class="item-label">⑧ 破線の矢印（依存）</p>
+<p>左が <code>ProductService</code>、右が <code>ProductDTO</code> の箱です。⑧の破線の矢印が<strong>依存</strong>です。依存は、引数や戻り値で使うだけで、フィールドには持っていない、という線です。<code>ProductService</code> は、<code>add(p : ProductDTO)</code> の引数や、<code>findAll()</code> の戻り値で <code>ProductDTO</code> を使います。でも、<code>ProductDTO</code> のフィールドは持っていません。だから破線です。関連と同じく、使う側から使われる側へ矢印を引きます。</p>
+<p>全体の図では、<code>ProductDAO</code> から <code>ProductDTO</code> へも、同じ破線（⑧）を引いています。<code>ProductDAO</code> も、<code>insert</code> の引数や <code>findById</code> の戻り値で使うだけだからです。</p>
+<p><strong>なぜ関連と分けるのか。</strong>持ち続けるのか、その場で使うだけなのかで、つながりの強さが違うからです。<code>ProductDTO</code> を直すと、破線でつながったクラスにも直しが及びます。</p>
+</div>
+<div class="line-block"><p class="item-label">左の箱 ProductService の中身</p>
+<p>右の箱の ①②④ は、前の節で説明した所です。<code>ProductService</code> の2段目は空です。フィールドの <code>dao</code> は、⑥の線の端に書いたからです。左の箱の下の端から出ている線が、その⑥の関連の線です。</p>
+<p><code>ProductService</code> の3段目には、5つのメソッドが並んでいます。<code>findAll()</code> は、全部の商品を <code>List&lt;ProductDTO&gt;</code> で返します。<code>add</code> と <code>update</code> は、<code>ProductDTO</code> を受け取り、追加・更新します。<code>delete</code> は、<code>int</code> の ID を受け取り、削除します。この3つは何も返さないので、<code>: void</code> です。<code>check</code> は、入力の検査をする <code>private</code> のメソッドです。</p>
+</div>
+<p><strong>よくある間違い：フィールドで持っているのに、破線で描く。</strong><code>ProductService</code> は、<code>private ProductDAO dao = new ProductDAO();</code> と持ち続けています。だから、<code>ProductDAO</code> への線は実線の関連です。見分け方は「<strong>フィールドに書いてあるか</strong>」だけです。</p>
+<p>クラス図の線には、ほかに汎化・実現・集約・コンポジションがあります。今日の2本と合わせて、1枚にまとめます。</p>
+<svg class="fig" viewBox="0 0 720 310" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u7OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u7TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u7DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u7FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u7SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u7ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u7RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u7RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u7RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u7RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<text x="40" y="24" font-size="13" text-anchor="start" fill="#64748b" font-weight="bold">線</text>
+<text x="215" y="24" font-size="13" text-anchor="start" fill="#64748b" font-weight="bold">名前</text>
+<text x="335" y="24" font-size="13" text-anchor="start" fill="#64748b" font-weight="bold">描き方</text>
+<text x="530" y="24" font-size="13" text-anchor="start" fill="#64748b" font-weight="bold">Java では</text>
+<line x1="30" y1="34" x2="710" y2="34" stroke="#cbd5e1" stroke-width="1"/>
+<polyline points="40,60 190,60" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u7OP)"/>
+<text x="215" y="65" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">関連</text>
+<text x="335" y="65" font-size="13" text-anchor="start" fill="#1f2933">実線＋開いた矢じり</text>
+<text x="530" y="65" font-size="13" text-anchor="start" fill="#1f2933">フィールドとして持つ</text>
+<polyline points="40,105 190,105" fill="none" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#u7OP)"/>
+<text x="215" y="110" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">依存</text>
+<text x="335" y="110" font-size="13" text-anchor="start" fill="#1f2933">破線＋開いた矢じり</text>
+<text x="530" y="110" font-size="13" text-anchor="start" fill="#1f2933">引数・戻り値で使うだけ</text>
+<polyline points="40,150 190,150" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u7TRI)"/>
+<text x="215" y="155" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">汎化</text>
+<text x="335" y="155" font-size="13" text-anchor="start" fill="#1f2933">実線＋白抜きの三角</text>
+<text x="530" y="155" font-size="13" text-anchor="start" fill="#1f2933">extends</text>
+<polyline points="40,195 190,195" fill="none" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#u7TRI)"/>
+<text x="215" y="200" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">実現</text>
+<text x="335" y="200" font-size="13" text-anchor="start" fill="#1f2933">破線＋白抜きの三角</text>
+<text x="530" y="200" font-size="13" text-anchor="start" fill="#1f2933">implements</text>
+<polyline points="40,240 190,240" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u7OP)" marker-start="url(#u7DIA)"/>
+<text x="215" y="245" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">集約</text>
+<text x="335" y="245" font-size="13" text-anchor="start" fill="#1f2933">白抜きのひし形（全体の側）</text>
+<text x="530" y="245" font-size="13" text-anchor="start" fill="#1f2933">持つ。部分は単独でも残る</text>
+<polyline points="40,285 190,285" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u7OP)" marker-start="url(#u7FDIA)"/>
+<text x="215" y="290" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">コンポジション</text>
+<text x="335" y="290" font-size="13" text-anchor="start" fill="#1f2933">黒塗りのひし形（全体の側）</text>
+<text x="530" y="290" font-size="13" text-anchor="start" fill="#1f2933">持つ。全体と一緒に消える</text>
+</svg><p class="figcap">矢じり・三角・ひし形の形と、実線か破線かで描き分ける</p><div class="line-block"><p class="item-label">1行目・2行目　関連と依存</p>
+<p>1行目と2行目は、今日写した関連と依存です。関連は実線と開いた矢じりで、フィールドとして持つときに使います。依存は破線と開いた矢じりで、引数・戻り値で使うだけのときに使います。</p>
+</div>
+<div class="line-block"><p class="item-label">3行目・4行目　汎化と実現</p>
+<p>3行目から下の4本は、今日の図には出てきません。</p>
+<p>3行目の<strong>汎化</strong>は、継承（<code>extends</code>）です。実線の先に、白抜きの三角を付けます。4行目の<strong>実現</strong>は、インタフェースの実装（<code>implements</code>）です。破線の先に、白抜きの三角を付けます。どちらも、三角は親（インタフェース）の側に付けます。違いは、実線か破線かです。</p>
+</div>
+<svg class="fig" viewBox="0 0 720 340" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u5OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u5TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u5DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u5FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u5SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u5ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u5RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u5RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u5RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u5RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<rect x="60" y="40" width="200" height="30" fill="#fff"/>
+<rect x="60" y="40" width="200" height="30" fill="#e0f2fe"/>
+<text x="160" y="61" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">Member</text>
+<rect x="60" y="40" width="200" height="30" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="60" y="180" width="200" height="30" fill="#fff"/>
+<rect x="60" y="180" width="200" height="30" fill="#e0f2fe"/>
+<text x="160" y="201" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">GoldMember</text>
+<rect x="60" y="180" width="200" height="30" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polyline points="160,180 160,70" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u5TRI)"/>
+<text x="172" y="130" font-size="13" text-anchor="start" fill="#475569">実線</text>
+<text x="160" y="324" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">汎化（extends）</text>
+<rect x="400" y="20" width="280" height="96" fill="#fff"/>
+<rect x="400" y="20" width="280" height="46" fill="#e0f2fe"/>
+<text x="540" y="37" font-size="12" text-anchor="middle" fill="#475569">«interface»</text>
+<text x="540" y="57" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">Coupon</text>
+<line x1="400" y1="66" x2="680" y2="66" stroke="#334155" stroke-width="1.5"/>
+<text x="410" y="86" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ getName() : String</text>
+<text x="410" y="104" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ apply(price : int) : int</text>
+<rect x="400" y="20" width="280" height="96" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="400" y="170" width="280" height="130" fill="#fff"/>
+<rect x="400" y="170" width="280" height="30" fill="#e0f2fe"/>
+<text x="540" y="191" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">PercentCoupon</text>
+<line x1="400" y1="200" x2="680" y2="200" stroke="#334155" stroke-width="1.5"/>
+<text x="410" y="220" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- rate : int</text>
+<line x1="400" y1="232" x2="680" y2="232" stroke="#334155" stroke-width="1.5"/>
+<text x="410" y="252" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ PercentCoupon(rate : int)</text>
+<text x="410" y="270" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ getName() : String</text>
+<text x="410" y="288" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ apply(price : int) : int</text>
+<rect x="400" y="170" width="280" height="130" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polyline points="540,170 540,116" fill="none" stroke="#334155" stroke-width="1.6" stroke-dasharray="7 5" marker-end="url(#u5TRI)"/>
+<text x="552" y="148" font-size="13" text-anchor="start" fill="#475569">破線</text>
+<text x="540" y="324" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">実現（implements）</text>
+</svg><p class="figcap">三角はどちらも白抜きで、親（インタフェース）の側。違いは実線か破線か</p><div class="line-block"><p class="item-label">左　Member と GoldMember（汎化）</p>
+<p>左は汎化の例です。<code>GoldMember</code> が <code>Member</code> を継承しています。子の <code>GoldMember</code> から親の <code>Member</code> へ実線を引き、親の側に三角を付けています。2つの箱は、名前だけを書いて、2段目と3段目を省いています。</p>
+</div>
+<div class="line-block"><p class="item-label">右　Coupon と PercentCoupon（実現）</p>
+<p>右は実現の例です。<code>Coupon</code> の名前の上の <code>«interface»</code> は、インタフェースであることを示す印です。第15回の <code>«include»</code> と同じ、ステレオタイプの書き方です。<code>Coupon</code> は、2段目を省き、3段目に2つのメソッドを書いています。<code>getName()</code> はクーポンの名前を、<code>apply(price : int) : int</code> は割り引いたあとの価格を返します。</p>
+<p><code>PercentCoupon</code> は、<code>Coupon</code> を実装したクラスです。2段目の <code>- rate : int</code> は、割り引く割合です。3段目は、<code>rate</code> を受け取るコンストラクタと、<code>Coupon</code> のメソッドを書き直した2つです。<code>PercentCoupon</code> から <code>Coupon</code> へ破線を引き、<code>Coupon</code> の側に三角を付けています。子の箱には、コードで子に書いたもの（書き直したメソッドなど）だけを書きます。</p>
+</div>
+<p><strong>よくある間違い：汎化の三角を、子の側に付ける。</strong>三角は「こちらが親」という印です。線は子から親へ引きます。三角は、<code>extends</code> の右に書いたクラスの側に付けます。</p>
+<div class="line-block"><p class="item-label">5行目・6行目　集約とコンポジション</p>
+<p>表の5行目の<strong>集約</strong>と、6行目の<strong>コンポジション</strong>は、どちらも「全体と部分」の関係です。どちらも、全体の側の端にひし形を付けます。決め手は「<strong>全体を消したとき、部分も一緒に消えるか</strong>」です。消えるなら黒塗りのひし形（コンポジション）、残るなら白抜きのひし形（集約）です。Java のコードでは、部分を全体の中だけで <code>new</code> しているなら、コンポジションです。外で作ったものを受け取って持つなら、集約です。</p>
+</div>
+
+</div></details>
+<h2>5　オブジェクト図（⑨）</h2>
+<p class="explain-brief">オブジェクト図は「インスタンス名 : クラス名」とその現在値を書く。操作の段は書かない。</p>
+<p class="explain-mini"><code>price = 150</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:248px" viewBox="10 2 248 124" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l16obj3"/></svg><p><strong>オブジェクト図</strong>は、ある瞬間のインスタンスと、その値を描いた図です。2枚目の図は、<code>findAll()</code> が返った瞬間を描いています。このとき、メモリの中には <code>ProductDTO</code> のインスタンスが3つあります。抜き出したのは、そのうちの1つ目です。<strong>なぜ描くのか。</strong>クラス図の形で、実際のデータが表せるかを確かめるためです。</p>
+<div class="line-block"><p class="item-label">⑨ インスタンスの箱 pen : ProductDTO</p>
+<p>1段目の <code>pen : ProductDTO</code> は、「インスタンス名 : クラス名」の形です。下線を引きます。<code>pen</code> は、見分けるために付けた名前です。コードの変数名ではありません。名前が要らなければ、<code>: ProductDTO</code> と書きます。</p>
+<p>2段目には、そのときの値を「属性名 = 値」で書きます。<code>id = 1</code> は、表の1件目の ID です。<code>name = "ボールペン"</code> は商品名です。文字列なので <code>"</code> で囲みます。<code>price = 150</code> は価格150円、<code>stock = 30</code> は在庫30個です。どれも、表を3件に戻す SQL で入れた1件目の値です。</p>
+<p>全体の図の残りの2つの箱（<code>note</code> と <code>eraser</code>）も、同じ書き方で2件目と3件目を描いています。</p>
+</div>
+<p><strong>よくある間違い：クラス図の書き方のまま描く。</strong></p>
+<svg class="fig" viewBox="0 0 720 160" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u6OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u6TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u6DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u6FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u6SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u6ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u6RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u6RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u6RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u6RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<rect x="40" y="10" width="300" height="130" fill="#fff"/>
+<rect x="40" y="10" width="300" height="30" fill="#fff3e6"/>
+<text x="190" y="31" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">pen : ProductDTO</text>
+<line x1="40" y1="40" x2="340" y2="40" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="60" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- id : int = 1</text>
+<text x="50" y="78" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- name : String = "ボールペン"</text>
+<text x="50" y="96" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- price : int = 150</text>
+<line x1="40" y1="108" x2="340" y2="108" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="128" font-size="13" text-anchor="start" fill="#b91c1c" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve" font-weight="bold">+ getId() : int</text>
+<rect x="40" y="10" width="300" height="130" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="60" font-size="13" text-anchor="start" fill="#b91c1c" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">-</text>
+<text x="50" y="78" font-size="13" text-anchor="start" fill="#b91c1c" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">-</text>
+<text x="50" y="96" font-size="13" text-anchor="start" fill="#b91c1c" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">-</text>
+<text x="370" y="30" font-size="13" text-anchor="start" fill="#b91c1c" font-weight="bold">名前に下線が無い</text>
+<text x="370" y="80" font-size="13" text-anchor="start" fill="#b91c1c" font-weight="bold">可視性の - を書いている</text>
+<text x="370" y="132" font-size="13" text-anchor="start" fill="#b91c1c" font-weight="bold">操作の段がある</text>
+</svg><p class="figcap">間違いあり：クラス図の書き方のまま描いている</p><p>上の図は、3つの所がクラス図の書き方のままです。1つ目は、名前の <code>pen : ProductDTO</code> に下線が無いことです。2つ目は、属性の先頭に、可視性の <code>-</code> を書いていることです。3つ目は、3段目に操作の <code>+ getId() : int</code> を書いていることです。</p>
+<p>オブジェクト図は「ある瞬間の値」を描く図です。だから、可視性の <code>-</code> と、操作の段は書きません。メソッドはどのインスタンスでも同じなので、クラス図に書いてあれば足ります。属性の <code>: int</code> のような型は、書いても構いませんが、省くのがふつうです。</p>
+<table><tr><th></th><th>クラス図</th><th>オブジェクト図</th></tr><tr><td>箱の名前</td><td><code>ProductDTO</code></td><td><code>pen : ProductDTO</code>（下線を引く）</td></tr><tr><td>段の数</td><td>3段（名前・属性・操作）</td><td>2段（名前・属性）</td></tr><tr><td>属性の書き方</td><td><code>- price : int</code></td><td><code>price = 150</code></td></tr><tr><td>線の呼び名</td><td>関連</td><td>リンク</td></tr><tr><td>多重度</td><td>書く</td><td>書かない（線の本数で分かる）</td></tr><tr><td>表すもの</td><td>いつでも成り立つ決まり</td><td>ある瞬間の様子</td></tr></table>
+</div></details>
+</div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>「pen : ProductDTO」と現在の価格「price = 150」を書くのは、どちらの図？</h2><details class="quick-answer"><summary>答えと理由を見る</summary><p><strong>オブジェクト図</strong>です。クラス図は型や操作を表し、オブジェクト図は特定のインスタンスとその時点の値を表します。</p></details></div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①のクラス図が描けたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　下の <code>Order</code>（注文）と <code>OrderLine</code>（注文明細）を、クラス図に描く。3段の箱・可視性・型・線の種類・多重度を、すべて書く。</li><li>②　<code>OrderMain</code> を実行した直後の様子を、オブジェクト図に描く。</li></ul>
+<h2>骨組み</h2>
+<p>描く元になる3つのファイルの全体です。<code>lesson16</code> に作って貼り、<code>OrderMain</code> を実行してから描いてください。</p>
+<p class="fname">OrderLine.java</p>
+<pre class="code" id="c6">package lesson16;
+
+public class OrderLine {
+    private String productName;
+    private int quantity;
+
+    public OrderLine(String productName, int quantity) {
+        this.productName = productName;
+        this.quantity = quantity;
+    }
+
+    public void show() {
+        System.out.println("  " + productName + " × " + quantity);
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c6">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">Order.java</p>
+<pre class="code" id="c7">package lesson16;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Order {
+    private int id;
+    private List&lt;OrderLine&gt; lines = new ArrayList&lt;&gt;();
+
+    public Order(int id) {
+        this.id = id;
+    }
+
+    public void add(String productName, int quantity) {
+        lines.add(new OrderLine(productName, quantity));
+    }
+
+    public void show() {
+        System.out.println("注文 " + id + "（明細 " + lines.size() + "件）");
+        for (OrderLine line : lines) {
+            line.show();
+        }
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c7">コピーする</button><span class="copy-msg"></span></div>
+<p class="fname">OrderMain.java</p>
+<pre class="code" id="c8">package lesson16;
+
+public class OrderMain {
+    public static void main(String[] args) {
+        Order order = new Order(1);
+        order.add("ボールペン", 3);
+        order.add("ノート", 2);
+
+        order.show();
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c8">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">注文 1（明細 2件）
+  ボールペン × 3
+  ノート × 2</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　<code>lines</code> はフィールドなので、箱の中ではなく線の端に名前を書きます。<code>ProductService</code> の <code>dao</code> と同じです。多重度は、<code>new Order(1)</code> の直後に明細が何件あるかで、<code>0..*</code> か <code>1..*</code> かを決めます。</li><li>②　ひし形も付けます。白か黒かは「注文を消したとき、明細が残るか」で決めます。<code>OrderLine</code> がどこで <code>new</code> されているかを見てください。</li><li>③　オブジェクト図の明細には、名前が無くて構いません。<code>: OrderLine</code> と書きます。</li></ul>
+<div class="calm">2問とも描けなくて構いません。描けなかった所は、答えを見て写してから、もう一度自分で描いてください。</div>
+<div class="note">終わった人は <strong>問題集の第16回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　Order のクラス図</summary><div class="sol">
+<svg class="fig" viewBox="0 0 720 190" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u8OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u8TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u8DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u8FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u8SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u8ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u8RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u8RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u8RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u8RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<rect x="30" y="20" width="250" height="148" fill="#fff"/>
+<rect x="30" y="20" width="250" height="30" fill="#e0f2fe"/>
+<text x="155" y="41" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">Order</text>
+<line x1="30" y1="50" x2="280" y2="50" stroke="#334155" stroke-width="1.5"/>
+<text x="40" y="70" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- id : int</text>
+<line x1="30" y1="82" x2="280" y2="82" stroke="#334155" stroke-width="1.5"/>
+<text x="40" y="102" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ Order(id : int)</text>
+<text x="40" y="120" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ add(productName : String,</text>
+<text x="40" y="138" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">      quantity : int) : void</text>
+<text x="40" y="156" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ show() : void</text>
+<rect x="30" y="20" width="250" height="148" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="440" y="20" width="270" height="148" fill="#fff"/>
+<rect x="440" y="20" width="270" height="30" fill="#e0f2fe"/>
+<text x="575" y="41" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold">OrderLine</text>
+<line x1="440" y1="50" x2="710" y2="50" stroke="#334155" stroke-width="1.5"/>
+<text x="450" y="70" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- productName : String</text>
+<text x="450" y="88" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- quantity : int</text>
+<line x1="440" y1="100" x2="710" y2="100" stroke="#334155" stroke-width="1.5"/>
+<text x="450" y="120" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ OrderLine(productName : String,</text>
+<text x="450" y="138" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">            quantity : int)</text>
+<text x="450" y="156" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">+ show() : void</text>
+<rect x="440" y="20" width="270" height="148" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polyline points="280,70 440,70" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#u8OP)" marker-start="url(#u8FDIA)"/>
+<text x="430" y="62" font-size="13" text-anchor="end" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">- lines</text>
+<text x="430" y="90" font-size="13" text-anchor="end" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">0..&#42;</text>
+<text x="306" y="90" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">1</text>
+</svg><p class="figcap">注文（全体）の側に黒塗りのひし形。明細の側は <code>0..*</code></p><p><code>lines</code> はフィールドなので、線の端に <code>- lines</code> と書きます。</p>
+<p>ひし形は黒塗りです。<code>OrderLine</code> は <code>Order</code> の <code>add</code> の中で <code>new</code> され、<code>Order</code> の外からは使われていません。注文を消せば明細も要らなくなるので、コンポジションです。</p>
+<p>多重度は <code>0..*</code> です。<code>new Order(1)</code> の直後は、明細が0件だからです。「明細の無い注文は作らせない」と決めるなら <code>1..*</code> にし、コードのほうも、明細を1件受け取らないと作れない形に直します。</p>
+<div class="note">図とコードは、いつも同じことを言っている必要があります。図だけ <code>1..*</code> にしても、コードが0件を許していれば、その図は間違いです。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　注文のオブジェクト図</summary><div class="sol">
+<svg class="fig" viewBox="0 0 720 205" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="u9OP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="u9TRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u9DIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#334155" stroke-width="1.5"/></marker><marker id="u9FDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#334155" stroke="#334155" stroke-width="1.5"/></marker><marker id="u9SOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#334155"/></marker><marker id="u9ROP" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.6"/></marker><marker id="u9RTRI" viewBox="0 0 18 18" refX="17" refY="9" markerWidth="18" markerHeight="18" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L17,9 L1,17 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u9RDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#fff" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u9RFDIA" viewBox="0 0 24 12" refX="1" refY="6" markerWidth="24" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,6 L12,1 L23,6 L12,11 z" fill="#b91c1c" stroke="#b91c1c" stroke-width="1.5"/></marker><marker id="u9RSOL" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="12" markerHeight="12" markerUnits="userSpaceOnUse" orient="auto"><path d="M1,1 L11,6 L1,11 z" fill="#b91c1c"/></marker></defs>
+<rect x="40" y="64" width="200" height="62" fill="#fff"/>
+<rect x="40" y="64" width="200" height="30" fill="#fff3e6"/>
+<text x="140" y="85" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold" text-decoration="underline">order : Order</text>
+<line x1="40" y1="94" x2="240" y2="94" stroke="#334155" stroke-width="1.5"/>
+<text x="50" y="114" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">id = 1</text>
+<rect x="40" y="64" width="200" height="62" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="420" y="10" width="280" height="80" fill="#fff"/>
+<rect x="420" y="10" width="280" height="30" fill="#fff3e6"/>
+<text x="560" y="31" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold" text-decoration="underline">: OrderLine</text>
+<line x1="420" y1="40" x2="700" y2="40" stroke="#334155" stroke-width="1.5"/>
+<text x="430" y="60" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">productName = "ボールペン"</text>
+<text x="430" y="78" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">quantity = 3</text>
+<rect x="420" y="10" width="280" height="80" fill="none" stroke="#334155" stroke-width="1.5"/>
+<rect x="420" y="110" width="280" height="80" fill="#fff"/>
+<rect x="420" y="110" width="280" height="30" fill="#fff3e6"/>
+<text x="560" y="131" font-size="15" text-anchor="middle" fill="#1f2933" font-weight="bold" text-decoration="underline">: OrderLine</text>
+<line x1="420" y1="140" x2="700" y2="140" stroke="#334155" stroke-width="1.5"/>
+<text x="430" y="160" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">productName = "ノート"</text>
+<text x="430" y="178" font-size="13" text-anchor="start" fill="#1f2933" font-family="Consolas,'BIZ UDGothic',monospace" xml:space="preserve">quantity = 2</text>
+<rect x="420" y="110" width="280" height="80" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polyline points="240,95 420,50" fill="none" stroke="#334155" stroke-width="1.6"/>
+<polyline points="240,95 420,150" fill="none" stroke="#334155" stroke-width="1.6"/>
+</svg><p class="figcap">OrderMain で2件足した直後。リンク2本が「明細2件」を表す</p><p>明細は名前を付けず、<code>: OrderLine</code> と書いています。多重度は書かず、リンクが2本あることが「明細2件」を表します。</p>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>クラスの3段の箱に、<code>- id : int</code> のように可視性・名前・型を書ける</li><li>関連・依存・汎化の線を、実線か破線かと矢じりの形で描き分けられる</li><li>多重度を「相手の側の数字」で読める</li><li>実行したある瞬間を、オブジェクト図に描ける</li></ul></div>
+<h2>次回</h2><p><strong>次回は、シーケンス図と複合フラグメントです。</strong>今日の図は「どんなクラスがあり、どうつながっているか」でした。次回は「<strong>どの順番で呼び合うか</strong>」を描きます。<code>findAll()</code> を呼んでから一覧が出るまでを、時間の流れに沿って描きます。</p></div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>UML</td><td>ゆーえむえる</td><td>プログラムの設計を図で描くための共通の決まり（第15回）</td></tr><tr><td>クラス図</td><td>くらすず</td><td>クラスと、クラスどうしのつながりを描いた図。いつでも成り立つ決まりを表します</td></tr><tr><td>オブジェクト図</td><td>おぶじぇくとず</td><td>ある瞬間のインスタンスと、その値を描いた図。箱の名前に下線を引きます</td></tr><tr><td>属性</td><td>ぞくせい</td><td>クラス図の2段目。フィールドのこと。<code>- id : int</code></td></tr><tr><td>操作</td><td>そうさ</td><td>クラス図の3段目。メソッドのこと。<code>+ getId() : int</code></td></tr><tr><td>可視性</td><td>かしせい</td><td>外から見えるかどうかの印。<code>-</code> は <code>private</code>、<code>+</code> は <code>public</code>、<code>#</code> は <code>protected</code></td></tr><tr><td>関連</td><td>かんれん</td><td>フィールドとして持ち続ける関係。実線で描きます</td></tr><tr><td>多重度</td><td>たじゅうど</td><td>線の端に書く個数。<code>1</code>・<code>0..1</code>・<code>0..*</code>・<code>1..*</code> など。相手の側の数字を読みます</td></tr><tr><td>依存</td><td>いぞん</td><td>引数・戻り値などで、その場で使うだけの関係。破線と開いた矢じりで描きます</td></tr><tr><td>汎化</td><td>はんか</td><td>継承（<code>extends</code>）のこと。実線と白抜きの三角を、親の側に付けます</td></tr><tr><td>実現</td><td>じつげん</td><td>インタフェースの実装（<code>implements</code>）のこと。破線と白抜きの三角で描きます</td></tr><tr><td>集約</td><td>しゅうやく</td><td>全体と部分の関係で、部分は全体が無くても残るもの。白抜きのひし形を全体の側に付けます</td></tr><tr><td>コンポジション</td><td>こんぽじしょん</td><td>全体と部分の関係で、全体と一緒に部分も消えるもの。黒塗りのひし形を全体の側に付けます</td></tr><tr><td>リンク</td><td>りんく</td><td>オブジェクト図で、インスタンスどうしを結ぶ線。クラス図の関連に当たります</td></tr><tr><td>インスタンス</td><td>いんすたんす</td><td>クラスから <code>new</code> で作った実物（第4回）</td></tr><tr><td>static</td><td>すたてぃっく</td><td>インスタンスごとではなく、クラスに1つだけのもの（第5回）。クラス図では下線を引きます</td></tr><tr><td>DTO・DAO</td><td>でぃーてぃーおー・だお</td><td>1件分の値を運ぶクラス・データベースとの出し入れをするクラス（第13回）</td></tr></table></details>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 16 回 ／ 全 22 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
