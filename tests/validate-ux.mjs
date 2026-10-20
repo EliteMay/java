@@ -4,10 +4,10 @@ import { readFileSync } from 'node:fs';
 const read=name=>readFileSync(new URL('../'+name, import.meta.url),'utf8');
 const home=read('index.html');
 let total=0;
-assert.equal((home.match(/class="lesson-copy"/g)||[]).length,14,'all lesson cards have readable titles');
+assert.equal((home.match(/class="lesson-copy"/g)||[]).length,15,'all lesson cards have readable titles');
 assert.ok((home.match(/class="lesson-tag"/g)||[]).length>=42,'lesson cards need keyword tags');
 total+=2;
-for (const name of [...Array.from({length:14},(_,i)=>'lesson'+String(i+2).padStart(2,'0')+'.html'),'problems.html']) {
+for (const name of [...Array.from({length:15},(_,i)=>'lesson'+String(i+2).padStart(2,'0')+'.html'),'problems.html']) {
   const html=read(name);
   assert.ok(html.includes('href="reader-ux.css"'),name+' missing shared mobile CSS');
   assert.ok(html.includes('src="reader-ux.js"'),name+' missing shared code/TOC JS');
