@@ -74,7 +74,7 @@ console.log('Dedicated Java concepts: all 10 paths and lesson links verified');
 
 for (const [number,svgCount] of [[17,31],[18,16]]) {
   const html=read('lesson'+number+'.html');
-  assert.equal((html.match(/<svg\\b/g)||[]).length,svgCount,'Lesson '+number+': original UML diagrams changed');
+  assert.equal((html.match(/<svg\b/g)||[]).length,svgCount,'Lesson '+number+': original UML diagrams changed');
   assert.equal((html.match(/class="ans"/g)||[]).length,2,'Lesson '+number+': original answers lost');
   assert.ok(html.includes('href="index.html"'),'Lesson '+number+': back navigation missing');
   checks += 3;
