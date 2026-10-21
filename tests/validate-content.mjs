@@ -5,7 +5,7 @@ const read = (name) => readFileSync(new URL('../' + name, import.meta.url), 'utf
 const required = ['① 今日の主役', '② 写して動かす', '③ 解説', '④ 自力で書く', '⑤ まとめ'];
 let checks = 0;
 
-for (let n = 2; n <= 16; n++) {
+for (let n = 2; n <= 18; n++) {
   const name = 'lesson' + String(n).padStart(2, '0') + '.html';
   const html = read(name);
   for (const label of required.map(x=>n>=15 && x==="② 写して動かす"?"② 写して描く":x)) {
@@ -25,7 +25,7 @@ for (let n = 2; n <= 16; n++) {
   checks += 6;
 }
 const home = read('index.html');
-for (let n = 2; n <= 16; n++) {
+for (let n = 2; n <= 18; n++) {
   const name = 'lesson' + String(n).padStart(2, '0') + '.html';
   assert.ok(home.includes(name), 'Index missing ' + name);
   checks++;
@@ -71,3 +71,11 @@ for (const asset of ['concepts/style.css', 'concepts/script.js']) {
   checks++;
 }
 console.log('Dedicated Java concepts: all 10 paths and lesson links verified');
+
+for (const [number,svgCount] of [[17,31],[18,16]]) {
+  const html=read('lesson'+number+'.html');
+  assert.equal((html.match(/<svg\b/g)||[]).length,svgCount,'Lesson '+number+': original UML diagrams changed');
+  assert.equal((html.match(/class="ans"/g)||[]).length,2,'Lesson '+number+': original answers lost');
+  assert.ok(html.includes('href="index.html"'),'Lesson '+number+': back navigation missing');
+  checks += 3;
+}

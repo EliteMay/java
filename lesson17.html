@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第17回｜シーケンス図と複合フラグメント</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
+    table.symtab td { vertical-align:middle; }   /* UML の記号の表（2026-10-14） */
+    table.symtab td.sym-cell { width:176px; text-align:center; background:#fff; }
+    table.symtab td.sym-name { white-space:nowrap; font-weight:bold; }
+    svg.sym { display:block; margin:0 auto; width:164px; max-width:100%; height:auto; }   /* 絵の中の文字を本文に近い大きさにする */
+    .card h2.sym-h { border-left-color:#0f766e; }
+    table.mini { width:auto; margin:0 auto; font-size:.72rem; }
+    table.mini th, table.mini td { padding:.15rem .35rem; }
+    code.symcode { display:inline-block; text-align:left; white-space:pre; background:#f8fafc; font-size:.82rem; line-height:1.6; padding:.3em .5em; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}</style>
+<link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader-ux.css">
+<script defer src="reader.js"></script>
+<script defer src="reader-ux.js"></script>
+<link rel="stylesheet" href="learning-support.css">
+<script defer src="learning-support-data.js"></script>
+<script defer src="learning-support.js"></script>
+<link rel="stylesheet" href="concise-explanations.css">
+</head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container">
+<nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson16.html">前の講義</a><a href="lesson18.html">次の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
+
+<header><span class="badge">第 17 回 ／ 全 22 回</span><h1>シーケンス図と複合フラグメント</h1><p>第21章　シーケンス図の基本 ／ 複合フラグメント（alt・loop）</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">シーケンス図</span>　<span class="term">複合フラグメント（alt・loop）</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>コードを読んで、呼び出しの順にシーケンス図を描ける</li><li>呼び出し（実線）と戻り（破線）、実行仕様（細長い四角）を描き分けられる</li><li>コードの <code>if</code> を <code>alt</code> の段に、<code>while</code> を <code>loop</code> の枠に置き換えられる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>UML での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>シーケンス図</td><td>オブジェクトどうしのメッセージ（メソッドの呼び出し）のやりとりを、時間の順に上から下へ表す UML の図。</td></tr><tr><td>複合フラグメント（alt・loop）</td><td>シーケンス図で、条件による分かれ道（<code>alt</code>）や繰り返し（<code>loop</code>）を表す枠です。枠の中に <code>[ ]</code> でガード条件を書きます。</td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>シーケンス図は「舞台の台本」</h3><p class="lead">誰が、誰に、どの順でセリフを言うか。時間は上から下へ流れます。</p><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 290" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar5" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<line x1="40" y1="80" x2="40" y2="262" stroke="#c2410c" stroke-width="2"/>
+<polygon points="40,276 33,260 47,260" fill="#c2410c"/>
+<text x="56" y="176" font-size="14" text-anchor="start" fill="#c2410c" font-weight="bold">時間</text>
+<rect x="125" y="20" width="130" height="44" rx="6" fill="#f5f3ff" stroke="#334155" stroke-width="1.5"/>
+<text x="190" y="39" font-size="15" font-weight="bold" text-anchor="middle" fill="#1f2933">画面係</text>
+<text x="190" y="56" font-size="12" text-anchor="middle" fill="#64748b">ProductFrame</text>
+<rect x="325" y="20" width="130" height="44" rx="6" fill="#f5f3ff" stroke="#334155" stroke-width="1.5"/>
+<text x="390" y="39" font-size="15" font-weight="bold" text-anchor="middle" fill="#1f2933">店長</text>
+<text x="390" y="56" font-size="12" text-anchor="middle" fill="#64748b">ProductService</text>
+<rect x="525" y="20" width="130" height="44" rx="6" fill="#f5f3ff" stroke="#334155" stroke-width="1.5"/>
+<text x="590" y="39" font-size="15" font-weight="bold" text-anchor="middle" fill="#1f2933">倉庫係</text>
+<text x="590" y="56" font-size="12" text-anchor="middle" fill="#64748b">ProductDAO</text>
+<line x1="190" y1="64" x2="190" y2="280" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="390" y1="64" x2="390" y2="280" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="590" y1="64" x2="590" y2="280" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="184" y="90" width="12" height="160" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="384" y="118" width="12" height="104" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="584" y="146" width="12" height="48" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="118" x2="384" y2="118" stroke="#334155" stroke-width="1.5"/>
+<polygon points="384,118 373,113 373,123" fill="#334155"/>
+<text x="290" y="112" font-size="13" text-anchor="middle" fill="#1f2933">「一覧をください」</text>
+<line x1="396" y1="146" x2="584" y2="146" stroke="#334155" stroke-width="1.5"/>
+<polygon points="584,146 573,141 573,151" fill="#334155"/>
+<text x="490" y="140" font-size="13" text-anchor="middle" fill="#1f2933">「一覧をください」</text>
+<line x1="584" y1="194" x2="396" y2="194" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="407,188 396,194 407,200" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="490" y="188" font-size="13" text-anchor="middle" fill="#1f2933">「3件です」</text>
+<line x1="384" y1="222" x2="196" y2="222" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="207,216 196,222 207,228" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="290" y="216" font-size="13" text-anchor="middle" fill="#1f2933">「3件です」</text>
+</svg><p class="figcap">台本は上から読む。上にあるセリフほど、先に言う</p><p>台本には、誰が誰にセリフを言うかが、言う順に上から書いてあります。<strong>上にあるセリフほど、先に言います。</strong></p>
+<p><strong>シーケンス図</strong>も同じです。横に並ぶのが登場するインスタンス、縦が時間です。今日描くアプリでは、画面（<code>ProductFrame</code>）が店長（<code>ProductService</code>）に頼み、店長が倉庫係（<code>ProductDAO</code>）に頼みます。その順番を1枚に描きます。</p>
+<p>第16回のクラス図は「どんなクラスがあるか」を描く図でした。<strong>シーケンス図は「それらが、どの順に呼び合うか」</strong>を描く図です。</p>
+</div><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 470" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar6" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="20" y="24" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">台本の書き込み</text>
+<rect x="20" y="36" width="320" height="96" rx="6" fill="#fffbeb" stroke="#334155" stroke-width="1.5"/>
+<text x="36" y="66" font-size="14" text-anchor="start" fill="#1d4ed8" font-weight="bold">［雨なら］</text>
+<text x="140" y="66" font-size="14" text-anchor="start" fill="#1f2933">このセリフ</text>
+<line x1="30" y1="84" x2="330" y2="84" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="36" y="112" font-size="14" text-anchor="start" fill="#1d4ed8" font-weight="bold">［晴れなら］</text>
+<text x="140" y="112" font-size="14" text-anchor="start" fill="#1f2933">このセリフ</text>
+<text x="328" y="60" font-size="14" text-anchor="end" fill="#c2410c" font-weight="bold">→ alt</text>
+<rect x="380" y="36" width="320" height="96" rx="6" fill="#fffbeb" stroke="#334155" stroke-width="1.5"/>
+<text x="396" y="62" font-size="14" text-anchor="start" fill="#1d4ed8" font-weight="bold">この場面を3回くり返す</text>
+<text x="688" y="62" font-size="14" text-anchor="end" fill="#c2410c" font-weight="bold">→ loop</text>
+<rect x="396" y="74" width="288" height="44" rx="4" fill="#fff" stroke="#64748b" stroke-width="1.2" stroke-dasharray="5 4"/>
+<text x="540" y="101" font-size="13" text-anchor="middle" fill="#64748b">場面</text>
+<text x="20" y="166" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">シーケンス図（UML）</text>
+<rect x="43" y="178" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="110" y="198" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<rect x="214" y="178" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="290" y="198" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<rect x="411" y="178" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="470" y="198" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="110" y1="208" x2="110" y2="460" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="290" y1="208" x2="290" y2="460" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="470" y1="208" x2="470" y2="460" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="20" y="224" width="520" height="118" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M20,224 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="26" y="239" font-size="13" font-weight="bold" fill="#1f2933">alt</text>
+<text x="73" y="239" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[商品名が空]</text>
+<line x1="284" y1="266" x2="116" y2="266" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="127,260 116,266 127,272" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="200" y="260" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="20" y1="284" x2="540" y2="284" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="28" y="300" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[else]</text>
+<line x1="296" y1="322" x2="464" y2="322" stroke="#334155" stroke-width="1.5"/>
+<polygon points="464,322 453,317 453,327" fill="#334155"/>
+<text x="380" y="316" font-size="13" text-anchor="middle" fill="#1f2933">insert(p)</text>
+<text x="556" y="288" font-size="13" text-anchor="start" fill="#64748b">Java の if に当たる</text>
+<rect x="304" y="356" width="406" height="90" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M304,356 h52 v12 l-7,8 h-45 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="310" y="371" font-size="13" font-weight="bold" fill="#1f2933">loop</text>
+<text x="312" y="394" font-size="12" text-anchor="start" fill="#1d4ed8">[rs.next() が true]</text>
+<line x1="476" y1="410" x2="581" y2="410" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="570,404 581,410 570,416" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="528" y="404" font-size="13" text-anchor="middle" fill="#1f2933">«create»</text>
+<rect x="581" y="395" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="640" y="415" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDTO</text>
+<line x1="640" y1="425" x2="640" y2="460" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<text x="200" y="404" font-size="13" text-anchor="middle" fill="#64748b">Java の while に当たる</text>
+</svg><p class="figcap">台本の「雨なら〜、晴れなら〜」が alt、「この場面を3回くり返す」が loop</p><p>台本には「雨ならこのセリフ、晴れならこのセリフ」「この場面を3回くり返す」といった書き込みもあります。シーケンス図でこれを表す枠が、<strong>複合フラグメント（alt・loop）</strong>です。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>役者</td><td>ヘッダーとライフライン　<code>:ProductFrame</code> など</td></tr><tr><td>セリフ</td><td>呼び出しの矢印（実線）　<code>findAll()</code></td></tr><tr><td>返事</td><td>戻りの矢印（破線）　<code>List</code></td></tr><tr><td>役者が話している間</td><td>細長い四角（実行仕様）</td></tr><tr><td>台本を上から読む</td><td>上にある矢印ほど、先に起きる</td></tr><tr><td>「雨なら〜、晴れなら〜」の書き込み</td><td><code>alt</code>。Java の <code>if</code> に当たる</td></tr><tr><td>「この場面を3回くり返す」の書き込み</td><td><code>loop</code>。Java の <code>while</code> に当たる</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>シーケンス図</td><td>どのクラスがどの順にメソッドを呼び合うかを、コードを追わずに一目で分かるようにするためです。</td></tr><tr><td>複合フラグメント（alt・loop）</td><td><code>if</code> や <code>while</code> の動きも図に描き、どの条件でどの呼び出しが起きるかを示すためです。</td></tr></table>
+<p>今日のゴールは、第13回・第14回のコードを、この台本の形で描けるようになることです。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して描く</div>
+<p><strong>まずは自分で写して描いてみましょう。</strong>各部品の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日は Eclipse を使いません。紙（ノート）と鉛筆を用意して、図を描き写します。定規があると矢印をまっすぐ引けますが、無くても構いません。</p>
+<p><strong>四角や矢印は、きれいでなくて構いません。</strong>線が実線か破線か、矢じりが黒く塗ってあるか開いているか。この2つが合っていれば正解です。</p>
+<h2>全体像</h2>
+<p>写すのは次の2枚です。図1が「商品を一覧する」、図2が「商品を登録する」です。名前は第15回のユースケースと同じにしてあります。</p>
+<p>図の中の ①〜⑫ は、③解説の番号です。番号は写さなくて構いません。</p>
+<svg class="fig" viewBox="0 0 720 340" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<g id="l17fig1">
+<rect x="10" y="10" width="700" height="318" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を一覧する</text>
+<rect x="43" y="50" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="110" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<rect x="214" y="50" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="290" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<rect x="401" y="50" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="460" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<rect x="587" y="50" width="76" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="625" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:MySQL</text>
+<line x1="110" y1="80" x2="110" y2="318" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="290" y1="80" x2="290" y2="318" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="460" y1="80" x2="460" y2="318" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="625" y1="80" x2="625" y2="318" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="104" y="96" width="12" height="204" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="284" y="116" width="12" height="166" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="454" y="146" width="12" height="110" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="619" y="176" width="12" height="30" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="116" y1="116" x2="284" y2="116" stroke="#334155" stroke-width="1.5"/>
+<polygon points="284,116 273,111 273,121" fill="#334155"/>
+<text x="200" y="110" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<line x1="296" y1="146" x2="454" y2="146" stroke="#334155" stroke-width="1.5"/>
+<polygon points="454,146 443,141 443,151" fill="#334155"/>
+<text x="375" y="140" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<line x1="466" y1="176" x2="619" y2="176" stroke="#334155" stroke-width="1.5"/>
+<polygon points="619,176 608,171 608,181" fill="#334155"/>
+<text x="542" y="170" font-size="13" text-anchor="middle" fill="#1f2933">SELECT文</text>
+<line x1="619" y1="206" x2="466" y2="206" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="477,200 466,206 477,212" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="542" y="200" font-size="13" text-anchor="middle" fill="#1f2933">3行</text>
+<line x1="454" y1="256" x2="296" y2="256" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="307,250 296,256 307,262" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="375" y="250" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<line x1="284" y1="282" x2="116" y2="282" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="127,276 116,282 127,288" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="200" y="276" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<text x="186" y="32" font-size="17" font-weight="bold" fill="#c2410c">①</text>
+<text x="174" y="70" font-size="17" font-weight="bold" fill="#c2410c">②</text>
+<text x="633" y="98" font-size="17" font-weight="bold" fill="#c2410c">③</text>
+<text x="472" y="238" font-size="17" font-weight="bold" fill="#c2410c">④</text>
+<text x="302" y="140" font-size="17" font-weight="bold" fill="#c2410c">⑤</text>
+<text x="302" y="250" font-size="17" font-weight="bold" fill="#c2410c">⑥</text>
+</g>
+</svg><p class="figcap">図1　商品を一覧する（一覧を表示したときの流れ）</p><svg class="fig" viewBox="0 0 770 710" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<g id="l17fig2">
+<rect x="10" y="10" width="750" height="690" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を登録する</text>
+<circle cx="45" cy="48" r="8" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="45" y1="56" x2="45" y2="74" stroke="#334155" stroke-width="1.5"/>
+<line x1="33" y1="62" x2="57" y2="62" stroke="#334155" stroke-width="1.5"/>
+<polyline points="35,88 45,74 55,88" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="45" y="106" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">担当者</text>
+<rect x="98" y="50" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="165" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<rect x="254" y="50" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="330" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<rect x="461" y="50" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="520" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="45" y1="112" x2="45" y2="696" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="165" y1="80" x2="165" y2="696" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="330" y1="80" x2="330" y2="696" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="520" y1="80" x2="520" y2="696" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="680" y1="599" x2="680" y2="696" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="159" y="126" width="12" height="542" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="45" y1="126" x2="159" y2="126" stroke="#334155" stroke-width="1.5"/>
+<polygon points="159,126 148,121 148,131" fill="#334155"/>
+<text x="102" y="120" font-size="13" text-anchor="middle" fill="#1f2933">追加を押す</text>
+<rect x="324" y="154" width="12" height="296" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="171" y1="154" x2="324" y2="154" stroke="#334155" stroke-width="1.5"/>
+<polygon points="324,154 313,149 313,159" fill="#334155"/>
+<text x="247" y="148" font-size="13" text-anchor="middle" fill="#1f2933">add(p)</text>
+<rect x="330" y="198" width="12" height="16" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<polyline points="336,178 370,178 370,198 342,198" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polygon points="342,198 353,193 353,203" fill="#334155"/>
+<text x="376" y="193" font-size="13" fill="#1f2933">check(p)</text>
+<rect x="22" y="226" width="726" height="446" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M22,226 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="28" y="241" font-size="13" font-weight="bold" fill="#1f2933">alt</text>
+<text x="75" y="241" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[商品名が空]</text>
+<line x1="324" y1="272" x2="171" y2="272" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,266 171,272 182,278" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="266" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="159" y1="298" x2="45" y2="298" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="56,292 45,298 56,304" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="102" y="292" font-size="13" text-anchor="middle" fill="#1f2933">理由を表示</text>
+<line x1="22" y1="314" x2="748" y2="314" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="330" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[価格か在庫が負]</text>
+<line x1="324" y1="356" x2="171" y2="356" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,350 171,356 182,362" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="350" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="159" y1="382" x2="45" y2="382" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="56,376 45,382 56,388" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="102" y="376" font-size="13" text-anchor="middle" fill="#1f2933">理由を表示</text>
+<line x1="22" y1="398" x2="748" y2="398" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="414" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[else]</text>
+<rect x="514" y="426" width="12" height="24" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="426" x2="514" y2="426" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,426 503,421 503,431" fill="#334155"/>
+<text x="425" y="420" font-size="13" text-anchor="middle" fill="#1f2933">insert(p)</text>
+<line x1="514" y1="450" x2="336" y2="450" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,444 336,450 347,456" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="444" font-size="13" text-anchor="middle" fill="#1f2933">1</text>
+<rect x="165" y="496" width="12" height="166" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<polyline points="171,476 205,476 205,496 177,496" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polygon points="177,496 188,491 188,501" fill="#334155"/>
+<text x="211" y="491" font-size="13" fill="#1f2933">showList()</text>
+<rect x="324" y="520" width="12" height="132" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="177" y1="520" x2="324" y2="520" stroke="#334155" stroke-width="1.5"/>
+<polygon points="324,520 313,515 313,525" fill="#334155"/>
+<text x="250" y="514" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<rect x="514" y="544" width="12" height="90" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="544" x2="514" y2="544" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,544 503,539 503,549" fill="#334155"/>
+<text x="425" y="538" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<rect x="372" y="554" width="368" height="58" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M372,554 h52 v12 l-7,8 h-45 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="378" y="569" font-size="13" font-weight="bold" fill="#1f2933">loop</text>
+<text x="380" y="604" font-size="12" text-anchor="start" fill="#1d4ed8">[rs.next() が true]</text>
+<line x1="526" y1="584" x2="621" y2="584" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="610,578 621,584 610,590" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="573" y="578" font-size="13" text-anchor="middle" fill="#1f2933">«create»</text>
+<rect x="621" y="569" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="680" y="589" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDTO</text>
+<line x1="514" y1="634" x2="336" y2="634" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,628 336,634 347,640" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="628" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<line x1="324" y1="652" x2="177" y2="652" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="188,646 177,652 188,658" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="250" y="646" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<text x="65" y="66" font-size="17" font-weight="bold" fill="#c2410c">⑦</text>
+<text x="440" y="196" font-size="17" font-weight="bold" fill="#c2410c">⑧</text>
+<text x="60" y="264" font-size="17" font-weight="bold" fill="#c2410c">⑨</text>
+<text x="64" y="350" font-size="17" font-weight="bold" fill="#c2410c">⑩</text>
+<text x="428" y="570" font-size="17" font-weight="bold" fill="#c2410c">⑪</text>
+<text x="560" y="606" font-size="17" font-weight="bold" fill="#c2410c">⑫</text>
+</g>
+</svg><p class="figcap">図2　商品を登録する（alt と loop を含む）</p><p class="fname">ProductFrame.java　画面</p>
+<pre class="code" id="c1">package lesson17;
+
+import java.awt.BorderLayout;
+import java.awt.GridLayout;
+import java.sql.SQLException;
+
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTextField;
+import javax.swing.table.DefaultTableModel;
+
+public class ProductFrame extends JFrame {
+    private ProductService service = new ProductService();
+    private DefaultTableModel model =
+            new DefaultTableModel(new String[] {"ID", "商品名", "価格", "在庫"}, 0);
+    private JTable table = new JTable(model);
+
+    private JTextField idField = new JTextField();
+    private JTextField nameField = new JTextField();
+    private JTextField priceField = new JTextField();
+    private JTextField stockField = new JTextField();
+
+    public ProductFrame() {
+        setTitle("商品在庫管理");
+        setSize(480, 360);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel form = new JPanel(new GridLayout(4, 2));
+        form.add(new JLabel("ID（更新・削除で使う）"));
+        form.add(idField);
+        form.add(new JLabel("商品名"));
+        form.add(nameField);
+        form.add(new JLabel("価格"));
+        form.add(priceField);
+        form.add(new JLabel("在庫"));
+        form.add(stockField);
+
+        JButton addButton = new JButton("追加");
+        JButton updateButton = new JButton("更新");
+        JButton deleteButton = new JButton("削除");
+        JPanel buttons = new JPanel();
+        buttons.add(addButton);
+        buttons.add(updateButton);
+        buttons.add(deleteButton);
+
+        add(form, BorderLayout.NORTH);
+        add(new JScrollPane(table), BorderLayout.CENTER);
+        add(buttons, BorderLayout.SOUTH);
+
+        addButton.addActionListener(e -&gt; addProduct());          <span class="cm">// 図2 追加を押す</span>
+        updateButton.addActionListener(e -&gt; updateProduct());
+        deleteButton.addActionListener(e -&gt; deleteProduct());
+        showList();
+    }
+
+    private void addProduct() {
+        try {
+            String name = nameField.getText();
+            int price = Integer.parseInt(priceField.getText());
+            int stock = Integer.parseInt(stockField.getText());
+            service.add(new ProductDTO(0, name, price, stock));  <span class="cm">// 図2 add(p)</span>
+            showList();                                          <span class="cm">// 図2 showList()</span>
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "価格と在庫は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage()); <span class="cm">// 図2 理由を表示</span>
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void updateProduct() {
+        try {
+            int id = Integer.parseInt(idField.getText());
+            String name = nameField.getText();
+            int price = Integer.parseInt(priceField.getText());
+            int stock = Integer.parseInt(stockField.getText());
+            service.update(new ProductDTO(id, name, price, stock));
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "ID と価格と在庫は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void deleteProduct() {
+        try {
+            int id = Integer.parseInt(idField.getText());
+            service.delete(id);
+            showList();
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "ID は数字で入力してください");
+        } catch (IllegalArgumentException e) {
+            JOptionPane.showMessageDialog(this, e.getMessage());
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+
+    private void showList() {
+        model.setRowCount(0);
+        try {
+            for (ProductDTO p : service.findAll()) {             <span class="cm">// 図1 findAll()</span>
+                Object[] row = {p.getId(), p.getName(), p.getPrice(), p.getStock()};
+                model.addRow(row);
+            }
+        } catch (SQLException e) {
+            JOptionPane.showMessageDialog(this, "データベースのエラー: " + e.getMessage());
+        }
+    }
+}</pre>
+<p class="fname">Main.java　画面を開く</p>
+<pre class="code" id="c2">package lesson17;
+
+public class Main {
+    public static void main(String[] args) {
+        ProductFrame frame = new ProductFrame();
+        frame.setVisible(true);
+    }
+}</pre>
+<p class="fname">ProductService.java　入力の検査</p>
+<pre class="code" id="c3">package lesson17;
+
+import java.sql.SQLException;
+import java.util.List;
+
+public class ProductService {
+    private ProductDAO dao = new ProductDAO();
+
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        return dao.findAll();
+    }
+
+    public void add(ProductDTO p) throws SQLException {
+        check(p);
+        dao.insert(p);
+    }
+
+    public void update(ProductDTO p) throws SQLException {
+        check(p);
+        if (dao.update(p) == 0) {
+            throw new IllegalArgumentException("ID " + p.getId() + " の商品はありません");
+        }
+    }
+
+    public void delete(int id) throws SQLException {
+        if (dao.delete(id) == 0) {
+            throw new IllegalArgumentException("ID " + id + " の商品はありません");
+        }
+    }
+
+    private void check(ProductDTO p) {
+        if (p.getName() == null || p.getName().isBlank()) {
+            throw new IllegalArgumentException("商品名を入力してください");
+        }
+        if (p.getPrice() &lt; 0) {
+            throw new IllegalArgumentException("価格に負の値は設定できません");
+        }
+        if (p.getStock() &lt; 0) {
+            throw new IllegalArgumentException("在庫に負の値は設定できません");
+        }
+    }
+}</pre>
+<p class="fname">ProductDAO.java　データの出し入れ</p>
+<pre class="code" id="c4">package lesson17;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class ProductDAO {
+    private static final String URL = "jdbc:mysql://localhost:3306/stock";
+    private static final String USER = "root";
+    private static final String PASSWORD = "password";
+
+    <span class="cm">// 全部の商品を読む（第11回と同じ）</span>
+    public List&lt;ProductDTO&gt; findAll() throws SQLException {
+        List&lt;ProductDTO&gt; list = new ArrayList&lt;&gt;();
+        String sql = "SELECT id, name, price, stock FROM products ORDER BY id";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                list.add(new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                        rs.getInt("price"), rs.getInt("stock")));
+            }
+        }
+        return list;
+    }
+
+    <span class="cm">// ID で1つ探す。無ければ null を返す</span>
+    public ProductDTO findById(int id) throws SQLException {
+        String sql = "SELECT id, name, price, stock FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new ProductDTO(rs.getInt("id"), rs.getString("name"),
+                                          rs.getInt("price"), rs.getInt("stock"));
+                }
+            }
+        }
+        return null;
+    }
+
+    <span class="cm">// 追加する。変わった行数を返す</span>
+    public int insert(ProductDTO p) throws SQLException {
+        String sql = "INSERT INTO products (name, price, stock) VALUES (?, ?, ?)";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 更新する。変わった行数を返す</span>
+    public int update(ProductDTO p) throws SQLException {
+        String sql = "UPDATE products SET name = ?, price = ?, stock = ? WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, p.getName());
+            ps.setInt(2, p.getPrice());
+            ps.setInt(3, p.getStock());
+            ps.setInt(4, p.getId());
+            return ps.executeUpdate();
+        }
+    }
+
+    <span class="cm">// 削除する。変わった行数を返す</span>
+    public int delete(int id) throws SQLException {
+        String sql = "DELETE FROM products WHERE id = ?";
+        try (Connection con = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        }
+    }
+}</pre>
+<p class="fname">ProductDTO.java　値を運ぶ</p>
+<pre class="code" id="c5">package lesson17;
+
+public class ProductDTO {
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public ProductDTO(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) { this.price = price; }
+    public void setStock(int stock) { this.stock = stock; }
+}</pre>
+<p>上の5つが、2枚の図が表しているコードの全部です。<code>ProductService</code>・<code>ProductDAO</code>・<code>ProductDTO</code> は第13回と同じもの（1行目のパッケージだけ <code>lesson17</code>）です。<code>ProductFrame</code> は第14回の④の答え（［更新］と［削除］まで書いたもの）と同じです。今日は動かさず、図と見比べるために読みます。</p>
+<p>図2 には <code>:MySQL</code> を描いていません。データベースとのやりとりは図1で描いたので、図2では <code>ProductDAO</code> の中の繰り返しのほうを描いています。</p>
+</div>
+<div class="card explanation-card"><div class="card-title">③ 解説</div>
+<p class="explanation-intro">結論を先に確認できます。元教材の図・詳しい説明・間違い例は必要な項目だけ開いてください。</p>
+<h2 class="sym-h">シーケンス図で使う記号と書き方</h2>
+<p class="explain-brief">シーケンス図は、登場するオブジェクトのやりとりを上から下の時間順に描く。左上の sd は図の名前。</p>
+<p class="explain-mini"><code>sd とライフライン</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<table class="symtab"><tr><th>記号・書き方</th><th>名前</th><th>意味と書き方</th></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 56" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s1o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s1f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s1t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="48" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><path d="M4,4 L116,4 L116,16 L108,24 L4,24 z" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="10" y="18" font-size="10" text-anchor="start" fill="#1f2933" font-weight="bold">sd 商品を一覧する</text></svg></td><td class="sym-name">枠（sd）</td><td>図の全体を囲み、左上に sd と流れの名前を書きます。設計書では枠を省いた図も多くあります。ほかの図から ref で呼ぶときは、この名前を使います。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 72" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s2o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s2f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s2t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="20" y="4" width="90" height="24" rx="0" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/><text x="65" y="21" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">:ProductDAO</text><polyline points="65,28 65,68" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4"/></svg></td><td class="sym-name">ヘッダーとライフライン</td><td>上に並ぶ四角がヘッダーで、「:クラス名」と書きます。下へ伸びる破線がライフラインです。上にある矢印ほど先に起きます。データベースや外部のシステムも、「:MySQL」「«system» 決済」のようにヘッダーにして、右の端に置きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 66" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s3o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s3f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s3t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><circle cx="65" cy="9" r="6" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="65,15 65,33" fill="none" stroke="#334155" stroke-width="1.5"/><polyline points="53,22 77,22" fill="none" stroke="#334155" stroke-width="1.5"/><polyline points="65,33 56,46" fill="none" stroke="#334155" stroke-width="1.5"/><polyline points="65,33 74,46" fill="none" stroke="#334155" stroke-width="1.5"/><text x="65" y="61" font-size="12" text-anchor="middle" fill="#1f2933">担当者</text></svg></td><td class="sym-name">アクター</td><td>操作する人です。ユースケース図と同じ名前にします。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 64" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s4o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s4f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s4t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="65,2 65,62" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4"/><rect x="59" y="12" width="12" height="40" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/></svg></td><td class="sym-name">実行仕様</td><td>ライフラインの上の細長い四角です。メソッドが動いている間を表します。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 32" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s5o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s5f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s5t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,22 120,22" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s5f)"/><text x="64" y="14" font-size="11" text-anchor="middle" fill="#1f2933">findAll()</text></svg></td><td class="sym-name">同期メッセージ</td><td>メソッドの呼び出しです。実線と黒塗りの矢じりで描き、線の上にメソッド名と引数を書きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 32" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s6o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s6f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s6t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="120,22 10,22" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#s6o)"/><text x="64" y="14" font-size="11" text-anchor="middle" fill="#1f2933">List</text></svg></td><td class="sym-name">戻りメッセージ</td><td>return で値を返す所です。破線と開いた矢じりで描き、線の上に返す値を書きます。設計書では戻りを省き、呼び出しの矢印に <code>list = findAll()</code> とまとめて書くことが多くあります。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 32" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s7o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s7f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s7t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,22 120,22" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s7o)"/><text x="64" y="14" font-size="11" text-anchor="middle" fill="#1f2933">send()</text></svg></td><td class="sym-name">非同期メッセージ</td><td>返事を待たずに先へ進む呼び出しです。実線と開いた矢じりで描きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 56" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s8o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s8f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s8t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="30,2 30,54" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4"/><rect x="24" y="6" width="12" height="46" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="36,14 70,14 70,34 42,34" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s8f)"/><text x="76" y="28" font-size="11" text-anchor="start" fill="#1f2933">check(p)</text></svg></td><td class="sym-name">自己メッセージ</td><td>自分のメソッドを呼ぶ所です。自分のライフラインへ戻る矢印で描きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 74" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s9o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s9f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s9t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="66" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><path d="M4,4 L39,4 L39,14 L32,21 L4,21 z" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="12" y="17" font-size="11" text-anchor="start" fill="#1f2933" font-weight="bold">alt</text><text x="46" y="34" font-size="10" text-anchor="start" fill="#1f2933">[価格が負]</text><polyline points="4,44 126,44" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4"/><text x="10" y="60" font-size="10" text-anchor="start" fill="#1f2933">[else]</text></svg></td><td class="sym-name">alt</td><td>複合フラグメントの1つで、どれか1つの段だけが起きます。Java の if・else です。段は破線で区切り、各段の頭に [ ] で条件（ガード条件）を書きます。最後の段は [else] です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 54" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s10o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s10f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s10t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s10d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s10D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="46" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><path d="M4,4 L39,4 L39,14 L32,21 L4,21 z" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="12" y="17" font-size="11" text-anchor="start" fill="#1f2933" font-weight="bold">opt</text><text x="46" y="34" font-size="10" text-anchor="start" fill="#1f2933">[在庫が少ない]</text></svg></td><td class="sym-name">opt</td><td>条件を満たすときだけ起きます。else の無い if です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 54" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s11o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s11f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s11t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s11d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s11D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="46" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><path d="M4,4 L46,4 L46,14 L39,21 L4,21 z" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="12" y="17" font-size="11" text-anchor="start" fill="#1f2933" font-weight="bold">loop</text><text x="46" y="34" font-size="10" text-anchor="start" fill="#1f2933">[rs.next() が true]</text></svg></td><td class="sym-name">loop</td><td>条件を満たす間、くり返します。Java の while・for です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 54" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s12o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s12f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s12t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s12d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s12D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="46" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><path d="M4,4 L53,4 L53,14 L46,21 L4,21 z" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="12" y="17" font-size="11" text-anchor="start" fill="#1f2933" font-weight="bold">break</text><text x="46" y="34" font-size="10" text-anchor="start" fill="#1f2933">[在庫が足りない]</text></svg></td><td class="sym-name">break</td><td>条件を満たしたら、その枠の処理をして、囲んでいる処理を抜けます。Java の break・return や、例外を投げる所に当たります。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 50" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s13o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s13f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s13t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s13d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s13D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="42" rx="0" fill="#fff" stroke="#334155" stroke-width="1.5"/><path d="M4,4 L34,4 L34,14 L28,20 L4,20 z" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="10" y="16" font-size="10" text-anchor="start" fill="#1f2933" font-weight="bold">ref</text><text x="65" y="37" font-size="11" text-anchor="middle" fill="#1f2933">認証する</text></svg></td><td class="sym-name">ref</td><td>別のシーケンス図を呼ぶ枠です。中に呼ぶ図の名前を書きます。長い流れを、図を分けて描くときに使います。</td></tr><tr><td class="sym-cell"><code class="symcode">[在庫あり] sell()</code></td><td class="sym-name">条件付きメッセージ</td><td>メッセージの前に [ ] で条件を書いた形です。古い書き方ですが、設計書でよく見かけます。描くときは opt を使います。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 32" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s14o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s14f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s14t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s14d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s14D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,22 120,22" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#s14o)"/><text x="64" y="14" font-size="11" text-anchor="middle" fill="#1f2933">«create»</text></svg></td><td class="sym-name">生成</td><td>new でインスタンスを作る所です。«create» と書いた破線の矢印で描き、作られた側のヘッダーは、その高さに描きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 56" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s15o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s15f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s15t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s15d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s15D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="40" y="4" width="50" height="18" rx="0" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/><polyline points="65,22 65,44" fill="none" stroke="#334155" stroke-width="1.5" stroke-dasharray="5 4"/><polyline points="57,38 73,52" fill="none" stroke="#334155" stroke-width="2"/><polyline points="73,38 57,52" fill="none" stroke="#334155" stroke-width="2"/></svg></td><td class="sym-name">破棄</td><td>ライフラインの終わりの大きな × です。そのインスタンスが無くなることを表します。接続を閉じる、セッションを消す、などで描きます。</td></tr></table>
+
+</div></details>
+<h2>1　枠・ヘッダー・ライフライン（①②③）</h2>
+<p class="explain-brief">全体の枠には名前を書き、ヘッダーは参加者、縦の破線は参加者の存在を表す。</p>
+<p class="explain-mini"><code>枠 → ヘッダー → ライフライン</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:720px" viewBox="0 0 720 332" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l17fig1"/></svg><p>抜き出したのは、図1「商品を一覧する」の全体です。</p>
+<div class="line-block"><p class="item-label">① 全体を囲む枠と、左上の sd 商品を一覧する</p>
+<p>①は、全体を囲む枠と、左上の <code>sd 商品を一覧する</code> です。この図が、何の流れを描いたものかを表します。<code>sd</code> は、シーケンス図（sequence diagram）の頭文字です。1つの流れ（シナリオ）を、1枚に描きます。名前を第15回のユースケース名とそろえると、どの流れの図かがすぐ分かります。</p>
+</div>
+<div class="line-block"><p class="item-label">② <code>:ProductFrame</code> などの四角（ヘッダー）</p>
+<p>②の <code>:ProductFrame</code> などの四角を、<strong>ヘッダー</strong>と言います。ヘッダーは、この流れに登場するインスタンスです。左から、画面・Service・DAO・MySQL の4つが並んでいます。</p>
+<p>書き方は「<code>:</code> クラス名」です。並ぶのはクラスではなく、<code>new</code> で作った実物です。だから、コロンを付けて「この型の実物」と表します。区別が要るときは、コロンの前に名前を書きます（<code>dao:ProductDAO</code>）。</p>
+<p><code>:MySQL</code> はクラスではありませんが、DAO が SQL を送る相手なので並べています。</p>
+</div>
+<div class="line-block"><p class="item-label">③ ヘッダーから下へ伸びる縦の破線（ライフライン）</p>
+<p>③の、ヘッダーから下へ伸びる縦の破線が<strong>ライフライン</strong>です。ライフラインは、そのインスタンスがいる間を表します。</p>
+<p>上から下へ、時間が流れます。<strong>上にある矢印ほど先</strong>に起きます。横の並び順は、時間と関係ありません。矢印の上下を入れ替えると、コードの行の順番を入れ替えたことになります。</p>
+<p>横の矢印と細長い四角は、次の④〜⑥で説明します。</p>
+</div>
+<p><strong>よくある間違い：呼び出しの順番を入れ替える。</strong>図2「商品を登録する」で、一覧を読み直す <code>findAll()</code> を、登録の <code>add(p)</code> より上に描いた形です。下の図は、それを3つのインスタンスだけで描いたものです。上から順に読んでみてください。</p>
+<svg class="fig" viewBox="0 0 720 330" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar11" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="10" width="700" height="310" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を登録する</text>
+<rect x="123" y="44" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="190" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<line x1="190" y1="74" x2="190" y2="320" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="324" y="44" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="400" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<line x1="400" y1="74" x2="400" y2="320" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="551" y="44" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="610" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="610" y1="74" x2="610" y2="320" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="184" y="90" width="12" height="210" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="394" y="110" width="12" height="60" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="110" x2="394" y2="110" stroke="#334155" stroke-width="1.5"/>
+<polygon points="394,110 383,105 383,115" fill="#334155"/>
+<text x="295" y="104" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<rect x="604" y="130" width="12" height="20" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="406" y1="130" x2="604" y2="130" stroke="#334155" stroke-width="1.5"/>
+<polygon points="604,130 593,125 593,135" fill="#334155"/>
+<text x="505" y="124" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<line x1="604" y1="150" x2="406" y2="150" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="417,144 406,150 417,156" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="505" y="144" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<line x1="394" y1="170" x2="196" y2="170" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="207,164 196,170 207,176" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="295" y="164" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<rect x="394" y="210" width="12" height="60" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="210" x2="394" y2="210" stroke="#334155" stroke-width="1.5"/>
+<polygon points="394,210 383,205 383,215" fill="#334155"/>
+<text x="295" y="204" font-size="13" text-anchor="middle" fill="#1f2933">add(p)</text>
+<rect x="604" y="230" width="12" height="20" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="406" y1="230" x2="604" y2="230" stroke="#334155" stroke-width="1.5"/>
+<polygon points="604,230 593,225 593,235" fill="#334155"/>
+<text x="505" y="224" font-size="13" text-anchor="middle" fill="#1f2933">insert(p)</text>
+<line x1="604" y1="250" x2="406" y2="250" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="417,244 406,250 417,256" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="505" y="244" font-size="13" text-anchor="middle" fill="#1f2933">1</text>
+</svg><p class="figcap">間違いを含んだ図　一覧を読んでから登録している</p><p>上の4本の矢印では、画面が <code>findAll()</code> を呼び、DAO から <code>List</code> が戻っています。下の4本では、画面が <code>add(p)</code> を呼び、Service が DAO の <code>insert(p)</code> を呼んでいます。DAO が返す <code>1</code> は、追加できた行の数です。</p>
+<p>上から読むと、一覧を読んでから登録しています。この順でコードを書くと、登録する前の一覧が画面に出ます。足した商品は表示されません。エラーにならないので、動かしただけでは気づきにくい間違いです。図にすると、矢印の上下で気づけます。描き始める前に、コードを上から指でたどってください。<code>service.</code> や <code>dao.</code> が出てくる順に番号を振っておくと、防げます。</p>
+
+</div></details>
+<h2>2　実行仕様と、呼び出し・戻り（④⑤⑥）</h2>
+<p class="explain-brief">細い縦長の四角は実行中、実線の矢印は呼び出し、破線の矢印は戻り値を示す。</p>
+<p class="explain-mini"><code>呼び出し → 実行 → 戻り</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:630px" viewBox="90 100 630 212" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l17fig1"/></svg><p><code>ProductFrame.java</code> から抜き出しています。図1は、この行から始まります。</p>
+<pre class="code" id="c6">    private void showList() {
+        <span class="cm">// （中略）</span>
+            for (ProductDTO p : service.findAll()) {             <span class="cm">// 図1 findAll()</span>
+            <span class="cm">// （中略）</span>
+    }</pre>
+<p><code>showList</code> は、一覧を表示し直すメソッドです。<code>private</code> なので、<code>ProductFrame</code> の中からだけ呼ばれます。1つ目の（中略）には、表を空にする行と、<code>try</code> の行があります。<code>for</code> は、<code>service.findAll()</code> が返した商品を、1件ずつ取り出す繰り返しです。この <code>service.findAll()</code> が、図1の最初の矢印 <code>findAll()</code> です。2つ目の（中略）には、取り出した商品を、画面の表に1行ずつ足す処理があります。</p>
+<div class="line-block"><p class="item-label">④ ライフラインの上の細長い四角（実行仕様）</p>
+<p>④の、ライフラインの上の細長い四角が<strong>実行仕様</strong>です。実行仕様は、メソッドが動いている間を表します。呼ばれた所で始まり、戻す所で終わります。<code>ProductService</code> の四角の途中で、<code>ProductDAO</code> の四角が始まっています。DAO が終わるまで、Service が待っている、という意味です。<code>ProductFrame</code> の四角がいちばん長いのは、最初に呼び、最後に受け取るからです。</p>
+</div>
+<div class="line-block"><p class="item-label">⑤ 実線と黒塗りの矢じりの矢印（同期メッセージ）</p>
+<p>⑤の、実線と黒塗りの矢じりの矢印が<strong>同期メッセージ</strong>です。同期メッセージは、メソッドの呼び出しを表します。線の上に、メソッド名と引数を書きます。Java のふつうのメソッド呼び出しは、返ってくるまで次の行へ進みません。だから「同期」です。<code>service.</code> や <code>dao.</code> で始まる呼び出しが、この矢印になります。</p>
+<p>図1では、画面が Service の <code>findAll()</code> を呼び、続けて Service が DAO の <code>findAll()</code> を呼びます。DAO から MySQL への <code>SELECT文</code> は、DAO が SQL の SELECT 文を送る所です。</p>
+</div>
+<div class="line-block"><p class="item-label">⑥ 破線と開いた矢じりの矢印（戻りメッセージ）</p>
+<p>⑥の、破線と開いた矢じりの矢印が<strong>戻りメッセージ</strong>です。呼ばれた側が、<code>return</code> で値を返す所です。線の上に、返す値を書きます。</p>
+<p>MySQL から DAO への <code>3行</code> は、表の3件の行が返ってくる所です。DAO から Service、Service から画面への <code>List</code> は、商品の一覧が入った <code>List&lt;ProductDTO&gt;</code> です。</p>
+<p><strong>なぜ描くのか。</strong>戻りが無いと、<code>ProductFrame</code> が何を受け取ったのかが読めないからです。<code>List&lt;ProductDTO&gt; list = service.findAll();</code> の左側が書けません。UML では、戻りを省いてもよいことになっています。この講座では、何も返さない <code>void</code> のメソッド以外は、戻りも描きます。</p>
+</div>
+<p><strong>よくある間違い：呼ぶ矢印と返す矢印の線を取り違える。</strong>下の図は、図1の画面・Service・DAO のやりとりを、線を逆にして描いたものです。</p>
+<svg class="fig" viewBox="0 0 720 240" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar9" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="10" width="700" height="220" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を一覧する</text>
+<rect x="123" y="44" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="190" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<line x1="190" y1="74" x2="190" y2="230" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="324" y="44" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="400" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<line x1="400" y1="74" x2="400" y2="230" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="551" y="44" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="610" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="610" y1="74" x2="610" y2="230" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="184" y="90" width="12" height="116" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="394" y="110" width="12" height="80" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="604" y="130" width="12" height="40" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="110" x2="394" y2="110" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="383,104 394,110 383,116" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="295" y="104" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<line x1="406" y1="130" x2="604" y2="130" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="593,124 604,130 593,136" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="505" y="124" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<line x1="604" y1="170" x2="406" y2="170" stroke="#334155" stroke-width="1.5"/>
+<polygon points="406,170 417,165 417,175" fill="#334155"/>
+<text x="505" y="164" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<line x1="394" y1="190" x2="196" y2="190" stroke="#334155" stroke-width="1.5"/>
+<polygon points="196,190 207,185 207,195" fill="#334155"/>
+<text x="295" y="184" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+</svg><p class="figcap">間違いを含んだ図　線と矢じりが逆</p><p><code>findAll()</code> の矢印が破線、<code>List</code> の矢印が実線と黒塗りになっています。これでは「<code>findAll()</code> という値が返ってきて、<code>List</code> というメソッドを呼んだ」と読めてしまいます。線の種類は、矢印の向きより先に目に入ります。<strong>頼むのは実線＋黒塗り、返すのは破線</strong>です。</p>
+<svg class="fig" viewBox="0 0 720 190" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar10" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<text x="30" y="44" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">同期</text>
+<line x1="130" y1="40" x2="380" y2="40" stroke="#334155" stroke-width="1.5"/>
+<polygon points="380,40 369,35 369,45" fill="#334155"/>
+<text x="255" y="34" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<text x="400" y="44" font-size="13" text-anchor="start" fill="#1f2933">実線＋黒塗り。返ってくるまで待つ</text>
+<text x="30" y="104" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">非同期</text>
+<line x1="130" y1="100" x2="380" y2="100" stroke="#334155" stroke-width="1.5"/>
+<polyline points="369,94 380,100 369,106" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="255" y="94" font-size="13" text-anchor="middle" fill="#1f2933">send()</text>
+<text x="400" y="104" font-size="13" text-anchor="start" fill="#1f2933">実線＋開いた矢じり。待たずに先へ進む</text>
+<text x="30" y="164" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">戻り</text>
+<line x1="380" y1="160" x2="130" y2="160" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="141,154 130,160 141,166" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="255" y="154" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<text x="400" y="164" font-size="13" text-anchor="start" fill="#1f2933">破線＋開いた矢じり。値を返す</text>
+</svg><p class="figcap">メッセージは3種類。線と矢じりで見分ける</p><p>上の図は、メッセージの3種類を並べたものです。1行目の同期と、3行目の戻りは、図1で見たものです。2行目の非同期メッセージは、返事を待たずに先へ進む呼び出しです。実線と開いた矢じりで描きます。<code>send()</code> は、説明のための例の名前です。非同期メッセージは、この講座のアプリには出てきません。戻りとの違いは、線が実線か破線かです。</p>
+
+</div></details>
+<h2>3　アクターと自己メッセージ（⑦⑧）</h2>
+<p class="explain-brief">アクターは外部の利用者。自己メッセージは、同じオブジェクト自身への呼び出しを表す。</p>
+<p class="explain-mini"><code>アクターと自己メッセージ</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:770px" viewBox="0 30 770 196" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l17fig2"/></svg><p>抜き出したのは、図2「商品を登録する」の上の部分です。</p>
+<div class="line-block"><p class="item-label">⑦ 棒人間の 担当者（アクター）</p>
+<p>⑦の棒人間の <code>担当者</code> は<strong>アクター</strong>です。システムの外から操作する人です。第15回のユースケース図と同じ名前にします。担当者からも、下へライフラインが伸びています。</p>
+<p><code>追加を押す</code> の矢印は、担当者が［追加］ボタンを押す所です。この矢印で、<code>ProductFrame</code> の実行仕様が始まります。誰の操作で流れが始まるかを示すために描きます。ユースケース記述の「担当者は、〜」の行が、アクターから出る矢印になります。</p>
+<p>続く <code>add(p)</code> は、画面が Service の <code>add</code> を呼ぶ所です。<code>p</code> は、入力した値を入れた <code>ProductDTO</code> です。コードでは、<code>service.add(new ProductDTO(0, name, price, stock));</code> の行です。最初の <code>0</code> は、ID の仮の値です。ID は、データベースが自動で振ります。右端の <code>:ProductDAO</code> は、この部分ではまだ呼ばれていません。</p>
+</div>
+<div class="line-block"><p class="item-label">⑧ 自分に戻る矢印 <code>check(p)</code>（自己メッセージ）</p>
+<p>⑧の、自分に戻る矢印 <code>check(p)</code> が<strong>自己メッセージ</strong>です。自己メッセージは、同じインスタンスの、別のメソッドを呼ぶ形です。<code>add</code> の中で、同じ <code>ProductService</code> の <code>check</code> を呼んでいます。<code>check</code> は、商品名・価格・在庫を検査するメソッドです。重ねて描いた小さな四角が、<code>check</code> が動いている間です。</p>
+<p>図2の下のほうの <code>showList()</code> も、同じ自己メッセージです。1つのクラスの中の大事な手順を見せるために描きます。<code>private</code> メソッドの呼び出しは、たいていこの形になります。</p>
+</div>
+<p><strong>よくある間違い：getter まで全部描く。</strong>コードの呼び出しを、1つ残らず矢印にした形です。</p>
+<svg class="fig" viewBox="0 0 720 420" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar13" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="10" width="700" height="400" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を登録する</text>
+<rect x="114" y="44" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="190" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<line x1="190" y1="74" x2="190" y2="410" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="341" y="44" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="400" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDTO</text>
+<line x1="400" y1="74" x2="400" y2="410" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="551" y="44" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="610" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="610" y1="74" x2="610" y2="410" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="184" y="90" width="12" height="302" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="394" y="104" width="12" height="22" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="104" x2="394" y2="104" stroke="#334155" stroke-width="1.5"/>
+<polygon points="394,104 383,99 383,109" fill="#334155"/>
+<text x="295" y="98" font-size="13" text-anchor="middle" fill="#1f2933">getName()</text>
+<line x1="394" y1="126" x2="196" y2="126" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="207,120 196,126 207,132" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="295" y="120" font-size="13" text-anchor="middle" fill="#1f2933">"付箋"</text>
+<rect x="394" y="156" width="12" height="22" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="156" x2="394" y2="156" stroke="#334155" stroke-width="1.5"/>
+<polygon points="394,156 383,151 383,161" fill="#334155"/>
+<text x="295" y="150" font-size="13" text-anchor="middle" fill="#1f2933">getPrice()</text>
+<line x1="394" y1="178" x2="196" y2="178" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="207,172 196,178 207,184" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="295" y="172" font-size="13" text-anchor="middle" fill="#1f2933">200</text>
+<rect x="394" y="208" width="12" height="22" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="208" x2="394" y2="208" stroke="#334155" stroke-width="1.5"/>
+<polygon points="394,208 383,203 383,213" fill="#334155"/>
+<text x="295" y="202" font-size="13" text-anchor="middle" fill="#1f2933">getStock()</text>
+<line x1="394" y1="230" x2="196" y2="230" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="207,224 196,230 207,236" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="295" y="224" font-size="13" text-anchor="middle" fill="#1f2933">25</text>
+<rect x="604" y="262" width="12" height="110" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="262" x2="604" y2="262" stroke="#334155" stroke-width="1.5"/>
+<polygon points="604,262 593,257 593,267" fill="#334155"/>
+<text x="400" y="256" font-size="13" text-anchor="middle" fill="#1f2933">insert(p)</text>
+<rect x="394" y="292" width="12" height="22" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="604" y1="292" x2="406" y2="292" stroke="#334155" stroke-width="1.5"/>
+<polygon points="406,292 417,287 417,297" fill="#334155"/>
+<text x="505" y="286" font-size="13" text-anchor="middle" fill="#1f2933">getName()</text>
+<line x1="406" y1="314" x2="604" y2="314" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="593,308 604,314 593,320" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="505" y="308" font-size="13" text-anchor="middle" fill="#1f2933">"付箋"</text>
+<rect x="394" y="344" width="12" height="22" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="604" y1="344" x2="406" y2="344" stroke="#334155" stroke-width="1.5"/>
+<polygon points="406,344 417,339 417,349" fill="#334155"/>
+<text x="505" y="338" font-size="13" text-anchor="middle" fill="#1f2933">getPrice()</text>
+<line x1="406" y1="366" x2="604" y2="366" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="593,360 604,366 593,372" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="505" y="360" font-size="13" text-anchor="middle" fill="#1f2933">200</text>
+<text x="626" y="372" font-size="13" text-anchor="start" fill="#c2410c" font-weight="bold">…まだ続く</text>
+</svg><p class="figcap">間違いを含んだ図　getter まで全部描いた</p><p>Service は、DTO の <code>getName()</code>・<code>getPrice()</code>・<code>getStock()</code> を順に呼んでいます。戻りの <code>"付箋"</code>・<code>200</code>・<code>25</code> は、登録しようとしている商品名・価格・在庫です。そのあと DAO の <code>insert(p)</code> を呼び、DAO もまた DTO の getter を呼んでいます。右下の「…まだ続く」は、このあとも矢印が続くという意味です。</p>
+<p>矢印が多すぎて、「検査して、登録する」という流れが埋もれてしまいます。描くのは、まず<strong>層をまたぐ呼び出し</strong>（画面 → Service → DAO）です。層は、第13回で分けた画面・Service・DAO の3つの受け持ちです。もう1つは、<strong>流れの分かれ目になる手順</strong>（<code>check(p)</code> のような検査）です。写した図2が、その形です。</p>
+<table><tr><th>描く</th><th>描かない</th></tr><tr><td>別の層のクラスへの呼び出し</td><td>getter・setter</td></tr><tr><td>分かれ目になる検査・判断（自己メッセージ）</td><td>ローカル変数への代入</td></tr><tr><td>データベースとのやりとり</td><td>画面の中の部品の操作（<code>model.addRow</code> など）</td></tr></table>
+<div class="note">目安は「人に流れを口で説明するときに言うこと」です。「ここで DAO に登録を頼んで」とは言いますが、「ここで名前を get して」とは言いません。1枚に登場するものは5つまで、矢印は20本までに収まるようにします。</div>
+
+</div></details>
+<h2>4　alt とガード条件（⑨⑩）</h2>
+<p class="explain-brief">alt は if / else のような条件分岐。各段に [条件] を書いて、どれを実行するか示す。</p>
+<p class="explain-mini"><code>alt [条件]</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:770px" viewBox="0 220 770 238" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l17fig2"/></svg><div class="line-block"><p class="item-label">⑨ <code>alt</code> と書いた枠（複合フラグメント）</p>
+<p>⑨の、<code>alt</code> と書いた枠が<strong>複合フラグメント</strong>です。複合フラグメントは、図の一部を囲んで、特別な動きを示す枠です。</p>
+<p><code>alt</code> は、条件で道が分かれる所です。Java の <code>if</code> / <code>else if</code> / <code>else</code> に当たります。枠は、横の破線で3つの段に区切ってあります。当てはまった段の矢印だけが起きます。うまくいかない道（第15回の代替フロー）も、1枚に描くために使います。</p>
+</div>
+<div class="line-block"><p class="item-label">⑩ 角括弧で書いた条件（ガード条件）</p>
+<p>⑩の、角括弧で書いた条件が<strong>ガード条件</strong>です。その段の道に入る条件です。</p>
+<p>1段目の <code>[商品名が空]</code> は、商品名が入力されていないときです。このとき Service は、<code>IllegalArgumentException</code> を投げて、画面へ戻ります。<code>IllegalArgumentException</code> は、渡された値がおかしいことを表す例外です（第9回）。例外で戻るときも破線で描き、線の上に例外の名前を書きます（この講座の決まり）。</p>
+<p>画面から担当者への <code>理由を表示</code> は、例外の理由を担当者に見せる所です。コードでは、<code>catch</code> で受け止めた例外の <code>e.getMessage()</code> を表示する行です。</p>
+<p>2段目の <code>[価格か在庫が負]</code> は、価格か在庫に、0より小さい数が入ったときです。矢印は、1段目と同じです。</p>
+<p>3段目の <code>[else]</code> は、上のどちらにも当てはまらないとき、つまり入力が正しいときです。このときだけ、Service が DAO の <code>insert(p)</code> を呼びます。DAO が返す <code>1</code> は、追加できた行の数です。<code>check(p)</code> が例外を投げた段では、<code>insert</code> を呼びません。それが図で分かります。</p>
+</div>
+<p>段は、分かれる道の数だけ作ります。上の2段は、どちらも例外で断る道ですが、段を分けています。確かめる中身が違うからです。商品名は入力されているか、価格と在庫は負でないかを確かめます。そこで、<code>check</code> の価格の <code>if</code> と在庫の <code>if</code> を、1段にまとめています。商品名の <code>if</code> とは、段を分けています。</p>
+<p><strong>よくある間違い：alt に条件を書かない。</strong>下の図は、図2の alt を、条件を書かずに描いたものです。</p>
+<svg class="fig" viewBox="0 0 720 380" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar12" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="10" width="700" height="360" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を登録する</text>
+<rect x="123" y="44" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="190" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<line x1="190" y1="74" x2="190" y2="370" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="324" y="44" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="400" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<line x1="400" y1="74" x2="400" y2="370" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="551" y="44" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="610" y="64" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="610" y1="74" x2="610" y2="370" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="184" y="90" width="12" height="250" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="394" y="100" width="12" height="210" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="196" y1="100" x2="394" y2="100" stroke="#334155" stroke-width="1.5"/>
+<polygon points="394,100 383,95 383,105" fill="#334155"/>
+<text x="295" y="94" font-size="13" text-anchor="middle" fill="#1f2933">add(p)</text>
+<rect x="22" y="120" width="676" height="230" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M22,120 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="28" y="135" font-size="13" font-weight="bold" fill="#1f2933">alt</text>
+<line x1="394" y1="162" x2="196" y2="162" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="207,156 196,162 207,168" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="295" y="156" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="22" y1="186" x2="698" y2="186" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="202" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke"></text>
+<line x1="394" y1="230" x2="196" y2="230" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="207,224 196,230 207,236" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="295" y="224" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="22" y1="254" x2="698" y2="254" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="270" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke"></text>
+<rect x="604" y="284" width="12" height="26" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="406" y1="284" x2="604" y2="284" stroke="#334155" stroke-width="1.5"/>
+<polygon points="604,284 593,279 593,289" fill="#334155"/>
+<text x="505" y="278" font-size="13" text-anchor="middle" fill="#1f2933">insert(p)</text>
+<line x1="604" y1="310" x2="406" y2="310" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="417,304 406,310 417,316" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="505" y="304" font-size="13" text-anchor="middle" fill="#1f2933">1</text>
+</svg><p class="figcap">間違いを含んだ図　alt に条件が書いていない</p><p>段が3つあることは分かりますが、どんなときにどの段を通るのかが読めません。直すには、<code>ProductService</code> の <code>check</code> を開き、<code>if</code> の条件を段ごとに写します。よく使う枠を、下の表にまとめます。<code>opt</code> は、今日の図には出てきません。</p>
+<table><tr><th>枠</th><th>意味</th><th>Java では</th><th>条件の書き方</th></tr><tr><td><code>alt</code></td><td>条件で道が分かれる</td><td><code>if</code> / <code>else if</code> / <code>else</code></td><td>段ごとに <code>[ ]</code>。最後は <code>[else]</code></td></tr><tr><td><code>opt</code></td><td>条件を満たしたときだけ動く</td><td><code>else</code> の無い <code>if</code></td><td><code>[ ]</code> を1つ</td></tr><tr><td><code>loop</code></td><td>繰り返す</td><td><code>for</code> / <code>while</code></td><td><code>[rs.next() が true]</code> のように続ける条件</td></tr></table>
+
+</div></details>
+<h2>5　loop と生成（⑪⑫）</h2>
+<p class="explain-brief">loop は while や for のような繰り返し。繰り返す範囲と終了条件を表す。</p>
+<p class="explain-mini"><code>loop [条件]</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:620px" viewBox="150 468 620 196" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l17fig2"/></svg><p>抜き出したのは、図2の <code>[else]</code> の段の下の部分です。登録したあと、一覧を表示し直す所です。</p>
+<div class="line-block"><p class="item-label">⑪ <code>loop</code> の枠と <code>[rs.next() が true]</code></p>
+<p>左上の <code>showList()</code> は、画面の自己メッセージです（⑧と同じ形）。その中で、画面が Service の <code>findAll()</code> を呼び、続けて Service が DAO の <code>findAll()</code> を呼びます。</p>
+<p>⑪の <code>loop</code> の枠は、繰り返しです。Java の <code>while (rs.next())</code> に当たります。<code>rs.next()</code> は、読んだ結果に次の行があれば <code>true</code> を返すメソッドです。枠の中の <code>[rs.next() が true]</code> が、繰り返しを続ける条件です。</p>
+<p>3行あれば、<code>new ProductDTO(...)</code> が3回動きます。でも、矢印を3本は描きません。1本を枠で囲んで、繰り返すことを示します。</p>
+</div>
+<div class="line-block"><p class="item-label">⑫ <code>«create»</code> と書いた破線の矢印（生成）</p>
+<p>⑫の、<code>«create»</code> と書いた破線の矢印が<strong>生成</strong>です。生成は、<code>new</code> でインスタンスを作る所です。</p>
+<p>矢印の先の <code>:ProductDTO</code> のヘッダーは、ほかのヘッダーより下にあります。作られたものは、その高さにヘッダーを描き、そこからライフラインを始めます。最初からいるものと、途中で生まれたものを見分けるためです。<code>loop</code> の枠の中なので、3つ作られても、ヘッダーは1つで代表させます。</p>
+<p>枠の下の2本の <code>List</code> の破線は、戻りメッセージです。作った <code>ProductDTO</code> を入れた一覧が、DAO から Service へ戻り、続けて画面へ戻ります。</p>
+</div>
+
+</div></details>
+</div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>条件が合うときだけ処理を描く、if / else に相当する枠はどれ？</h2><details class="quick-answer"><summary>答えと理由を見る</summary><p>alt。条件を [ ] に書き、分岐先を段で分けます。loop は繰り返しに使います。</p></details></div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。<strong>①が描けたら、今日の目的は達成です。</strong></p>
+<p>どちらも紙に描きます。元にするのは、②の全体像のコードです。</p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　「商品を削除する」のシーケンス図を、<strong>見つからないときの道も入れて</strong>描く。図2と同じく担当者から始め、<code>alt</code> を <code>[行数が 0]</code> の段と <code>[else]</code> の段に分ける。</li><li>②　図2の <code>alt</code> に、段を1つ足す。第15回のユースケース記述の代替フロー 4a「データベースに接続できないとき」です。<code>insert(p)</code> を呼んだら <code>SQLException</code> が返ってきて、画面がエラーを表示する道を描く。</li></ul>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①は、<code>ProductFrame</code> の <code>deleteProduct</code> → <code>ProductService</code> の <code>delete</code> → <code>ProductDAO</code> の <code>delete</code> の順にたどります。<code>ProductDAO</code> の <code>delete(id)</code> は分かれる前に呼ぶので、<code>alt</code> の枠の上に描き、返す行数も必ず描きます。</li><li>②　①の分かれ目は、<code>ProductService</code> の <code>delete</code> の <code>if (dao.delete(id) == 0)</code> です。<code>ProductService</code> の <code>delete</code> は何も返さない（<code>void</code>）ので、<code>[else]</code> の段に画面への戻りの矢印はありません。</li><li>③　②は、図2の <code>[価格か在庫が負]</code> と <code>[else]</code> の間に段を入れます。<code>SQLException</code> は <code>ProductDAO</code> から <code>ProductService</code> を通って <code>ProductFrame</code> まで戻り、<code>addProduct</code> の <code>catch</code> で受け止めます。</li></ul>
+<div class="calm">2問とも描けなくて構いません。描けなかった所は、答えの図を写してから、もう一度自分で描いてください。</div>
+<div class="note">終わった人は <strong>問題集の第17回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　商品を削除する（見つからないときの道を入れたもの）</summary><div class="sol">
+<svg class="fig" viewBox="0 0 770 420" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar7" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="10" width="750" height="400" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を削除する</text>
+<circle cx="45" cy="48" r="8" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="45" y1="56" x2="45" y2="74" stroke="#334155" stroke-width="1.5"/>
+<line x1="33" y1="62" x2="57" y2="62" stroke="#334155" stroke-width="1.5"/>
+<polyline points="35,88 45,74 55,88" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="45" y="106" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">担当者</text>
+<rect x="98" y="50" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="165" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<rect x="254" y="50" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="330" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<rect x="461" y="50" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="520" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="45" y1="112" x2="45" y2="406" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="165" y1="80" x2="165" y2="406" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="330" y1="80" x2="330" y2="406" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="520" y1="80" x2="520" y2="406" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="159" y="126" width="12" height="248" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<rect x="324" y="154" width="12" height="114" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="45" y1="126" x2="159" y2="126" stroke="#334155" stroke-width="1.5"/>
+<polygon points="159,126 148,121 148,131" fill="#334155"/>
+<text x="102" y="120" font-size="13" text-anchor="middle" fill="#1f2933">削除を押す</text>
+<line x1="171" y1="154" x2="324" y2="154" stroke="#334155" stroke-width="1.5"/>
+<polygon points="324,154 313,149 313,159" fill="#334155"/>
+<text x="247" y="148" font-size="13" text-anchor="middle" fill="#1f2933">delete(id)</text>
+<rect x="514" y="184" width="12" height="28" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="184" x2="514" y2="184" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,184 503,179 503,189" fill="#334155"/>
+<text x="425" y="178" font-size="13" text-anchor="middle" fill="#1f2933">delete(id)</text>
+<line x1="514" y1="212" x2="336" y2="212" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,206 336,212 347,218" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="206" font-size="13" text-anchor="middle" fill="#1f2933">行数</text>
+<rect x="22" y="228" width="726" height="152" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M22,228 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="28" y="243" font-size="13" font-weight="bold" fill="#1f2933">alt</text>
+<text x="75" y="243" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[行数が 0]</text>
+<line x1="324" y1="268" x2="171" y2="268" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,262 171,268 182,274" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="262" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="159" y1="294" x2="45" y2="294" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="56,288 45,294 56,300" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="102" y="288" font-size="13" text-anchor="middle" fill="#1f2933">理由を表示</text>
+<line x1="22" y1="310" x2="748" y2="310" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="326" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[else]</text>
+<rect x="165" y="350" width="12" height="12" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<polyline points="171,330 205,330 205,350 177,350" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polygon points="177,350 188,345 188,355" fill="#334155"/>
+<text x="211" y="345" font-size="13" fill="#1f2933">showList()</text>
+</svg><p class="figcap">商品を削除する（見つからないときの道を入れたもの）</p><p><code>ProductDAO</code> の <code>delete(id)</code> は、消せても消せなくても呼ぶので、<code>alt</code> の枠の上にあります。返ってきた行数が 0 の段では、例外が画面まで戻って理由が表示され、一覧の表示し直しはしません。</p>
+<p><code>showList()</code> の中の呼び出しは図2と同じなので、自己メッセージだけを描いて、中は省いています。</p>
+<div class="note">条件は <code>[商品が見つからない]</code> と日本語で書いても正解です。コードの <code>if</code> と同じ意味になっていれば構いません。</div>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　データベースに接続できないとき</summary><div class="sol">
+<svg class="fig" viewBox="0 0 770 820" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<rect x="10" y="10" width="750" height="800" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M10,10 h135 v12 l-7,8 h-128 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="16" y="25" font-size="13" font-weight="bold" fill="#1f2933">sd 商品を登録する</text>
+<circle cx="45" cy="48" r="8" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="45" y1="56" x2="45" y2="74" stroke="#334155" stroke-width="1.5"/>
+<line x1="33" y1="62" x2="57" y2="62" stroke="#334155" stroke-width="1.5"/>
+<polyline points="35,88 45,74 55,88" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="45" y="106" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">担当者</text>
+<rect x="98" y="50" width="135" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="165" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductFrame</text>
+<rect x="254" y="50" width="152" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="330" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductService</text>
+<rect x="461" y="50" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="520" y="70" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDAO</text>
+<line x1="45" y1="112" x2="45" y2="806" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="165" y1="80" x2="165" y2="806" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="330" y1="80" x2="330" y2="806" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="520" y1="80" x2="520" y2="806" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<line x1="680" y1="709" x2="680" y2="806" stroke="#64748b" stroke-width="1.3" stroke-dasharray="6 4"/>
+<rect x="159" y="126" width="12" height="652" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="45" y1="126" x2="159" y2="126" stroke="#334155" stroke-width="1.5"/>
+<polygon points="159,126 148,121 148,131" fill="#334155"/>
+<text x="102" y="120" font-size="13" text-anchor="middle" fill="#1f2933">追加を押す</text>
+<rect x="324" y="154" width="12" height="406" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="171" y1="154" x2="324" y2="154" stroke="#334155" stroke-width="1.5"/>
+<polygon points="324,154 313,149 313,159" fill="#334155"/>
+<text x="247" y="148" font-size="13" text-anchor="middle" fill="#1f2933">add(p)</text>
+<rect x="330" y="198" width="12" height="16" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<polyline points="336,178 370,178 370,198 342,198" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polygon points="342,198 353,193 353,203" fill="#334155"/>
+<text x="376" y="193" font-size="13" fill="#1f2933">check(p)</text>
+<rect x="22" y="226" width="726" height="556" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M22,226 h44 v12 l-7,8 h-37 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="28" y="241" font-size="13" font-weight="bold" fill="#1f2933">alt</text>
+<text x="75" y="241" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[商品名が空]</text>
+<line x1="324" y1="272" x2="171" y2="272" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,266 171,272 182,278" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="266" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="159" y1="298" x2="45" y2="298" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="56,292 45,298 56,304" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="102" y="292" font-size="13" text-anchor="middle" fill="#1f2933">理由を表示</text>
+<line x1="22" y1="314" x2="748" y2="314" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="330" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[価格か在庫が負]</text>
+<line x1="324" y1="356" x2="171" y2="356" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,350 171,356 182,362" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="350" font-size="11" text-anchor="middle" fill="#1f2933">IllegalArgumentException</text>
+<line x1="159" y1="382" x2="45" y2="382" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="56,376 45,382 56,388" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="102" y="376" font-size="13" text-anchor="middle" fill="#1f2933">理由を表示</text>
+<line x1="22" y1="398" x2="748" y2="398" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="414" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[DBに接続できない]</text>
+<rect x="514" y="426" width="12" height="24" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="426" x2="514" y2="426" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,426 503,421 503,431" fill="#334155"/>
+<text x="425" y="420" font-size="13" text-anchor="middle" fill="#1f2933">insert(p)</text>
+<line x1="514" y1="450" x2="336" y2="450" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,444 336,450 347,456" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="444" font-size="12" text-anchor="middle" fill="#1f2933">SQLException</text>
+<line x1="324" y1="476" x2="171" y2="476" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="182,470 171,476 182,482" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="247" y="470" font-size="12" text-anchor="middle" fill="#1f2933">SQLException</text>
+<line x1="159" y1="502" x2="45" y2="502" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="56,496 45,502 56,508" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="102" y="496" font-size="13" text-anchor="middle" fill="#1f2933">エラーを表示</text>
+<line x1="22" y1="508" x2="748" y2="508" stroke="#334155" stroke-width="1.3" stroke-dasharray="7 4"/>
+<text x="30" y="524" font-size="13" fill="#1d4ed8" stroke="#ffffff" stroke-width="4" paint-order="stroke">[else]</text>
+<rect x="514" y="536" width="12" height="24" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="536" x2="514" y2="536" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,536 503,531 503,541" fill="#334155"/>
+<text x="425" y="530" font-size="13" text-anchor="middle" fill="#1f2933">insert(p)</text>
+<line x1="514" y1="560" x2="336" y2="560" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,554 336,560 347,566" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="554" font-size="13" text-anchor="middle" fill="#1f2933">1</text>
+<rect x="165" y="606" width="12" height="166" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<polyline points="171,586 205,586 205,606 177,606" fill="none" stroke="#334155" stroke-width="1.5"/>
+<polygon points="177,606 188,601 188,611" fill="#334155"/>
+<text x="211" y="601" font-size="13" fill="#1f2933">showList()</text>
+<rect x="324" y="630" width="12" height="132" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="177" y1="630" x2="324" y2="630" stroke="#334155" stroke-width="1.5"/>
+<polygon points="324,630 313,625 313,635" fill="#334155"/>
+<text x="250" y="624" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<rect x="514" y="654" width="12" height="90" fill="#fff" stroke="#334155" stroke-width="1.5"/>
+<line x1="336" y1="654" x2="514" y2="654" stroke="#334155" stroke-width="1.5"/>
+<polygon points="514,654 503,649 503,659" fill="#334155"/>
+<text x="425" y="648" font-size="13" text-anchor="middle" fill="#1f2933">findAll()</text>
+<rect x="372" y="664" width="368" height="58" fill="none" stroke="#334155" stroke-width="1.5"/>
+<path d="M372,664 h52 v12 l-7,8 h-45 z" fill="#f1f5f9" stroke="#334155" stroke-width="1.3"/>
+<text x="378" y="679" font-size="13" font-weight="bold" fill="#1f2933">loop</text>
+<text x="380" y="714" font-size="12" text-anchor="start" fill="#1d4ed8">[rs.next() が true]</text>
+<line x1="526" y1="694" x2="621" y2="694" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="610,688 621,694 610,700" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="573" y="688" font-size="13" text-anchor="middle" fill="#1f2933">«create»</text>
+<rect x="621" y="679" width="118" height="30" rx="4" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/>
+<text x="680" y="699" font-size="14" font-weight="bold" text-anchor="middle" fill="#1f2933">:ProductDTO</text>
+<line x1="514" y1="744" x2="336" y2="744" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="347,738 336,744 347,750" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="425" y="738" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+<line x1="324" y1="762" x2="177" y2="762" stroke="#334155" stroke-width="1.5" stroke-dasharray="7 4"/>
+<polyline points="188,756 177,762 188,768" fill="none" stroke="#334155" stroke-width="1.5"/>
+<text x="250" y="756" font-size="13" text-anchor="middle" fill="#1f2933">List</text>
+</svg><p class="figcap">商品を登録する（代替フロー 4a の段を足したもの）</p><p>足した段では、<code>insert(p)</code> を呼んだところで <code>SQLException</code> が返り、<code>ProductService</code> を素通りして画面まで戻ります。一覧の表示し直しはしません。</p>
+<div class="note">図が縦に長くなりました。代替フローを全部1枚に入れると読みにくくなるので、よく起きるもの2つか3つまでにして、残りはユースケース記述に任せる、という分け方もよく使います。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>シーケンス図の上下が、呼び出しの起きた順番だと説明できる</li><li>呼び出し（実線＋黒塗り）と戻り（破線）を描き分けられる</li><li>コードの <code>if</code> を <code>alt</code> の段に、<code>while</code> を <code>loop</code> の枠に置き換えられる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、ステートマシン図です。</strong>商品1件が「在庫あり」から「売り切れ」へどう移るかを図にし、その図をコードの <code>if</code> にします。今日の図1と同じやりとりを時間の縦軸を使わずに描くコミュニケーション図と、処理の流れを描くアクティビティ図は、第19回で扱います。</p></div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>シーケンス図</td><td>しーけんすず</td><td>誰が誰に、どの順でメッセージを送るかを、上から下への時間の順に描いた図。UML の図の1つ</td></tr><tr><td>UML</td><td>ゆーえむえる</td><td>設計を図で表すときの、共通の描き方（第15回）</td></tr><tr><td>sd</td><td>えすでぃー</td><td>シーケンス図を囲む枠の見出し。sequence diagram の頭文字。続けて図の名前を書きます</td></tr><tr><td>ヘッダー</td><td>へっだー</td><td>図のいちばん上に並ぶ四角。登場するインスタンスを「<code>:</code> クラス名」で書きます</td></tr><tr><td>ライフライン</td><td>らいふらいん</td><td>ヘッダーから下へ伸びる縦の破線。上から下へ時間が流れます</td></tr><tr><td>実行仕様</td><td>じっこうしよう</td><td>ライフラインの上の細長い四角。メソッドが動いている間。活性化とも呼びます</td></tr><tr><td>メッセージ</td><td>めっせーじ</td><td>横の矢印。メソッドの呼び出しと、その戻り</td></tr><tr><td>同期メッセージ</td><td>どうきめっせーじ</td><td>返ってくるまで待つ呼び出し。実線＋黒塗りの矢じり。Java の普通のメソッド呼び出し</td></tr><tr><td>非同期メッセージ</td><td>ひどうきめっせーじ</td><td>返事を待たずに先へ進む呼び出し。実線＋開いた矢じり。この講座のアプリには出てきません</td></tr><tr><td>戻りメッセージ</td><td>もどりめっせーじ</td><td>呼ばれた側が値を返す所。破線＋開いた矢じり</td></tr><tr><td>自己メッセージ</td><td>じこめっせーじ</td><td>同じインスタンスの別のメソッドを呼ぶこと。自分に戻る矢印で描きます</td></tr><tr><td>アクター</td><td>あくたー</td><td>システムの外から操作する人。棒人間で描きます（第15回）</td></tr><tr><td>複合フラグメント</td><td>ふくごうふらぐめんと</td><td>図の一部を囲む枠。左上に <code>alt</code> や <code>loop</code> などの種類を書きます</td></tr><tr><td>alt</td><td>おると</td><td>条件で道が分かれる枠。<code>if</code> / <code>else if</code> / <code>else</code></td></tr><tr><td>opt</td><td>おぷと</td><td>条件を満たしたときだけ動く枠。<code>else</code> の無い <code>if</code></td></tr><tr><td>loop</td><td>るーぷ</td><td>繰り返しの枠。<code>for</code> / <code>while</code></td></tr><tr><td>生成</td><td>せいせい</td><td><code>new</code> でインスタンスを作ること。<code>«create»</code> と書いた破線の矢印で描き、作られたもののヘッダーをその高さに置きます</td></tr><tr><td>ガード条件</td><td>がーどじょうけん</td><td><code>[商品名が空]</code> のように、角括弧で書く条件</td></tr><tr><td>代替フロー</td><td>だいたいふろー</td><td>ユースケース記述で、うまくいかなかったときの手順（第15回）。<code>alt</code> の段になります</td></tr><tr><td>IllegalArgumentException</td><td>いりーがる あーぎゅめんと えくせぷしょん</td><td>「渡された値がおかしい」ことを表す例外（第9回）。<code>check</code> が投げます</td></tr><tr><td>SQLException</td><td>えすきゅーえる えくせぷしょん</td><td>データベースとのやりとりで失敗したことを表す例外（第11回）</td></tr><tr><td>DAO</td><td>だお</td><td>データベースとの出し入れだけを受け持つクラス。<code>ProductDAO</code>（第13回）</td></tr><tr><td>DTO</td><td>でぃーてぃーおー</td><td>値を運ぶだけのクラス。<code>ProductDTO</code>（第13回）</td></tr></table></details>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 17 回 ／ 全 22 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>
