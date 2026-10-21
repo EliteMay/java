@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>第18回｜ステートマシン図</title>
+<style>
+    @font-face { font-family:'CodeAscii'; src:local('Consolas');   /* 半角だけ Consolas。BIZ UDゴシックの " が ” に見えるため */
+                 unicode-range:U+0020-007E; size-adjust:90.94%; }   /* 幅を全角のちょうど半分にそろえる */
+    :root { --accent:#e76f00; --code-bg:#1e1e2e; --ok:#10b981; --sol:#f59e0b; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html { font-size:16px; }
+    body { font-family:'Segoe UI',Meiryo,sans-serif; background:#f1f5f9; color:#1e293b;
+           padding:2rem 1rem; line-height:1.75; }
+    .container { max-width:920px; margin:0 auto; }
+    body.big html, body.big { font-size:22px; }
+    body.big .container { max-width:1400px; }
+    body.big pre.code, body.big .expected { font-size:17px; }
+    body.big .fig { max-width:900px; }
+    header { text-align:center; margin-bottom:1.5rem; }
+    .badge { display:inline-block; background:var(--accent); color:#fff; padding:.25rem 1rem;
+             border-radius:999px; font-size:.8rem; font-weight:bold; letter-spacing:.05em; margin-bottom:.5rem; }
+    header h1 { font-size:1.7rem; }
+    header p { color:#64748b; font-size:.85rem; margin-top:.4rem; }
+    .hero { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .hero .card { flex:1 1 280px; margin:0; }
+    .hero .card:first-child { flex:2 1 220px; }   /* 今日の主役は短いので狭く、できるようになることを広く（2026-09-30） */
+    .hero .card:last-child { flex:3 1 320px; }
+    .lead-terms { font-size:1.15rem; font-weight:bold; color:#c25c00; }
+    .lead-terms .term { white-space:nowrap; display:inline-block; }
+    .lead-terms small { font-size:.8rem; color:#64748b; font-weight:normal; display:block; }
+    .card { background:#fff; border-radius:12px; padding:1.5rem; margin-bottom:1.5rem;
+            box-shadow:0 1px 4px rgba(0,0,0,.08); }
+    .card-title { font-size:.72rem; font-weight:bold; letter-spacing:.1em; margin-bottom:1rem; color:var(--accent); }
+    .card h2 { font-size:1.1rem; margin:2.2rem 0 .6rem; border-left:4px solid var(--accent); padding-left:.6rem; }
+    .line-block { margin:1rem 0; padding:1rem 0 .3rem; border-top:1px dashed #cbd5e1; }   /* 行ごとの解説の1組（2026-10-13） */
+    .line-block pre.code { margin:0 0 .6rem; padding:.6rem .95rem; }
+    .line-block p { margin:.35rem 0; line-height:1.95; }
+    .line-block p.item-label { font-weight:bold; color:#0f172a; margin:0 0 .4rem; }
+    table.symtab td { vertical-align:middle; }   /* UML の記号の表（2026-10-14） */
+    table.symtab td.sym-cell { width:176px; text-align:center; background:#fff; }
+    table.symtab td.sym-name { white-space:nowrap; font-weight:bold; }
+    svg.sym { display:block; margin:0 auto; width:164px; max-width:100%; height:auto; }   /* 絵の中の文字を本文に近い大きさにする */
+    .card h2.sym-h { border-left-color:#0f766e; }
+    table.mini { width:auto; margin:0 auto; font-size:.72rem; }
+    table.mini th, table.mini td { padding:.15rem .35rem; }
+    code.symcode { display:inline-block; text-align:left; white-space:pre; background:#f8fafc; font-size:.82rem; line-height:1.6; padding:.3em .5em; }
+    .card h2:first-of-type { margin-top:0; }
+    .card h3 { font-size:.98rem; margin:1.1rem 0 .35rem; color:#0f172a; }
+    .card p { margin:.4rem 0; }
+    table { width:100%; border-collapse:collapse; margin:.9rem 0; font-size:.92rem; }
+    th, td { padding:.5rem .85rem; text-align:left; border:1px solid #e2e8f0; vertical-align:top; }
+    th { background:#f8fafc; font-weight:bold; white-space:nowrap; }
+    ul, ol { padding-left:1.4rem; }
+    li { margin:.28rem 0; }
+    code { background:#f1f5f9; padding:.1em .35em; border-radius:4px;
+           font-family:'Consolas',monospace; font-size:.9em; white-space:pre-wrap; }
+    .define td:first-child { white-space:nowrap; font-weight:bold; }   /* 「Java での意味」 */
+    .define p.use { margin:.35rem 0 0; }
+    code.ex { display:block; white-space:pre; overflow-x:auto; margin-top:.45rem; padding:.4em .6em; line-height:1.6; }
+    pre.code { background:var(--code-bg); color:#cdd6f4; padding:1rem 1.1rem; border-radius:8px;
+               overflow-x:auto; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace; font-size:13.5px; line-height:1.55;
+               white-space:pre; margin:.7rem 0; }
+    pre.code .cm { color:#a6adc8; }
+    pre.code .cn { font-family:inherit; }
+    .btn-row { display:flex; gap:.75rem; margin-top:.5rem; flex-wrap:wrap; align-items:center; }
+    button { padding:.45rem 1.2rem; border:none; border-radius:8px; font-size:.85rem; font-weight:600;
+             cursor:pointer; background:var(--accent); color:#fff; }
+    button:hover { opacity:.85; }
+    .copy-msg { font-size:.85rem; color:var(--ok); font-weight:600; }
+    .expected { background:#0d1117; color:#7ee787; font-family:'CodeAscii','BIZ UDGothic','MS Gothic',monospace;
+                font-size:13.5px; padding:1rem; border-radius:8px; white-space:pre-wrap; overflow-wrap:anywhere;
+                line-height:1.55; margin:.7rem 0; }
+    .expected-label { font-size:.8rem; color:#64748b; margin-top:.8rem; }
+    .expected.err { color:#ff7b72; }   /* エラーメッセージは赤（本文の「赤い文字」と見た目をそろえる） */
+    .fig { display:block; width:100%; max-width:720px; height:auto; margin:.8rem auto; }
+    .figcap { text-align:center; font-size:.85rem; color:#64748b; margin-top:-.3rem; }
+    .note { background:#fffbeb; border-left:4px solid var(--sol); padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .trap { background:#fef2f2; border-left:4px solid #ef4444; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .calm { background:#eff6ff; border-left:4px solid #3b82f6; padding:.7rem 1rem;
+            border-radius:0 8px 8px 0; font-size:.92rem; margin:.8rem 0; }
+    .words { background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:.6rem 1rem;
+             font-size:.88rem; margin:.6rem 0 1rem; }
+    .words b { color:#c25c00; }
+    .words span { display:block; margin:.15rem 0; }
+    .tatoe { background:#f5f3ff; border:1px solid #ddd6fe; border-radius:10px; padding:1rem 1.2rem; margin:.9rem 0; }
+    .tatoe h3 { margin:0 0 .3rem; color:#6d28d9; font-size:1.05rem; }
+    .tatoe .lead { font-weight:bold; color:#5b21b6; }
+    .tatoe p { line-height:normal; margin:.35rem 0; }
+    .tatoe-step + .tatoe-step { border-top:2px dashed #c4b5fd; margin-top:1.6rem; padding-top:1.4rem; }   /* 絵ごとの区切り（2026-10-06） */
+    .fname { font-family:'Consolas',monospace; font-weight:bold; font-size:.9rem; margin:1rem 0 -.3rem; color:#334155; }
+    ul.plain { list-style:none; padding-left:0; }
+    ul.num li { padding-left:1.6em; text-indent:-1.6em; }
+    .step { border-top:1px dashed #cbd5e1; padding-top:.9rem; margin-top:1.1rem; }
+    .step-id { display:inline-block; background:#334155; color:#fff; font-weight:bold; font-size:.8rem;
+               padding:.1rem .6rem; border-radius:5px; margin-right:.5rem; }
+    .step h3 { display:inline; font-size:1rem; }
+    .divider { background:#334155; color:#fff; text-align:center; border-radius:12px;
+               padding:1.1rem; margin:2.5rem 0 1.5rem; }
+    .divider h2 { font-size:1.15rem; }
+    .divider p { font-size:.85rem; color:#cbd5e1; margin-top:.3rem; }
+    details.ans { background:#fff; border-radius:12px; box-shadow:0 1px 4px rgba(0,0,0,.08);
+                  overflow:hidden; margin-bottom:1rem; }
+    details.ans > summary { padding:1rem 1.4rem; cursor:pointer; font-weight:bold; color:var(--sol);
+              list-style:none; user-select:none; }
+    summary::-webkit-details-marker { display:none; }
+    details.ans > summary::before { content:'\25b6'; font-size:.7rem; margin-right:.5rem; display:inline-block; }
+    .sol { padding:0 1.4rem 1.4rem; border-top:1px solid #f1f5f9; }
+    .sol h3 { font-size:.95rem; margin:1.1rem 0 .4rem; }
+    .sol p { margin:.4rem 0; }
+    .check ul { list-style:none; padding-left:0; }
+    .check li::before { content:'\2610'; margin-right:.5rem; color:#64748b; }
+    .glossary td:first-child { white-space:nowrap; font-weight:bold; }
+    .glossary td:nth-child(2) { white-space:nowrap; color:#64748b; }
+    #bigbtn { position:fixed; top:12px; right:12px; z-index:9; background:#334155; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+    footer { text-align:center; color:#94a3b8; font-size:.8rem; padding-bottom:2rem; }
+    @media print {
+      body { background:#fff; padding:0; font-size:10.5pt; line-height:1.6; }
+      .container { max-width:none; }
+      .card, details.ans { box-shadow:none; border:1px solid #cbd5e1; }
+      .btn-row, #bigbtn { display:none; }
+      pre.code, .expected { font-size:9pt; background:#fff; color:#111; border:1px solid #cbd5e1; white-space:pre-wrap; }
+      .expected.err { color:#b91c1c; }
+      .divider { background:#fff; color:#111; border:2px solid #111; break-before:page; }
+      .divider p { color:#333; }
+      details.ans { break-inside:avoid; }
+      details.ans[open] > summary::before { content:''; }
+    }
+</style>
+<style>.course-nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:18px}.course-nav a{display:inline-block;padding:5px 12px;border:1px solid #fdba74;background:#fff7ed;color:#9a3412;border-radius:8px;text-decoration:none;font-weight:600;font-size:.85rem}.course-nav a:hover{background:#ffedd5}.course-nav a:focus-visible{outline:3px solid #f97316}</style>
+<link rel="stylesheet" href="reader.css">
+<link rel="stylesheet" href="reader-ux.css">
+<script defer src="reader.js"></script>
+<script defer src="reader-ux.js"></script>
+<link rel="stylesheet" href="learning-support.css">
+<script defer src="learning-support-data.js"></script>
+<script defer src="learning-support.js"></script>
+<link rel="stylesheet" href="concise-explanations.css">
+</head>
+<body>
+<button id="bigbtn">文字を大きくする</button>
+<div class="container">
+<nav aria-label="講義の移動" class="course-nav"><a href="index.html">講義一覧</a><a href="lesson17.html">前の講義</a><a href="problems.html">問題集</a><a href="concepts/index.html">つまずき解説</a></nav>
+
+<header><span class="badge">第 18 回 ／ 全 22 回</span><h1>ステートマシン図</h1><p>第22章 22-2　ステートマシン図 ／ 状態と遷移 ／ ガード条件 ／ 図をコードにする</p></header>
+<div class="hero">
+<div class="card"><div class="card-title">今日の主役</div><p class="lead-terms"><span class="term">ステートマシン図</span>　<span class="term">ガード条件</span></p></div>
+<div class="card"><div class="card-title">今日できるようになること</div><ul><li>商品1件の状態の移り変わりを、ステートマシン図で描ける</li><li>ガード条件を、どの値でも1つだけに当てはまるように書ける</li><li>図の矢印を <code>if</code> にして、図に無い移り方を断れる</li></ul></div>
+</div>
+<div class="card"><div class="card-title">① 今日の主役</div>
+<h2>UML での意味</h2>
+<table class="define"><tr><th>言葉</th><th>意味</th></tr><tr><td>ステートマシン図</td><td>1つのオブジェクトが取りうる状態と、どのイベントでどの状態へ移るか（遷移）を表す UML の図。</td></tr><tr><td>ガード条件</td><td>ステートマシン図の矢印に［ ］で書く条件。条件を満たしたときだけ、その矢印へ進みます。</td></tr></table>
+<h2>たとえで言うと</h2>
+<div class="tatoe"><h3>ステートマシン図は「荷物の追跡画面」</h3><p class="lead">宅配の追跡画面は、荷物1個がいまどうなっているかを表しています。</p><div class="tatoe-step"><svg class="fig" viewBox="0 0 720 190" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="l18o1" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.8"/></marker><marker id="l18a1" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#c2410c" stroke-width="1.8"/></marker><marker id="l18r1" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.8"/></marker></defs>
+<text x="20" y="26" font-size="15" text-anchor="start" fill="#1f2933" font-weight="bold">荷物の追跡画面　荷物1個が、いまどうなっているか</text>
+<circle cx="40" cy="90" r="8" fill="#334155"/>
+<polyline points="48,90 98,90" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o1)"/>
+<rect x="100" y="68" width="120" height="44" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="160" y="95" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">受付済み</text>
+<polyline points="220,90 338,90" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o1)"/>
+<text x="279" y="80" font-size="13" text-anchor="middle" fill="#1f2933">発送する</text>
+<rect x="340" y="68" width="120" height="44" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="400" y="95" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">配送中</text>
+<polyline points="460,90 568,90" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o1)"/>
+<text x="514" y="80" font-size="13" text-anchor="middle" fill="#1f2933">届ける［在宅］</text>
+<rect x="570" y="68" width="120" height="44" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="630" y="95" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">配達済み</text>
+<polyline points="630,112 630,145" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o1)"/>
+<circle cx="630" cy="157" r="11" fill="#fff" stroke="#334155" stroke-width="1.6"/><circle cx="630" cy="157" r="6.5" fill="#334155"/>
+<text x="20" y="150" font-size="13" text-anchor="start" fill="#64748b">四角の中は「〜中」「〜済み」</text>
+<text x="20" y="170" font-size="13" text-anchor="start" fill="#64748b">いまの様子（状態）を書く</text>
+<text x="280" y="150" font-size="13" text-anchor="start" fill="#64748b">矢印の上は「〜する」</text>
+<text x="280" y="170" font-size="13" text-anchor="start" fill="#64748b">移る条件は［ ］に書く</text>
+</svg><p class="figcap">ステートマシン図の見え方。主役は「荷物1個」</p><p>追跡画面に出るのは「受付済み」「配送中」「配達済み」です。<strong>荷物1個が、いまどうなっているか</strong>を表しています。これを描くのが<strong>ステートマシン図</strong>です。</p>
+<p>配送中から配達済みへ移るのは、届けに行って、相手が在宅だったときだけです。留守なら配送中のままです。このように、矢印へ進む条件を［ ］で書いたものが<strong>ガード条件</strong>です。</p>
+</div></div>
+<table><tr><th>たとえ</th><th>Java では</th></tr><tr><td>追跡画面の「配送中」</td><td>状態。商品なら「在庫あり」「売り切れ」</td></tr><tr><td>「発送する」で表示が変わる</td><td>遷移。商品なら「売る」で在庫ありから売り切れへ移る</td></tr><tr><td>在宅のときだけ配達済みになる</td><td>ガード条件。商品なら［在庫と売る数が同じ］のときだけ売り切れへ移る</td></tr></table>
+<h2>なぜ必要か</h2>
+<table class="define"><tr><td>ステートマシン図</td><td>1つの物が、どの状態からどの状態へ移ってよいか（移ってはいけないか）をはっきりさせるためです。</td></tr><tr><td>ガード条件</td><td>同じきっかけでも、条件によって行き先が変わるからです。</td></tr></table>
+<p>今日は、第10〜14回で作った商品在庫管理アプリの「商品1件」を、ステートマシン図で描きます。まず写します。</p>
+</div>
+<div class="card"><div class="card-title">② 写して描く</div>
+<p><strong>まずは自分で図を描き写し、コードは写して動かしてみましょう。</strong>各部品の意味と、なぜ必要かは、③の解説で説明します。</p>
+<p>今日はノートに、商品1件の状態（ステートマシン図）を1枚描き写します。Eclipse は、その図をコードにした <code>SellMain</code> を動かすのに使います。</p>
+<h2>Eclipse の手順</h2>
+<table><tr><th>番号</th><th>操作</th></tr><tr><td>①</td><td>［ファイル］→［新規］→［Java プロジェクト］</td></tr><tr><td>②</td><td>プロジェクト名に <code>lesson18</code> と入力して［完了］</td></tr><tr><td>③</td><td>「module-info.java の作成」と聞かれたら［作成しない］</td></tr><tr><td>④</td><td>左のツリーで <code>lesson18</code> を開き、<code>src</code> を右クリック →［新規］→［クラス］</td></tr><tr><td>⑤</td><td>名前に <code>Product</code> と入力する。パッケージ欄に <code>lesson18</code> と入っていることを確かめて［完了］（空なら <code>lesson18</code> と入力する）</td></tr><tr><td>⑥</td><td>④⑤をもう一度行い、名前 <code>SellMain</code> のクラスを作る</td></tr><tr><td>⑦</td><td>それぞれのファイルで、Eclipse が自動で書いたものを <code>Ctrl</code> + <code>A</code> → <code>Delete</code> で全部消し、下のコードを写す</td></tr><tr><td>⑧</td><td><code>SellMain.java</code> を開いた状態で <code>Ctrl</code> + <code>F11</code> を押して実行する</td></tr></table>
+<h2>全体像</h2>
+<p>写すのは、図が1枚とコードが2つです。図の中のオレンジの ①〜⑤ は、③解説の番号です（ノートには写さなくて構いません）。</p>
+<p>図は、商品1件が「在庫あり」と「売り切れ」の間をどう移るかを描いたものです。</p>
+<svg class="fig" viewBox="0 0 720 240" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="l18o2" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.8"/></marker><marker id="l18a2" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#c2410c" stroke-width="1.8"/></marker><marker id="l18r2" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.8"/></marker></defs>
+<g id="l18state">
+<g transform="translate(0,-36)">
+<circle cx="40" cy="135" r="8" fill="#334155"/>
+<polyline points="48,135 118,135" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o2)"/>
+<text x="83" y="126" font-size="13" text-anchor="middle" fill="#1f2933">登録する</text>
+<rect x="120" y="110" width="150" height="50" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="195" y="140" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">在庫あり</text>
+<polyline points="170,110 170,78 220,78 220,108" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o2)"/>
+<text x="195" y="66" font-size="13" text-anchor="middle" fill="#1f2933">売る［在庫が売る数より多い］／在庫を減らす</text>
+<polyline points="270,127 498,127" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o2)"/>
+<text x="385" y="99" font-size="13" text-anchor="middle" fill="#1f2933">売る［在庫と売る数が同じ］</text>
+<text x="385" y="117" font-size="13" text-anchor="middle" fill="#1f2933">／在庫を減らす</text>
+<rect x="500" y="110" width="150" height="50" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="575" y="140" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">売り切れ</text>
+<polyline points="195,160 195,237" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o2)"/>
+<text x="205" y="222" font-size="13" text-anchor="start" fill="#1f2933">廃番にする</text>
+<circle cx="195" cy="249" r="11" fill="#fff" stroke="#334155" stroke-width="1.6"/><circle cx="195" cy="249" r="6.5" fill="#334155"/>
+<polyline points="575,160 575,237" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o2)"/>
+<text x="585" y="222" font-size="13" text-anchor="start" fill="#1f2933">廃番にする</text>
+<circle cx="575" cy="249" r="11" fill="#fff" stroke="#334155" stroke-width="1.6"/><circle cx="575" cy="249" r="6.5" fill="#334155"/>
+<text x="32" y="120" font-size="16" text-anchor="start" fill="#c2410c" font-weight="bold">①</text>
+<text x="124" y="104" font-size="16" text-anchor="start" fill="#c2410c" font-weight="bold">②</text>
+<text x="504" y="104" font-size="16" text-anchor="start" fill="#c2410c" font-weight="bold">②</text>
+<text x="376" y="150" font-size="16" text-anchor="start" fill="#c2410c" font-weight="bold">③</text>
+<text x="228" y="100" font-size="16" text-anchor="start" fill="#c2410c" font-weight="bold">④</text>
+<text x="214" y="262" font-size="16" text-anchor="start" fill="#c2410c" font-weight="bold">⑤</text>
+<text x="594" y="262" font-size="16" text-anchor="start" fill="#c2410c" font-weight="bold">⑤</text>
+</g></g>
+</svg><p class="figcap">商品1件の状態（ステートマシン図）</p><p>図のあとの2つのファイルは、この図をコードにしたものです。<code>SellMain</code> の行の右のコメントは、図のどの部品に当たるかです。</p><p class="fname">Product.java　第5回からの正本（このまま写す）</p>
+<pre class="code" id="c1">package lesson18;
+
+public class Product {
+    private static int count = 0;
+
+    private int id;
+    private String name;
+    private int price;
+    private int stock;
+
+    public Product(int id, String name, int price, int stock) {
+        this.id = id;
+        this.name = name;
+        this.price = price;
+        this.stock = stock;
+        count++;
+    }
+
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public int getPrice() { return price; }
+    public int getStock() { return stock; }
+
+    public void setPrice(int price) {
+        if (price &lt; 0) {
+            System.out.println("価格に負の値は設定できません");
+            return;
+        }
+        this.price = price;
+    }
+
+    public void setStock(int stock) {
+        if (stock &lt; 0) {
+            System.out.println("在庫に負の値は設定できません");
+            return;
+        }
+        this.stock = stock;
+    }
+
+    public void show() {
+        System.out.println(id + " / " + name + " / " + price + "円 / 残り" + stock + "個");
+    }
+
+    public static int getCount() { return count; }
+}</pre>
+<p class="fname">SellMain.java</p>
+<pre class="code" id="c2">package lesson18;
+
+public class SellMain {
+    public static void main(String[] args) {
+        Product p = new Product(2, "ノート", 220, 3);
+
+        sell(p, 2);
+        sell(p, 1);
+        sell(p, 1);
+    }
+
+    static void sell(Product p, int count) {
+        if (p.getStock() == 0) {                  <span class="cm">// 売り切れから出る「売る」の矢印は無い</span>
+            System.out.println(p.getName() + " : 売り切れなので売れません");
+            return;
+        }
+        if (p.getStock() &gt; count) {               <span class="cm">// ［在庫が売る数より多い］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 在庫あり（残り" + p.getStock() + "個）");
+        } else if (p.getStock() == count) {       <span class="cm">// ［在庫と売る数が同じ］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 売り切れ");
+        } else {                                  <span class="cm">// どの［ ］にも当てはまらない。図に矢印が無い</span>
+            System.out.println(p.getName() + " : 在庫が足りないので売れません");
+        }
+    }
+}</pre>
+<p class="expected-label">期待される実行結果</p>
+<div class="expected">ノート : 在庫あり（残り1個）
+ノート : 売り切れ
+ノート : 売り切れなので売れません</div>
+<p>実行するのは <code>SellMain</code> です。在庫3個のノートを、2個・1個・1個と売っています。3回目は、図に矢印が無いので売れません。</p>
+</div>
+<div class="card explanation-card"><div class="card-title">③ 解説</div>
+<p class="explanation-intro">結論を先に確認できます。元教材の図・詳しい説明・間違い例は必要な項目だけ開いてください。</p>
+<h2 class="sym-h">ステートマシン図で使う記号と書き方</h2>
+<p class="explain-brief">状態は角丸四角、開始は黒丸、終了は二重丸。矢印は状態を変えるイベントを表す。</p>
+<p class="explain-mini"><code>● → 状態 → ◎</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<table class="symtab"><tr><th>記号・書き方</th><th>名前</th><th>意味と書き方</th></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 26" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s1o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s1f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s1t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s1D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><circle cx="65" cy="13" r="8" fill="#334155"/></svg></td><td class="sym-name">開始疑似状態</td><td>黒丸です。図の始まりを表します。1枚に1つだけ描きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 40" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s2o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s2f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s2t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s2D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="20" y="4" width="90" height="32" rx="12" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/><text x="65" y="25" font-size="12" text-anchor="middle" fill="#1f2933" font-weight="bold">在庫あり</text></svg></td><td class="sym-name">状態</td><td>角丸四角です。「いまは〜です」と言える言葉（〜中・〜済み・在庫あり）を書きます。「〜する」は書きません。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 70" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s3o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s3f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s3t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s3D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="14" y="4" width="102" height="62" rx="12" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/><text x="65" y="20" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">売り切れ</text><polyline points="14,26 116,26" fill="none" stroke="#334155" stroke-width="1.5"/><text x="20" y="42" font-size="9" text-anchor="start" fill="#1f2933">entry / 知らせる</text><text x="20" y="58" font-size="9" text-anchor="start" fill="#1f2933">do / 入荷を待つ</text></svg></td><td class="sym-name">entry・exit・do</td><td>状態の中に書く動作です。entry はその状態に入ったとき、exit は出るとき、do はその状態にいる間にすることです。どの矢印から入っても同じ動作を、1か所にまとめられます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 44" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s4o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s4f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s4t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s4D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,34 120,34" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s4o)"/><text x="64" y="13" font-size="10" text-anchor="middle" fill="#1f2933">売る［在庫と</text><text x="64" y="26" font-size="10" text-anchor="middle" fill="#1f2933">売る数が同じ］／減らす</text></svg></td><td class="sym-name">遷移</td><td>状態から状態へ移る矢印です。矢印の上に「イベント［ガード条件］／動作」の順に書きます。</td></tr><tr><td class="sym-cell"><code class="symcode">［在庫と売る数が同じ］</code></td><td class="sym-name">ガード条件</td><td>［ ］の中の条件です。満たしたときだけ、その矢印へ進みます。同じイベントの矢印どうしは、どの値でも1つだけに当てはまるように書きます。</td></tr><tr><td class="sym-cell"><code class="symcode">after(30分)
+when(在庫 &lt; 5)</code></td><td class="sym-name">時間イベント・変化イベント</td><td>after は決めた時間がたったとき、when は条件が成り立ったときに起きるイベントです。タイムアウトや、値の見張りに使います。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 24" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s5o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s5f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s5t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s5D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,12 120,12" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s5o)"/></svg></td><td class="sym-name">完了遷移</td><td>イベントの書いていない矢印です。その状態での動作（do）が終わると、自動で移ります。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 56" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s6o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s6f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s6t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s6D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="20" y="26" width="90" height="26" rx="12" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/><polyline points="48,26 48,10 82,10 82,24" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s6o)"/><text x="65" y="44" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">在庫あり</text></svg></td><td class="sym-name">自己遷移</td><td>同じ状態へ戻る矢印です。状態は変わらず、動作だけが起きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 56" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s7o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s7f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s7t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s7D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><polyline points="8,28 51,28" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s7o)"/><polygon points="65,16 77,28 65,40 53,28" fill="#fff" stroke="#334155" stroke-width="1.5"/><polyline points="77,28 122,12" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s7o)"/><polyline points="77,28 122,44" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s7o)"/><text x="100" y="10" font-size="9" text-anchor="middle" fill="#1f2933">［あり］</text><text x="104" y="54" font-size="9" text-anchor="middle" fill="#1f2933">［なし］</text></svg></td><td class="sym-name">選択</td><td>遷移の途中のひし形です。［ ］の条件で行き先を分けます。ガード条件付きの矢印を2本描くのと同じ意味です。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 70" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s8o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s8f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s8t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s8D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><rect x="4" y="4" width="122" height="62" rx="12" fill="#fff" stroke="#334155" stroke-width="1.5"/><text x="65" y="18" font-size="11" text-anchor="middle" fill="#1f2933" font-weight="bold">処理中</text><rect x="12" y="28" width="44" height="24" rx="8" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/><text x="34" y="44" font-size="9" text-anchor="middle" fill="#1f2933">受付</text><polyline points="56,40 72,40" fill="none" stroke="#334155" stroke-width="1.5" marker-end="url(#s8o)"/><rect x="74" y="28" width="44" height="24" rx="8" fill="#e0f2fe" stroke="#334155" stroke-width="1.5"/><text x="96" y="44" font-size="9" text-anchor="middle" fill="#1f2933">審査中</text></svg></td><td class="sym-name">複合状態</td><td>状態の中に、小さな状態と遷移を描いたものです。「処理中」の中に「受付」「審査中」がある、のように描きます。</td></tr><tr><td class="sym-cell"><svg class="sym" viewBox="0 0 130 30" role="img" xmlns="http://www.w3.org/2000/svg"><defs><marker id="s9o" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.6"/></marker><marker id="s9f" viewBox="0 0 10 10" refX="9" refY="5" markerUnits="userSpaceOnUse" markerWidth="10" markerHeight="10" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker><marker id="s9t" viewBox="0 0 14 14" refX="13" refY="7" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><path d="M1,1 L13,7 L1,13 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9d" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#fff" stroke="#334155" stroke-width="1.4"/></marker><marker id="s9D" viewBox="0 0 18 10" refX="1" refY="5" markerUnits="userSpaceOnUse" markerWidth="18" markerHeight="10" orient="auto-start-reverse"><path d="M1,5 L9,1 L17,5 L9,9 z" fill="#334155" stroke="#334155" stroke-width="1.4"/></marker></defs><circle cx="65" cy="15" r="11" fill="#fff" stroke="#334155" stroke-width="1.6"/><circle cx="65" cy="15" r="6.5" fill="#334155"/></svg></td><td class="sym-name">終了状態</td><td>二重丸です。そこで終わり、もう何も起きません。いくつ描いても構いません。</td></tr><tr><td class="sym-cell"><table class="mini"><tr><th></th><th>売る</th><th>補充</th></tr><tr><th>あり</th><td>あり・切れ</td><td>あり</td></tr><tr><th>切れ</th><td>×</td><td>あり</td></tr></table></td><td class="sym-name">状態遷移表</td><td>図と同じことを表にしたものです。行が今の状態、列がイベント、ます目が移る先です。見本の「あり」は在庫あり、「切れ」は売り切れ、× は移れないことを表します。日本の設計書では、図より表のほうが多く使われます。Java では enum と switch で書くことが多くあります。</td></tr></table>
+
+</div></details>
+<h2>1　開始と状態（①②）</h2>
+<p class="explain-brief">開始疑似状態は図の始まり。状態には「在庫あり」など、いまの様子を書く。</p>
+<p class="explain-mini"><code>状態は動詞ではなく現在の様子</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:251px" viewBox="20 52 251 72.9" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l18state"/><rect x="160" y="52" width="90" height="21.4" fill="#fff"/></svg><div class="line-block"><p class="item-label">① 黒丸（開始疑似状態）</p>
+<p>①の黒丸が<strong>開始疑似状態</strong>です。「ここから始まる」という印です。1枚に1つだけ描きます。黒丸から出る矢印の上の「登録する」は、始まるきっかけです。商品を登録した直後は「在庫あり」から始まる、と読めます。</p>
+</div>
+<div class="line-block"><p class="item-label">② 角丸四角の「在庫あり」（状態）</p>
+<p>②の角丸四角が<strong>状態</strong>です。その商品が、いまどうなっているかを表します。中には、「いまは〜です」と言える言葉を書きます。抜き出した所の状態は「在庫あり」です。全体の図では、もう1つの状態「売り切れ」にも②が付いています。</p>
+<p><strong>なぜ状態を分けるのか。</strong>状態によって、できることが変わるからです。在庫ありなら売れますが、売り切れなら売れません。</p>
+</div>
+<p><strong>よくある間違い：状態の四角に「売る」と書く。</strong>ステートマシン図で、とても多い間違いです。</p>
+<svg class="fig" viewBox="0 0 720 222" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="l18o3" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.8"/></marker><marker id="l18a3" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#c2410c" stroke-width="1.8"/></marker><marker id="l18r3" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.8"/></marker></defs>
+<text x="20" y="26" font-size="14" text-anchor="start" fill="#b91c1c" font-weight="bold">間違い　四角の中に「〜する」を書いている</text>
+<rect x="40" y="42" width="130" height="40" rx="14" fill="#e0f2fe" stroke="#b91c1c" stroke-width="1.6"/>
+<text x="105" y="67" font-size="14" text-anchor="middle" fill="#b91c1c" font-weight="bold">登録する</text>
+<polyline points="170,62 228,62" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o3)"/>
+<rect x="230" y="42" width="130" height="40" rx="14" fill="#e0f2fe" stroke="#b91c1c" stroke-width="1.6"/>
+<text x="295" y="67" font-size="14" text-anchor="middle" fill="#b91c1c" font-weight="bold">売る</text>
+<polyline points="360,62 418,62" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o3)"/>
+<rect x="420" y="42" width="130" height="40" rx="14" fill="#e0f2fe" stroke="#b91c1c" stroke-width="1.6"/>
+<text x="485" y="67" font-size="14" text-anchor="middle" fill="#b91c1c" font-weight="bold">廃番にする</text>
+<text x="570" y="58" font-size="13" text-anchor="start" fill="#b91c1c">作業の並び。</text>
+<text x="570" y="76" font-size="13" text-anchor="start" fill="#b91c1c">いまの様子が読めない</text>
+<line x1="20" y1="104" x2="700" y2="104" stroke="#cbd5e1" stroke-width="1.2"/>
+<text x="20" y="132" font-size="14" text-anchor="start" fill="#1f2933" font-weight="bold">直したもの　四角は様子、矢印が「〜する」</text>
+<circle cx="40" cy="170" r="8" fill="#334155"/>
+<polyline points="48,170 128,170" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o3)"/>
+<text x="88" y="161" font-size="13" text-anchor="middle" fill="#1f2933">登録する</text>
+<rect x="130" y="150" width="130" height="40" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="195" y="175" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">在庫あり</text>
+<polyline points="260,170 478,170" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o3)"/>
+<text x="369" y="161" font-size="13" text-anchor="middle" fill="#1f2933">売る［在庫と売る数が同じ］</text>
+<rect x="480" y="150" width="130" height="40" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="545" y="175" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">売り切れ</text>
+<polyline points="610,170 653,170" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o3)"/>
+<text x="632" y="205" font-size="13" text-anchor="middle" fill="#1f2933">廃番にする</text>
+<circle cx="666" cy="170" r="11" fill="#fff" stroke="#334155" stroke-width="1.6"/><circle cx="666" cy="170" r="6.5" fill="#334155"/>
+</svg><p class="figcap">「〜する」は矢印に書く。四角には「いまは〜です」と言える言葉を書く</p><p>上の図は、四角の中に「登録する」「売る」「廃番にする」と書いています。これは作業の順番を並べたもので、次回のアクティビティ図の書き方です。これでは「いまこの商品は売れるのか」が読めません。「いまは在庫ありです」とは言えますが、「いまは売るです」とは言えません。言えないものは四角から出して、矢印に書きます。</p>
+<p>下の図が、直したものです。四角には「在庫あり」「売り切れ」と、様子を書いています。「登録する」「売る」「廃番にする」は、矢印に書いています。</p>
+
+</div></details>
+<h2>2　遷移・自己遷移・終了状態（③④⑤）</h2>
+<p class="explain-brief">遷移の [ガード条件] は動ける条件。条件は重ならず、必要な場合を取りこぼさないようにする。</p>
+<p class="explain-mini"><code>イベント [条件] / 動作</code></p>
+<details class="explain-more"><summary>この部分のコード・詳しい説明を見る</summary><div class="explain-detail">
+
+<svg class="fig" style="max-width:600px" viewBox="52 14 600 110.9" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l18state"/><rect x="52" y="70" width="67" height="55" fill="#fff"/><rect x="122" y="50" width="20" height="22" fill="#fff"/><rect x="502" y="50" width="20" height="22" fill="#fff"/></svg><div class="line-block"><p class="item-label">③ 「在庫あり」から「売り切れ」への矢印（遷移）</p>
+<p>③の、「在庫あり」から「売り切れ」への矢印が<strong>遷移</strong>です。状態から状態へ移ることです。矢印には「イベント［ガード条件］／動作」の順に書きます。</p>
+<p>最初の「売る」が<strong>イベント</strong>で、移るきっかけです。［在庫と売る数が同じ］が<strong>ガード条件</strong>で、その矢印へ進む条件です。／の後ろの「在庫を減らす」が<strong>動作</strong>で、移るときにすることです。つまり、在庫と同じ数を売ったら、在庫を減らして売り切れへ移ります。</p>
+<p>［ ］は、動作より先に、売る前の在庫と売る数で決まります。<strong>なぜ［ ］を書くのか。</strong>同じ「売る」でも、在庫と売る数の関係で行き先が変わるからです。</p>
+</div>
+<div class="line-block"><p class="item-label">④ 「在庫あり」に戻る矢印（自己遷移）</p>
+<p>④の、「在庫あり」から出て「在庫あり」に戻る矢印が<strong>自己遷移</strong>です。状態は変わらずに、動作だけが起きることです。矢印の言葉は「売る［在庫が売る数より多い］／在庫を減らす」です。在庫が売る数より多ければ、売ったあとも在庫が残ります。だから在庫ありのままです。3個のノートを2個売って1個になっても「在庫あり」のままだ、と示します。</p>
+</div>
+<p><code>SellMain.java</code> から、<code>sell</code> メソッドを抜き出しています。行の右のコメントが、図の部品です。</p>
+<pre class="code" id="c3">    static void sell(Product p, int count) {
+        if (p.getStock() == 0) {                  <span class="cm">// 売り切れから出る「売る」の矢印は無い</span>
+            System.out.println(p.getName() + " : 売り切れなので売れません");
+            return;
+        }
+        if (p.getStock() &gt; count) {               <span class="cm">// ［在庫が売る数より多い］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 在庫あり（残り" + p.getStock() + "個）");
+        } else if (p.getStock() == count) {       <span class="cm">// ［在庫と売る数が同じ］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 売り切れ");
+        } else {                                  <span class="cm">// どの［ ］にも当てはまらない。図に矢印が無い</span>
+            System.out.println(p.getName() + " : 在庫が足りないので売れません");
+        }
+    }</pre>
+<div class="line-block"><pre class="code" id="c4">static void sell(Product p, int count) {</pre>
+<p><code>sell</code> メソッドの宣言です。<code>p</code> は売る商品、<code>count</code> は売る数です。<code>static</code> なので、<code>main</code> からインスタンスを作らずに呼べます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c5">if (p.getStock() == 0) {                  <span class="cm">// 売り切れから出る「売る」の矢印は無い</span>
+    System.out.println(p.getName() + " : 売り切れなので売れません");
+    return;
+}</pre>
+<p><code>if</code> は、在庫が <code>0</code>、つまり売り切れかを調べます。売り切れから出る「売る」の矢印は、図にありません。だから「売り切れなので売れません」と表示し、<code>return</code> でメソッドを終えます。</p>
+</div>
+<div class="line-block"><pre class="code" id="c6">if (p.getStock() &gt; count) {               <span class="cm">// ［在庫が売る数より多い］</span>
+    p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+    System.out.println(p.getName() + " : 在庫あり（残り" + p.getStock() + "個）");</pre>
+<p><code>if</code> の条件 <code>p.getStock() &gt; count</code> が、④の［在庫が売る数より多い］です。中の <code>p.setStock(p.getStock() - count);</code> が、「／在庫を減らす」です。今の在庫から売る数を引いた数を、新しい在庫にしています。そのあと、商品名と「在庫あり（残り◯個）」を表示します。◯は、減らしたあとの在庫です。</p>
+</div>
+<div class="line-block"><pre class="code" id="c7">} else if (p.getStock() == count) {       <span class="cm">// ［在庫と売る数が同じ］</span>
+    p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+    System.out.println(p.getName() + " : 売り切れ");</pre>
+<p><code>else if</code> の条件 <code>p.getStock() == count</code> が、③の［在庫と売る数が同じ］です。中では同じように在庫を減らし、「売り切れ」と表示します。先に判定してから減らす順も、図と同じです。</p>
+</div>
+<div class="line-block"><pre class="code" id="c8">} else {                                  <span class="cm">// どの［ ］にも当てはまらない。図に矢印が無い</span>
+    System.out.println(p.getName() + " : 在庫が足りないので売れません");
+}</pre>
+<p>最後の <code>else</code> は、どの［ ］にも当てはまらないとき、つまり売る数が在庫より多いときです。図に矢印が無いので、「在庫が足りないので売れません」と表示して、何もしません。</p>
+</div>
+<p>図に無い矢印は、「起きてはいけない移り方」です。コードでは、表示して断る形になります。入荷で売り切れから戻す道は、④自力で書くで足します。</p>
+<p><strong>よくある間違い：ガード条件を重ねる。</strong>［ ］に当たる2つの <code>if</code> を、重なる条件で書いた形です。<code>Product</code> は写したままです。<code>sell</code> の中の、変えた所だけを抜き出しました。</p>
+<p class="fname">SellMain.java の sell の［ ］の所（間違いあり）</p>
+<pre class="code" id="c9">        if (p.getStock() &gt;= count) {              <span class="cm">// ［在庫が売る数以上］　ここが問題</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 在庫あり（残り" + p.getStock() + "個）");
+        } else if (p.getStock() &lt;= count) {       <span class="cm">// ［在庫が売る数以下］　ここが問題</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 売り切れ");
+        } else {                                  <span class="cm">// どの［ ］にも当てはまらない。図に矢印が無い</span>
+            System.out.println(p.getName() + " : 在庫が足りないので売れません");
+        }</pre>
+<p>行の右の <code>// ここが問題</code> が、変えた2行です。<code>if</code> の条件を <code>p.getStock() &gt;= count</code> にしました。写したコードの <code>&gt;</code> を <code>&gt;=</code> に変えています。［在庫が売る数以上］という意味です。<code>else if</code> の条件は <code>p.getStock() &lt;= count</code> です。<code>==</code> を <code>&lt;=</code> に変えています。［在庫が売る数以下］という意味です。</p>
+<p>ほかの行は写したままです。どちらの中でも <code>p.setStock(p.getStock() - count);</code> で在庫を減らします。そのあと、1つ目は「在庫あり（残り◯個）」、2つ目は「売り切れ」と表示します。最後の <code>else</code> は、どの［ ］にも当てはまらないとき、「在庫が足りないので売れません」と表示します。これで実行した結果です。</p>
+<p class="expected-label">実行結果</p>
+<div class="expected">ノート : 在庫あり（残り1個）
+ノート : 在庫あり（残り0個）
+ノート : 売り切れなので売れません</div>
+<p>1行目は、在庫3個のノートを2個売った結果です。残りは1個で、在庫ありのままです。2行目は、在庫1個に1個売った結果です。売り切れになるはずが、「在庫あり（残り0個）」と出ています。3行目は、在庫が0なので、最初の <code>if</code> で断られています。</p>
+<p>在庫1個に1個売る場面は、［在庫が売る数以上］にも［在庫が売る数以下］にも当てはまります。図にすると、「在庫あり」から出る2本の矢印の両方に当てはまり、行き先が2つになった形です。コードでは、先に書いた <code>if</code> へ進んだだけです。<strong>ガード条件は、移ってよいどの値でも、必ず1つだけに当てはまるように書きます。</strong>写したコードのとおり、［在庫が売る数より多い］と［在庫と売る数が同じ］にすれば、重なりは起きません。</p>
+<div class="trap">重なりの反対の「抜け」も、同じ種類の間違いです。［在庫が売る数より2個以上多い］と［在庫と売る数が同じ］だけだと、在庫が1個だけ多いときに行き先がありません。どの［ ］にも当てはまらない値は、「売れない」と決めたことになります。売る数が在庫より多いときのように、決めて断るならよいのです。決めずに抜けるのが間違いです。図を描いたら、売る数に<strong>在庫より1少ない数・同じ数・1多い数</strong>を当てはめてください。行き先がちょうど1つか、断るのかを確かめます。</div>
+<svg class="fig" style="max-width:500px" viewBox="150 126 500 110" role="img" xmlns="http://www.w3.org/2000/svg"><use href="#l18state"/></svg><div class="line-block"><p class="item-label">⑤ 二重丸（終了状態）</p>
+<p>⑤の二重丸が<strong>終了状態</strong>です。その商品の話がそこで終わり、もう何も起きないことを表します。</p>
+<p>二重丸へ向かう矢印の「廃番にする」が、終わるきっかけです。廃番は、メーカーが作るのをやめて、店でも扱わなくなることです。左の矢印は「在庫あり」から、右の矢印は「売り切れ」から出ています。どちらからでも廃番にできるので、2つ描いています。終了状態は、いくつ描いても構いません。</p>
+</div>
+
+</div></details>
+</div>
+<div class="card quick-check"><div class="card-title">理解のチェック ／ 30秒</div><h2>状態を「売る」と書くのは正しい？</h2><details class="quick-answer"><summary>答えと理由を見る</summary><p>正しくありません。「売る」は遷移のイベントで、状態には「在庫あり」「売り切れ」のように今の様子を書きます。</p></details></div>
+<div class="card"><div class="card-title">④ 自力で書く</div>
+<p>ここからは自力です。2問あります。①はノートに描き、②はコードを書きます。<strong>①で補充の矢印が描けたら、今日の目的は達成です。</strong></p>
+<h2>課題</h2>
+<ul class="plain num"><li>①　写した図に、入荷したときの「補充する［個数が1以上］／在庫を増やす」の矢印を足して描く。売り切れのときも、在庫ありのときも補充できるようにする</li><li>②　②で写した <code>SellMain</code> に、①の図をコードにした <code>refill</code> を足す。下の骨組みのとおり <code>main</code> も書き換える。<code>sell</code> は写したままで構わない</li></ul>
+<h2>骨組み</h2>
+<p><code>SellMain.java</code> の全体です。<code>// ここに…</code> の所を書きます。</p>
+<p class="fname">SellMain.java（main を書き換え、refill を足す）</p>
+<pre class="code" id="c10">package lesson18;
+
+public class SellMain {
+    public static void main(String[] args) {
+        Product p = new Product(2, "ノート", 220, 3);
+
+        sell(p, 3);
+        sell(p, 1);
+        refill(p, 0);
+        refill(p, 5);
+        refill(p, 2);
+        sell(p, 4);
+    }
+
+    static void sell(Product p, int count) {
+        if (p.getStock() == 0) {                  <span class="cm">// 売り切れから出る「売る」の矢印は無い</span>
+            System.out.println(p.getName() + " : 売り切れなので売れません");
+            return;
+        }
+        if (p.getStock() &gt; count) {               <span class="cm">// ［在庫が売る数より多い］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 在庫あり（残り" + p.getStock() + "個）");
+        } else if (p.getStock() == count) {       <span class="cm">// ［在庫と売る数が同じ］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 売り切れ");
+        } else {                                  <span class="cm">// どの［ ］にも当てはまらない。図に矢印が無い</span>
+            System.out.println(p.getName() + " : 在庫が足りないので売れません");
+        }
+    }
+
+    static void refill(Product p, int count) {
+        <span class="cm">// ここに、個数が1より少なければ「商品名 : 補充できません（個数は1以上）」と表示して終わる処理を書く</span>
+        <span class="cm">// ここに、在庫を個数だけ増やし、「商品名 : 在庫あり（残り◯個）」と表示する処理を書く</span>
+    }
+}</pre>
+<div class="btn-row"><button data-copy="c10">コピーする</button><span class="copy-msg"></span></div>
+<h2>出そろったときの形</h2>
+<p class="expected-label">実行結果はこうなります</p>
+<div class="expected">ノート : 売り切れ
+ノート : 売り切れなので売れません
+ノート : 補充できません（個数は1以上）
+ノート : 在庫あり（残り5個）
+ノート : 在庫あり（残り7個）
+ノート : 在庫あり（残り3個）</div>
+<h2>ヒント</h2>
+<ul class="plain num"><li>①　①で足す矢印は2本です。売り切れから在庫ありへ戻る矢印と、在庫ありから在庫ありへ戻る自己遷移です。</li><li>②　②の <code>refill</code> の <code>if</code> は、<code>sell</code> の最後の <code>else</code> と同じく、どの［ ］にも当てはまらない値（個数が0以下）を断る所です。表示して <code>return</code> する書き方は、<code>sell</code> の1つ目の <code>if</code> と同じです。</li><li>③　①の2本の矢印は、どちらも行き先が在庫ありです。行き先が同じなので、コードでは売り切れかどうかで分けずに済みます。</li></ul>
+<div class="calm">2問ともできなくて構いません。できなかった所は、答えを写してから、もう一度自分で書いてください。</div>
+<div class="note">終わった人は <strong>問題集の第18回</strong> へ進んでください。</div>
+</div>
+<div class="divider"><h2>ここから下は答えです</h2><p>演習が終わってから開いてください。印刷するとここから改ページします。</p></div>
+<details class="ans"><summary>④ 自力で書く　1　補充の矢印を足した図</summary><div class="sol">
+<svg class="fig" viewBox="0 0 720 240" role="img" xmlns="http://www.w3.org/2000/svg">
+<defs><marker id="ar4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#334155"/></marker></defs>
+<defs><marker id="l18o4" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#334155" stroke-width="1.8"/></marker><marker id="l18a4" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#c2410c" stroke-width="1.8"/></marker><marker id="l18r4" viewBox="0 0 12 12" refX="11" refY="6" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto-start-reverse"><path d="M1,1 L11,6 L1,11" fill="none" stroke="#b91c1c" stroke-width="1.8"/></marker></defs>
+<circle cx="40" cy="110" r="8" fill="#334155"/>
+<polyline points="48,110 108,110" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o4)"/>
+<text x="78" y="101" font-size="13" text-anchor="middle" fill="#1f2933">登録する</text>
+<rect x="110" y="85" width="150" height="50" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="185" y="115" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">在庫あり</text>
+<polyline points="150,85 150,55 210,55 210,83" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o4)"/>
+<text x="180" y="43" font-size="13" text-anchor="middle" fill="#1f2933">売る［在庫が売る数より多い］／在庫を減らす</text>
+<polyline points="260,100 488,100" fill="none" stroke="#334155" stroke-width="1.6" marker-end="url(#l18o4)"/>
+<text x="375" y="72" font-size="13" text-anchor="middle" fill="#1f2933">売る［在庫と売る数が同じ］</text>
+<text x="375" y="90" font-size="13" text-anchor="middle" fill="#1f2933">／在庫を減らす</text>
+<rect x="490" y="85" width="150" height="50" rx="14" fill="#e0f2fe" stroke="#334155" stroke-width="1.6"/>
+<text x="565" y="115" font-size="14" text-anchor="middle" fill="#1f2933" font-weight="bold">売り切れ</text>
+<polyline points="490,122 262,122" fill="none" stroke="#c2410c" stroke-width="1.6" marker-end="url(#l18a4)"/>
+<text x="272" y="150" font-size="13" text-anchor="start" fill="#c2410c" font-weight="bold">補充する［個数が1以上］／在庫を増やす</text>
+<polyline points="150,135 150,175 210,175 210,137" fill="none" stroke="#c2410c" stroke-width="1.6" marker-end="url(#l18a4)"/>
+<text x="30" y="198" font-size="13" text-anchor="start" fill="#c2410c" font-weight="bold">補充する［個数が1以上］／在庫を増やす</text>
+<text x="30" y="226" font-size="13" text-anchor="start" fill="#c2410c">オレンジが足した2本の矢印</text>
+</svg><p class="figcap">補充の矢印を足した「商品1件の状態」（答えの例。廃番の矢印は省いています）</p><p>売り切れから在庫ありへ戻る矢印と、在庫ありの下の自己遷移の2本です。どちらにも同じ「補充する［個数が1以上］／在庫を増やす」を書きます。</p>
+<p>個数が0以下のときは、どちらの矢印の［ ］にも当てはまりません。図に無い移り方なので、補充できません。</p>
+</div></details>
+<details class="ans"><summary>④ 自力で書く　2　refill</summary><div class="sol">
+<p class="fname">SellMain.java</p>
+<pre class="code" id="c11">package lesson18;
+
+public class SellMain {
+    public static void main(String[] args) {
+        Product p = new Product(2, "ノート", 220, 3);
+
+        sell(p, 3);
+        sell(p, 1);
+        refill(p, 0);
+        refill(p, 5);
+        refill(p, 2);
+        sell(p, 4);
+    }
+
+    static void sell(Product p, int count) {
+        if (p.getStock() == 0) {                  <span class="cm">// 売り切れから出る「売る」の矢印は無い</span>
+            System.out.println(p.getName() + " : 売り切れなので売れません");
+            return;
+        }
+        if (p.getStock() &gt; count) {               <span class="cm">// ［在庫が売る数より多い］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 在庫あり（残り" + p.getStock() + "個）");
+        } else if (p.getStock() == count) {       <span class="cm">// ［在庫と売る数が同じ］</span>
+            p.setStock(p.getStock() - count);     <span class="cm">// ／在庫を減らす</span>
+            System.out.println(p.getName() + " : 売り切れ");
+        } else {                                  <span class="cm">// どの［ ］にも当てはまらない。図に矢印が無い</span>
+            System.out.println(p.getName() + " : 在庫が足りないので売れません");
+        }
+    }
+
+    static void refill(Product p, int count) {
+        <span class="cm">// ここに、個数が1より少なければ「商品名 : 補充できません（個数は1以上）」と表示して終わる処理を書く</span>
+        if (count &lt; 1) {                          <span class="cm">// ［個数が1以上］に当てはまらない。図に矢印が無い</span>
+            System.out.println(p.getName() + " : 補充できません（個数は1以上）");
+            return;
+        }
+
+        <span class="cm">// ここに、在庫を個数だけ増やし、「商品名 : 在庫あり（残り◯個）」と表示する処理を書く</span>
+        p.setStock(p.getStock() + count);         <span class="cm">// ／在庫を増やす</span>
+        System.out.println(p.getName() + " : 在庫あり（残り" + p.getStock() + "個）");
+    }
+}</pre>
+<p class="expected-label">実行結果</p>
+<div class="expected">ノート : 売り切れ
+ノート : 売り切れなので売れません
+ノート : 補充できません（個数は1以上）
+ノート : 在庫あり（残り5個）
+ノート : 在庫あり（残り7個）
+ノート : 在庫あり（残り3個）</div>
+<div class="note">売り切れから補充した4行目と、在庫ありから補充した5行目は、同じ <code>refill</code> の同じ行を通っています。図の2本の矢印は行き先も書く言葉も同じなので、コードは1つで済みます。</div>
+</div></details>
+<div class="card"><div class="card-title">⑤ まとめ</div>
+<h2>確認チェック</h2><div class="check"><ul><li>状態（在庫あり・売り切れ）と遷移（売る）を、四角と矢印で描き分けられる</li><li>ガード条件が重なっていないかを、在庫より1少ない数・同じ数・1多い数で確かめられる</li><li>図に無い矢印を、コードの <code>if</code> で断る形にできる</li></ul></div>
+<h2>次回</h2><p><strong>次回は、アクティビティ図とコミュニケーション図です。</strong>今日は「商品1件」を主役にしました。次回は「仕事の流れ」と「誰と誰がつながっているか」を主役にして、第15〜19回で描いた図一式でアプリを振り返ります。</p></div>
+<details class="card glossary-fold"><summary>用語集を確認する（必要なときだけ）</summary>
+<p>この回に出た言葉です。覚えるためではなく、分からなくなったときに引くための表です。</p>
+<table class="glossary"><tr><th>言葉</th><th>読み方</th><th>意味</th></tr><tr><td>ステートマシン図</td><td>すてーとましんず</td><td>1つのものが、どの状態からどの状態へ移るかを描いた図。状態遷移図とも呼びます</td></tr><tr><td>状態</td><td>じょうたい</td><td>そのものが、いまどうなっているか。角丸四角に「在庫あり」「〜中」「〜済み」のように書きます</td></tr><tr><td>遷移</td><td>せんい</td><td>状態から状態へ移ること。矢印で描きます</td></tr><tr><td>イベント</td><td>いべんと</td><td>遷移のきっかけになる出来事。第14回の「ボタンが押された知らせ」と同じ意味です。矢印の上に「売る」「補充する」のように書きます</td></tr><tr><td>ガード条件</td><td>がーどじょうけん</td><td>［ ］の中に書く条件。満たしたときだけ、その矢印へ進みます</td></tr><tr><td>動作</td><td>どうさ</td><td>遷移するときにすること。矢印の上の ／ の後ろに書きます（例　／在庫を減らす）</td></tr><tr><td>自己遷移</td><td>じこせんい</td><td>同じ状態へ戻る矢印。状態は変わらず、動作だけが起きます</td></tr><tr><td>開始疑似状態</td><td>かいしぎじじょうたい</td><td>黒丸 ●。図の始まり。1枚に1つだけ</td></tr><tr><td>終了状態</td><td>しゅうりょうじょうたい</td><td>二重丸 ◎。そこで終わる。いくつあってもよく、無くてもよい</td></tr></table></details>
+<footer>大阪ITプログラミング講座 ｜ Java復習講座 ｜ 第 18 回 ／ 全 22 回</footer>
+</div>
+<script>
+  if (location.search.indexOf('big') >= 0) { document.body.classList.add('big'); document.getElementById('bigbtn').textContent = '文字を元に戻す'; }
+  document.getElementById('bigbtn').addEventListener('click', function () {
+    document.body.classList.toggle('big');
+    this.textContent = document.body.classList.contains('big') ? '文字を元に戻す' : '文字を大きくする';
+  });
+  document.querySelectorAll('button[data-copy]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var src = document.getElementById(btn.getAttribute('data-copy'));
+      var text = src.textContent;
+      var msg = btn.parentNode.querySelector('.copy-msg');
+      function done() { msg.textContent = 'コピーしました'; setTimeout(function () { msg.textContent = ''; }, 1800); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done);
+      } else {
+        var ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } finally { document.body.removeChild(ta); }
+      }
+    });
+  });
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.ans').forEach(function (d) { d.setAttribute('open', ''); });
+  });
+</script>
+</body>
+</html>

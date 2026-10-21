@@ -3,8 +3,8 @@ import {readFileSync} from 'node:fs';
 
 const read=path=>readFileSync(new URL('../'+path,import.meta.url),'utf8');
 let total=0;
-const expected={2:5,3:4,4:3,5:4,6:4,7:4,8:5,9:4,10:5,11:6,12:4,13:4,14:6,15:9,16:7};
-for(let n=2;n<=16;n++){
+const expected={2:5,3:4,4:3,5:4,6:4,7:4,8:5,9:4,10:5,11:6,12:4,13:4,14:6,15:9,16:7,17:6,18:3};
+for(let n=2;n<=18;n++){
  const path='lesson'+String(n).padStart(2,'0')+'.html';
  const html=read(path);
  const start=html.indexOf('<div class="card explanation-card">');
